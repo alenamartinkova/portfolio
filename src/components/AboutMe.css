@@ -1,0 +1,13 @@
+#about-me {
+    margin: 100px auto 0 auto;
+    background-color: #EDF0F1;
+    color: #24252A;
+}
+
+.image img, .image {
+    width: inherit;
+}
+
+.row {
+    align-items: center;
+}
