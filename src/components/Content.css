@@ -1,0 +1,6 @@
+.main {
+    background: white;
+    width: 50%;
+    margin-left: 50%;
+    min-height: calc(1vh * 100);
+}

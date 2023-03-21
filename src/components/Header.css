@@ -1,8 +1,30 @@
-header {
-    background-color: #24252A;
-    width: 100%;
-    position: fixed;
+#header {
+    position: sticky;
     top: 0;
+    width: 100%;
+    background-color: #24252A;
+    pointer-events: none;
+    color: white;
     z-index: 1;
-    box-shadow: 0 1px 1px 0px #8337AF;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5rem;
+}
+
+#header .header--content {
+    margin: 0 3rem;
+}
+
+@media(min-width: 1200px) {
+    #header {
+        width: 50%;
+        height: 100%;
+
+        position: fixed;
+        left: 0;
+        top: 0;
+
+        transition: width 1s cubic-bezier(.23, 1, .32, 1) .5s;
+    }
 }

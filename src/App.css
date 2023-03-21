@@ -6,17 +6,13 @@
     padding: 0;
 }
 
-body, #root {
-    background-color: #24252A;
-}
-
 .section {
+    position: sticky;
+    top: 0;
     width: 100%;
+    min-height: calc(1vh*100);
 }
 
-.row-wrapper {
-    padding: 80px 40px;
-    margin: 0 auto;
-    max-width: 1200px;
-    width: 100%;
+a {
+    color: #C3B1E1;
 }
