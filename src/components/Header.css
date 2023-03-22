@@ -3,7 +3,6 @@
     top: 0;
     width: 100%;
     background-color: #24252A;
-    pointer-events: none;
     color: white;
     z-index: 1;
     display: flex;
@@ -14,6 +13,47 @@
 
 #header .header--content {
     margin: 0 3rem;
+}
+
+#header .header--content__buttons {
+    display: flex;
+    align-items: center;
+}
+
+#header h1 {
+    margin-bottom: 2rem;
+}
+
+#header a {
+    margin-right: 1rem;
+    z-index: 2;
+}
+
+#header p {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+#header .button-primary {
+    background: #C3B1E1;
+    color: #333333;
+    border-radius: 20px;
+    padding: 10px 20px;
+    border: none;
+    margin-right: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+#header .button-primary:hover {
+    scale: 1.2;
+    margin-right: 2rem;
+}
+
+#header svg {
+    width: 40px;
+    height: 40px;
 }
 
 @media(min-width: 1200px) {
