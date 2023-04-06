@@ -4,3 +4,10 @@
     margin-left: 55%;
     min-height: calc(1vh * 100);
 }
+
+@media(max-width: 1200px) {
+    .main {
+        width: 100%;
+        margin-left: 0;
+    }
+}

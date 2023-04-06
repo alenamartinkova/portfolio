@@ -1,5 +1,5 @@
 #header {
-    position: sticky;
+    position: relative;
     top: 0;
     width: 100%;
     background-color: #24252A;
@@ -13,6 +13,14 @@
 
 #header .header--content {
     margin: 0 3rem;
+}
+
+#header .header--content:first-of-type {
+    padding: 80px 20px 0;
+}
+
+#header .header--content:last-of-type {
+    padding: 0 20px 80px;
 }
 
 #header .header--content__buttons {
@@ -66,5 +74,19 @@
         top: 0;
 
         transition: width 1s cubic-bezier(.23, 1, .32, 1) .5s;
+    }
+
+    #header .header--content {
+        padding: 80px 20px 0;
+    }
+}
+
+@media(max-width: 576px) {
+    #header .header--content:first-of-type {
+        padding: 40px 10px 0;
+    }
+
+    #header .header--content:last-of-type {
+        padding: 0 10px 40px;
     }
 }

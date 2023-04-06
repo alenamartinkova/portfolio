@@ -6,7 +6,7 @@ export default function Education() {
     return (
         <section className="section" id="education">
             <div>
-                <h1>Education</h1>
+                <h1>📚 Education</h1>
                 <p>
                 I hold a bachelor's degree in Computer Science, which has served as a solid foundation for my
                 career in the field.
