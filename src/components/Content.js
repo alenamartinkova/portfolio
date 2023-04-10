@@ -1,4 +1,3 @@
-import './Content.css';
 import Me from "./Me";
 import AboutMe from "./AboutMe";
 import Education from "./Education";

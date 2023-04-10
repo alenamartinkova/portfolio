@@ -1,10 +1,9 @@
 import React from 'react';
-import './Skills.css';
 
 export default function Skills() {
     return (
         <section className="section" id="skills">
-           <div>
+            <div data-aos='fade-left'>
                <h1>👩🏽‍💻 Skills</h1>
                <p>
                    Over the past years, I've gained experience in web development, including working as a

@@ -1,11 +1,9 @@
 import React from 'react';
-import './Education.css';
-
 
 export default function Education() {
     return (
         <section className="section" id="education">
-            <div>
+            <div data-aos='fade-left'>
                 <h1>📚 Education</h1>
                 <p>
                 I hold a bachelor's degree in Computer Science, which has served as a solid foundation for my

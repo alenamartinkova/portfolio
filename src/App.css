@@ -27,7 +27,43 @@
     margin-bottom: 1rem;
 }
 
+.main {
+    background: white;
+    width: 45%;
+    margin-left: 55%;
+    min-height: calc(1vh * 100);
+}
+
+#about-me, #skills {
+    background: white;
+}
+
+#education {
+    background-color: #C3B1E1;
+}
+
+#me img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    filter: saturate(0) brightness(1.1);
+    mix-blend-mode: multiply;
+    -o-object-fit: cover;
+    object-fit: cover;
+}
+
+.hidden {
+    display: none!important;
+}
+
 a {
     color: #C3B1E1;
     text-decoration: none;
+}
+
+@media(max-width: 1200px) {
+    .main {
+        width: 100%;
+        margin-left: 0;
+    }
 }

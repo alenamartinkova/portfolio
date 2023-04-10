@@ -1,10 +1,9 @@
-import React from 'react';
-import './AboutMe.css';
+import React from 'react'
 
 export default function AboutMe() {
     return (
         <section className="section" id="about-me">
-            <div>
+            <div data-aos='fade-left'>
                 <h1>👋 About me</h1>
 
                 <p>
