@@ -1,28 +1,53 @@
 import React from 'react';
+import {AnimationOnScroll} from "react-animation-on-scroll";
+import {Splide, SplideSlide} from "@splidejs/react-splide";
+import '@splidejs/react-splide/css'
 
 export default function Skills() {
     return (
         <section className="section" id="skills">
-            <div data-aos='fade-left'>
-               <h1>👩🏽‍💻 Skills</h1>
-               <p>
-                   Over the past years, I've gained experience in web development, including working as a
-                   freelancer and working for Moravio, a web development company, for more than four years.
-                   My time in the industry has exposed me to a wide range of projects.
-               </p>
+            <div>
+                <AnimationOnScroll animateIn="animate__fadeInRight">
+                   <h1>👩🏽‍💻 Skills</h1>
+                   <p>
+                       I'm well-versed in various programming languages and technologies, including HTML, CSS, JavaScript, React, and PHP.
+                       I'm always eager to learn new skills and stay up-to-date with the latest trends in the industry.
+                   </p>
 
-               <p>
-                   As a developer, I pride myself on my ability to write clean, efficient, and maintainable code.
-                   I'm well-versed in various programming languages and technologies, including HTML, CSS, JavaScript, React, and PHP.
-                   Additionally, I'm always eager to learn new skills and stay up-to-date with the latest trends in the industry.
-               </p>
+                    <div className={'carousel-wrapper'}>
+                        <Splide
+                            options={{
+                                rewind: true,
+                                gap   : '1rem',
+                                width : 300,
+                                height: 200,
+                                autoplay: true
+                            }}>
+                            <SplideSlide>
+                                <img src={'images/react.png'} alt={'react'}/>
+                            </SplideSlide>
+                            <SplideSlide>
+                                <img src={'images/php.png'} alt={'php'}/>
+                            </SplideSlide>
+                            <SplideSlide>
+                                <img src={'images/html.png'} alt={'html'}/>
+                            </SplideSlide>
+                            <SplideSlide>
+                                <img src={'images/css.png'} alt={'css'}/>
+                            </SplideSlide>
+                            <SplideSlide>
+                                <img src={'images/js.png'} alt={'js'}/>
+                            </SplideSlide>
+                        </Splide>
+                    </div>
 
-               <p>
-                   Other than programming skills, I have a strong grasp of soft skills, Scrum, Agile development, and Jira.
-                   Effective communication, teamwork, and time management allow me to collaborate efficiently, while Scrum
-                   and Agile methodologies provide a framework for organizing projects. I use Jira to manage workflows and
-                   track progress, leading to successful outcomes.
-               </p>
+                    <p>
+                        Other than programming skills, I have a strong grasp of soft skills, Scrum, Agile development, and Jira.
+                        Effective communication, teamwork, and time management allow me to collaborate efficiently, while Scrum
+                        and Agile methodologies provide a framework for organizing projects. I use Jira to manage workflows and
+                        track progress, leading to successful outcomes.
+                    </p>
+                </AnimationOnScroll>
            </div>
         </section>
     )
