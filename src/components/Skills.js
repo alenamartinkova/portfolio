@@ -24,10 +24,10 @@ export default function Skills() {
                                 autoplay: true
                             }}>
                             <SplideSlide>
-                                <img src={'images/react.png'} alt={'react'}/>
+                                <img src={'images/php.png'} alt={'php'}/>
                             </SplideSlide>
                             <SplideSlide>
-                                <img src={'images/php.png'} alt={'php'}/>
+                                <img src={'images/react.png'} alt={'react'}/>
                             </SplideSlide>
                             <SplideSlide>
                                 <img src={'images/html.png'} alt={'html'}/>
