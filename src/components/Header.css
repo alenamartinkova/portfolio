@@ -89,4 +89,13 @@
     #header .header--content:last-of-type {
         padding: 0 10px 40px;
     }
+
+    #header .header--content__buttons {
+        flex-direction: column;
+        align-items: start;
+    }
+
+    #header .header--content__buttons--social {
+        margin-top: 1rem;
+    }
 }

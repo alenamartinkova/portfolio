@@ -11,7 +11,7 @@ export default function Skills() {
                    <h1>👩🏽‍💻 Skills</h1>
                    <p>
                        I'm well-versed in various programming languages and technologies, including HTML, CSS, JavaScript, React, and PHP.
-                       I'm always eager to learn new skills and stay up-to-date with the latest trends in the industry.
+                       I'm always eager to learn new skills and stay up-to-date with the latest trends.
                    </p>
 
                     <div className={'carousel-wrapper'}>
@@ -44,8 +44,7 @@ export default function Skills() {
                     <p>
                         Other than programming skills, I have a strong grasp of soft skills, Scrum, Agile development, and Jira.
                         Effective communication, teamwork, and time management allow me to collaborate efficiently, while Scrum
-                        and Agile methodologies provide a framework for organizing projects. I use Jira to manage workflows and
-                        track progress, leading to successful outcomes.
+                        and Agile methodologies provide a framework for organizing projects.
                     </p>
                 </AnimationOnScroll>
            </div>

@@ -17,12 +17,15 @@ export default function Header() {
                 <a href={'mailto:martinkova.a@gmail.com'} className={'button-primary'}>
                     Contact me!
                 </a>
-                <a href={'https://www.facebook.com/martinkova.a'}>
-                    <FontAwesomeIcon className="fa" icon={faFacebook}/>
-                </a>
-                <a href={'https://www.linkedin.com/in/alena-martinkova/'}>
-                    <FontAwesomeIcon className="fa" icon={faLinkedin} />
-                </a>
+
+                <div className={'header--content__buttons--social'}>
+                    <a href={'https://www.facebook.com/martinkova.a'}>
+                        <FontAwesomeIcon className="fa" icon={faFacebook}/>
+                    </a>
+                    <a href={'https://www.linkedin.com/in/alena-martinkova/'}>
+                        <FontAwesomeIcon className="fa" icon={faLinkedin} />
+                    </a>
+                </div>
             </div>
         </header>
     );
