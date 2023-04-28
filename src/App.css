@@ -136,7 +136,7 @@ ul li a:hover {
     }
 }
 
-@media (orientation: landscape) {
+@media (max-width: 767px) and (orientation: landscape) {
     .section {
         position: relative;
         width: unset;
