@@ -4,7 +4,7 @@ import { AnimationOnScroll } from 'react-animation-on-scroll'
 export default function AboutMe() {
     return (
         <section className="section" id="about-me">
-            <div>
+            <div className={'content'}>
                 <AnimationOnScroll animateIn="animate__fadeInRight">
                     <h1>👋 About me</h1>
 

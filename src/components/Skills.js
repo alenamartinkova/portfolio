@@ -1,33 +1,12 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {AnimationOnScroll} from "react-animation-on-scroll";
 import {Splide, SplideSlide} from "@splidejs/react-splide";
 import '@splidejs/react-splide/css'
 
 export default function Skills() {
-    useEffect(() => {
-        function setDynamicHeight(stickySectionSelector, contentSelector) {
-            const stickySections = document.querySelectorAll(stickySectionSelector);
-
-            stickySections.forEach((stickySection) => {
-                const content = stickySection.querySelector(contentSelector);
-                const contentHeight = content.offsetHeight;
-
-                stickySection.style.height = `${contentHeight}px`;
-
-                window.addEventListener('resize', () => {
-                    const newContentHeight = content.offsetHeight;
-                    stickySection.style.height = `${newContentHeight}px`;
-                });
-            });
-        }
-
-        setDynamicHeight('#skills', '.content-skills');
-
-    }, []);
-
     return (
         <section className="section" id="skills">
-            <div className={'content-skills'}>
+            <div className={'content'}>
                 <AnimationOnScroll animateIn="animate__fadeInRight">
                    <h1>👩🏽‍💻 Skills</h1>
                    <p>

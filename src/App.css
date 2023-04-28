@@ -17,14 +17,14 @@ a {
     top: 0;
     width: 100%;
     min-height: 100vh;
-    height: auto;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 2rem;
 }
 
 .section > div {
-    margin: 3rem;
+    margin: 0 3rem;
     line-height: 2rem;
 }
 
@@ -126,7 +126,21 @@ ul li a:hover {
         left: -1rem;
     }
 
+    #header {
+      min-height: 100vh;
+    }
 
+    .section {
+        position: relative;
+        width: unset;
+    }
+}
+
+@media (orientation: landscape) {
+    .section {
+        position: relative;
+        width: unset;
+    }
 }
 
 @media (max-width: 450px) {

@@ -4,7 +4,7 @@ import {AnimationOnScroll} from "react-animation-on-scroll"
 export default function References() {
     return (
         <section className="section" id="references">
-            <div>
+            <div className={'content'}>
                 <AnimationOnScroll animateIn="animate__fadeInRight">
                     <h1>👩🏽‍💻 References</h1>
                     <p>

@@ -4,7 +4,7 @@ import {AnimationOnScroll} from "react-animation-on-scroll";
 export default function Education() {
     return (
         <section className="section" id="education">
-            <div>
+            <div className={'content'}>
                 <AnimationOnScroll animateIn="animate__fadeInRight">
                     <h1>📚 Education</h1>
                     <p>
