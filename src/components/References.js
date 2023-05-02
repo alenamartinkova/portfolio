@@ -18,13 +18,13 @@ export default function References() {
 
                     <div className={'list-wrapper'}>
                         <ul>
-                            <li><a href={'www.kaustaondrus.cz'}>kaustaondrus.cz</a></li>
-                            <li><a href={'www.svx.cz'}>svx.cz</a></li>
-                            <li><a href={'www.spanamo.com'}>spanamo.com</a></li>
+                            <li><a href={'https://www.kaustaondrus.cz'}>kaustaondrus.cz</a></li>
+                            <li><a href={'https://www.svx.cz'}>svx.cz</a></li>
+                            <li><a href={'https://www.spanamo.com'}>spanamo.com</a></li>
                         </ul>
                         <ul>
-                            <li><a href={'www.investor.kofola.cz'}>investor.kofola.cz</a></li>
-                            <li><a href={'www.mujchlupac.cz'}>mujchlupac.cz</a></li>
+                            <li><a href={'https://www.investor.kofola.cz'}>investor.kofola.cz</a></li>
+                            <li><a href={'https://www.mujchlupac.cz'}>mujchlupac.cz</a></li>
                         </ul>
                     </div>
                 </AnimationOnScroll>
