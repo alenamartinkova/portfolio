@@ -20,11 +20,10 @@ a {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
 }
 
-.section > div {
-    margin: 0 3rem;
+.section .content {
+    margin: 3rem;
     line-height: 2rem;
 }
 
