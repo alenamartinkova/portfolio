@@ -20,7 +20,7 @@ export default function References() {
                         <ul>
                             <li><a href={'https://www.kaustaondrus.cz'}>kaustaondrus.cz</a></li>
                             <li><a href={'https://www.svx.cz'}>svx.cz</a></li>
-                            <li><a href={'https://www.spanamo.com'}>spanamo.com</a></li>
+                            {/*<li><a href={'https://www.spanamo.com'}>spanamo.com</a></li>*/}
                         </ul>
                         <ul>
                             <li><a href={'https://www.investor.kofola.cz'}>investor.kofola.cz</a></li>
