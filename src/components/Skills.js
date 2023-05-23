@@ -21,7 +21,9 @@ export default function Skills() {
                                 gap   : '1rem',
                                 width : 300,
                                 height: 200,
-                                autoplay: true
+                                autoplay: true,
+                                arrows: false,
+                                pagination: false
                             }}>
                             <SplideSlide>
                                 <img src={'images/php.png'} alt={'php'}/>

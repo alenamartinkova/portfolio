@@ -77,6 +77,7 @@ ul li a:hover {
     text-decoration: underline;
 }
 
+/* SKILLS */
 .carousel-wrapper {
     margin: 2rem 0;
     display: flex;
@@ -91,18 +92,6 @@ ul li a:hover {
 .splide__slide img {
     max-width: 300px;
     height: auto;
-}
-
-.splide .splide__arrow {
-    background: none;
-}
-
-.splide .splide__arrow--next {
-    right: -3rem;
-}
-
-.splide .splide__arrow--prev {
-    left: -3rem;
 }
 
 @media(max-width: 1200px) {
