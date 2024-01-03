@@ -9,7 +9,7 @@ export default function Header() {
                 <h1>👋 Hello, I am Alena Martinková</h1>
                 <div>
                     <p> 👀 I am full stack web developer, more inclined to front-end development</p>
-                    <p> 💻 I am currently improving my skills in JavaScript frameworks</p>
+                    <p> 💻 I am currently improving my skills in JavaScript frameworks and Python on back-end</p>
                 </div>
             </div>
 
