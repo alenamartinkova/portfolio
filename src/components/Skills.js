@@ -11,10 +11,9 @@ export default function Skills() {
                     <h1>👩🏽‍💻 Skills</h1>
                     <p>
                         I'm well-versed in various programming languages and technologies, including HTML, CSS,
-                        JavaScript, React, and PHP.
+                        JavaScript, React, Python and PHP.
                         I'm always eager to learn new skills and stay up-to-date with the latest trends. As of now I am
-                        improving in Python,
-                        more precisely in Django framework.
+                        improving in Python, more precisely in <strong>Fast API</strong> and <strong>SQL Alchemy</strong>.
                     </p>
 
                     <div className={'carousel-wrapper'}>
@@ -48,8 +47,8 @@ export default function Skills() {
 
                     <p>
                         🛠️ Skills-wise, I'm a bit of a Swiss Army knife. I juggle Full-Stack Development, JavaScript
-                        Frameworks, Node.js, and much more. I've also dabbled in Google Cloud Platform (GCP), honed my
-                        skills in responsive web design, and navigated the complexities of databases with MySQL.
+                        Frameworks, Node.js, and much more. I've also dabbled in GCP and AWS, honed my
+                        skills in responsive web design, and navigated the complexities of databases. 
                     </p>
                     <p>
                         🎨 When I'm not coding, you'll find me contributing to the planning and development process,
