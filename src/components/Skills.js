@@ -46,8 +46,8 @@ export default function Skills() {
                     </div>
 
                     <p>
-                        🛠️ Skills-wise, I'm a bit of a Swiss Army knife. I juggle Full-Stack Development, JavaScript
-                        Frameworks, Node.js, and much more. I've also dabbled in GCP and AWS, honed my
+                        🛠️ Skills-wise, I'm a bit of a Swiss Army knife. I juggle Full-Stack Development, project management,
+                        and much more. I've also dabbled in GCP and AWS, honed my
                         skills in responsive web design, and navigated the complexities of databases. 
                     </p>
                     <p>
