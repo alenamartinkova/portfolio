@@ -35,16 +35,13 @@ export default function Skills() {
                                 <img src={'images/react.png'} alt={'react'}/>
                             </SplideSlide>
                             <SplideSlide>
-                                <img src={'images/html.png'} alt={'html'}/>
+                                <img src={'images/python.png'} alt={'python'}/>
                             </SplideSlide>
                             <SplideSlide>
                                 <img src={'images/css.png'} alt={'css'}/>
                             </SplideSlide>
                             <SplideSlide>
                                 <img src={'images/js.png'} alt={'js'}/>
-                            </SplideSlide>
-                            <SplideSlide>
-                                <img src={'images/python.png'} alt={'python'}/>
                             </SplideSlide>
                         </Splide>
                     </div>
