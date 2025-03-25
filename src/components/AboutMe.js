@@ -2,30 +2,45 @@ import React from 'react'
 import { AnimationOnScroll } from 'react-animation-on-scroll'
 
 export default function AboutMe() {
-    return (
-        <section className="section" id="about-me">
-            <div className={'content'}>
-                <AnimationOnScroll animateIn="animate__fadeInRight">
-                    <h1>👋 About me</h1>
+  return (
+    <section className="section" id="about-me">
+      <div className={'content'}>
+        <AnimationOnScroll animateIn="animate__fadeInRight">
+          <h1>👋 About me</h1>
 
-                    <p>
-                        🚀 Hey there! I'm a passionate Full Stack Developer with a knack for transforming ideas into digital realities. Since 2019, I've been delving into the tech world, currently working at Rankacy and previously at Moravio and GIMMEDATA, s.r.o.
-                    </p>
+          <p>
+            🚀 Hey there! I’m a Full Stack Developer who’s been bringing ideas
+            to life since 2019. Right now, I’m at Rankacy, and before that, I
+            was part of the teams at Moravio and GIMMEDATA, s.r.o. I’m all about
+            building web apps that aren’t just functional but also genuinely
+            enjoyable to use. From sleek static pages to dynamic e-shops and
+            complex booking platforms, I’ve had my hands in a bit of everything.
+          </p>
 
-                    <p>
-                        🌐 My journey has been all about building web applications that are not just functional but also a delight to use. I've managed multiple projects, from sleek static pages to dynamic e-shops and intricate online booking platforms. My tools? A mix of Python, Django, FastAPI, React, and Laravel for the most part, sprinkled with some frontend magic using technologies like Vue.js and Strapi.
-                    </p>
-                    <p>
-                        🔍 What drives me? The challenge of creating fast, efficient algorithms and crafting user-centric designs. I love tinkering with codes to make them cleaner and more readable, thanks to my buddies eslint and prettier. And yes, I'm a testing enthusiast, as I am ensuring everything runs smoothly.
-                    </p>
-                    <p>
-                        🤝 Collaboration is key in my book. I thrive in environments where I can bounce ideas off teammates, communicate directly with clients, and use tools like JIRA to keep everything on track. Whether it's Scrum or Kanban, I'm all about agile development and efficient project management.
-                    </p>
-                    <p>
-                        🌟 Looking forward to connecting with like-minded tech enthusiasts, sharing ideas, and exploring new opportunities in this ever-evolving digital landscape!
-                    </p>
-                </AnimationOnScroll>
-            </div>
-        </section>
-    )
+          <p>
+            🌐 My main tools are Python, FastAPI, React, and Laravel, but I’ve
+            also dabbled with Vue.js and Strapi when I need to mix things up on
+            the frontend. I’m into fast, efficient algorithms and love writing
+            clean, readable code – eslint and prettier are basically my best
+            friends. Plus, I’m pretty big on testing, whether it’s with Cypress,
+            PHP Unit or PyTest, because solid code should never be a gamble.
+          </p>
+          <p>
+            🤝 One thing I really value is collaboration. I thrive on bouncing
+            ideas off teammates, working closely with clients, and keeping
+            everything organized with JIRA. Whether it’s Scrum or Kanban, agile
+            development just makes sense to me. I’ve also led a few teams,
+            helping shape both the planning and the actual development process.
+          </p>
+          <p>
+            🌟 Outside of coding, I like to get involved in the creative side of
+            things too – from making design decisions to just figuring out how
+            to make the user experience smoother. I’m always down to connect
+            with other tech folks, share ideas, and see where the next challenge
+            takes me!
+          </p>
+        </AnimationOnScroll>
+      </div>
+    </section>
+  )
 }
