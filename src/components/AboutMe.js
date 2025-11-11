@@ -14,7 +14,10 @@ export default function AboutMe() {
     <section className="section" id="about">
       <div className="section__header">
         <p className="eyebrow">About</p>
-        <h2>Engineer with a product mindset and love for delightful UX</h2>
+        <h2>
+          Backend engineer with a product mindset and focus on clean, reliable
+          systems
+        </h2>
         <p className="section__description">
           🚀 I’m a backend-leaning full-stack developer who builds fast,
           reliable web platforms. Since 2019 I’ve shipped everything from
