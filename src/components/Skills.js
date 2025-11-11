@@ -1,61 +1,68 @@
-import React from 'react';
-import {AnimationOnScroll} from "react-animation-on-scroll";
-import {Splide, SplideSlide} from "@splidejs/react-splide";
-import '@splidejs/react-splide/css'
+import React from 'react'
+
+const skillGroups = [
+  {
+    title: 'Backend & platform engineering',
+    description:
+      'Designing and scaling backend systems that stay fast, predictable, and understandable as they grow.',
+    items: [
+      'Python · FastAPI ',
+      'PostgreSQL · SQLAlchemy',
+      'Redis · RabbitMQ',
+      'API design',
+    ],
+  },
+  {
+    title: 'Web product development',
+    description: 'Building usable, performant products — not just endpoints.',
+    items: [
+      'React & modern frontend fundamentals',
+      'State, routing, forms & real-time UI updates',
+      'Smooth collaboration',
+      'Accessibility & performance awareness',
+    ],
+  },
+  {
+    title: 'Deployment, testing & reliability',
+    description:
+      'I like systems that don’t break at 2 am. Or worse — during a Friday release.',
+    items: [
+      'CI/CD pipelines',
+      'Dockerized services · Kubernetes',
+      'PyTest & integration testing',
+      'Metrics & logging best-effort',
+    ],
+  },
+]
 
 export default function Skills() {
-    return (
-        <section className="section" id="skills">
-            <div className={'content'}>
-                <AnimationOnScroll animateIn="animate__fadeInRight">
-                    <h1>👩🏽‍💻 Skills</h1>
-                    <p>
-                        I'm well-versed in various programming languages and technologies, including HTML, CSS,
-                        JavaScript, React, Python and PHP.
-                        I'm always eager to learn new skills and stay up-to-date with the latest trends. As of now I am
-                        improving in Python, more precisely in <strong>Fast API</strong> and <strong>SQL Alchemy</strong>.
-                    </p>
+  return (
+    <section className="section" id="skills">
+      <div className="section__header">
+        <p className="eyebrow">Capabilities</p>
+        <h2>Systems thinking, clean architecture, and practical delivery</h2>
+        <p className="section__description">
+          I like taking complex ideas and turning them into clear, scalable
+          systems. My work sits at the intersection of engineering, product
+          clarity, and thoughtful user experience. I care about correctness,
+          maintainability, and making sure teams ship with confidence — not
+          chaos.
+        </p>
+      </div>
 
-                    <div className={'carousel-wrapper'}>
-                        <Splide
-                            options={{
-                                rewind: true,
-                                gap: '1rem',
-                                width: 300,
-                                height: 200,
-                                autoplay: true,
-                                arrows: false,
-                                pagination: false
-                            }}>
-                            <SplideSlide>
-                                <img src={'images/php.png'} alt={'php'}/>
-                            </SplideSlide>
-                            <SplideSlide>
-                                <img src={'images/react.png'} alt={'react'}/>
-                            </SplideSlide>
-                            <SplideSlide>
-                                <img src={'images/python.png'} alt={'python'}/>
-                            </SplideSlide>
-                            <SplideSlide>
-                                <img src={'images/css.png'} alt={'css'}/>
-                            </SplideSlide>
-                            <SplideSlide>
-                                <img src={'images/js.png'} alt={'js'}/>
-                            </SplideSlide>
-                        </Splide>
-                    </div>
-
-                    <p>
-                        🛠️ Skills-wise, I'm a bit of a Swiss Army knife. I juggle Full-Stack Development, project management,
-                        and much more. I've also dabbled in GCP and AWS, honed my
-                        skills in responsive web design, and navigated the complexities of databases. 
-                    </p>
-                    <p>
-                        🎨 When I'm not coding, you'll find me contributing to the planning and development process,
-                        leading teams, and occasionally diving into the world of graphic design decisions.
-                    </p>
-                </AnimationOnScroll>
-            </div>
-        </section>
-    )
+      <div className="skills-grid">
+        {skillGroups.map(group => (
+          <article className="skill-card" key={group.title}>
+            <h3>{group.title}</h3>
+            <p>{group.description}</p>
+            <ul>
+              {group.items.map(item => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
 }
