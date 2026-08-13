@@ -1,70 +1,61 @@
 # Portfolio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Personal site — [martinkova.dev](https://martinkova.dev)
 
-## Available Scripts
+Built with React 19 + Vite. No CSS framework, no UI kit: plain CSS with design
+tokens in `src/styles/tokens.css`.
 
-In the project directory, you can run:
+## Scripts
 
-### `npm start`
+```bash
+npm install     # install dependencies
+npm run dev     # dev server on http://localhost:3000
+npm run build   # production build into build/
+npm run preview # serve the production build locally
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+`npm start` is kept as an alias for `npm run dev`.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Structure
 
-### `npm test`
+```
+index.html                 page shell, meta + OG tags, fonts
+src/main.jsx               entry point
+src/App.jsx                page composition
+src/App.css                layout + shared components (panels, chips, buttons)
+src/styles/tokens.css      colors, radii, type scale, spacing
+src/styles/base.css        reset, grid background, focus & scrollbar styles
+src/hooks.js               scroll progress, active section, copy-to-clipboard
+src/components/            one .jsx + .css per section
+public/                    static assets served from /
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Images
 
-### `npm run build`
+The full-resolution photo lives in `assets-src/` so it is **not** copied into
+the build. `public/images/` holds only the derived files that ship:
+`me-{340,430,680,860}.{jpg,webp}` for the About section and `og-image.jpg`
+(1200×1200) for link previews.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+To regenerate them after replacing `assets-src/me-original.jpg`:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+for w in 340 430 680 860; do
+  sips --resampleWidth $w -s format jpeg -s formatOptions 80 \
+    --out public/images/me-$w.jpg assets-src/me-original.jpg
+  cwebp -q 78 -resize $w 0 assets-src/me-original.jpg -o public/images/me-$w.webp
+done
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The OG image is a square crop offset from the top so the head is not clipped
+(`sips -c 3840 3840 --cropOffset 96 0`), then resized to 1200×1200.
 
-### `npm run eject`
+## Notes
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- The build output goes to `build/` (not Vite's default `dist/`) so the existing
+  deployment setup keeps working.
+- Content lives in plain arrays at the top of each section component —
+  `experience` and `education` in `Education.jsx`, `projects` and `clients` in
+  `References.jsx`, `skillGroups` in `Skills.jsx`.
+- The architecture diagram in `StackDiagram.jsx` is hand-authored SVG; node
+  positions are a simple coordinate grid at the top of the file.

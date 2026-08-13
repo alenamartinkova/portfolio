@@ -1,0 +1,166 @@
+.diagram {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  overflow: hidden;
+}
+
+.diagram__scroll {
+  overflow-x: auto;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.diagram__svg {
+  display: block;
+  width: 100%;
+  /* Below this the labels stop being readable, so scroll instead of shrink. */
+  min-width: 720px;
+  height: auto;
+}
+
+/* --- canvas ------------------------------------------------------- */
+
+.diagram__canvas-dot {
+  fill: var(--line-mid);
+  opacity: 0.55;
+}
+
+/* --- data layer boundary ------------------------------------------ */
+
+.diagram__group rect {
+  fill: rgba(255, 255, 255, 0.012);
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.diagram__group text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--text-dim);
+}
+
+/* --- nodes -------------------------------------------------------- */
+
+.diagram__node rect {
+  fill: var(--surface-2);
+  stroke: var(--line-mid);
+  stroke-width: 1;
+  transition: stroke var(--dur) var(--ease), fill var(--dur) var(--ease);
+}
+
+.diagram__node:hover rect {
+  stroke: var(--accent-line);
+  fill: var(--surface-3);
+}
+
+.diagram__node--accent rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent-line);
+}
+
+.diagram__key {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--text-dim);
+}
+
+.diagram__name {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  fill: var(--text);
+}
+
+.diagram__node--accent .diagram__name {
+  fill: var(--accent-bright);
+}
+
+.diagram__icon path {
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--dur) var(--ease);
+}
+
+.diagram__node:hover .diagram__icon path {
+  stroke: var(--text-muted);
+}
+
+.diagram__node--accent .diagram__icon path {
+  stroke: var(--accent);
+}
+
+/* --- links -------------------------------------------------------- */
+
+.diagram__link {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+}
+
+/* Dashed = asynchronous hop (publish / consume). */
+.diagram__link--async {
+  stroke-dasharray: 5 4;
+}
+
+.diagram__arrowhead {
+  fill: var(--line-strong);
+}
+
+.diagram__port {
+  fill: var(--bg);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.diagram__junction {
+  fill: var(--line-strong);
+}
+
+.diagram__link-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  fill: var(--text-dim);
+}
+
+/* A packet travelling the wire, at a constant speed on every path. */
+.diagram__pulse {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 4 var(--len);
+  animation-name: diagram-flow;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes diagram-flow {
+  from {
+    stroke-dashoffset: calc(var(--len) + 4);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- legend ------------------------------------------------------- */
+
+.diagram__legend text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  fill: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram__pulse {
+    display: none;
+  }
+}

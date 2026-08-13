@@ -1,0 +1,156 @@
+.about__inline-icon {
+  width: 15px;
+  height: 15px;
+  margin-right: 0.45rem;
+  vertical-align: -2px;
+  color: var(--accent);
+}
+
+/* The photo sits at the top of the section, level with the heading, and spans
+   both text rows beside it. */
+.about__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.8fr);
+  grid-template-areas:
+    'header photo'
+    'copy   photo';
+  column-gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.about__header {
+  grid-area: header;
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.about__aside {
+  grid-area: photo;
+}
+
+.about__copy {
+  grid-area: copy;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.about__note {
+  position: relative;
+  padding: 1.1rem 1.25rem 1.1rem 3.25rem;
+  border: 1px solid var(--line);
+  border-left: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.about__note:hover {
+  border-color: var(--line-mid);
+  border-left-color: var(--accent);
+}
+
+.about__note-icon {
+  position: absolute;
+  left: 1.15rem;
+  top: 1.1rem;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+}
+
+.about__note-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- photo frame -------------------------------------------------- */
+
+.about__frame {
+  overflow: hidden;
+  margin: 0;
+}
+
+.about__frame picture {
+  display: block;
+}
+
+.about__frame img {
+  width: 100%;
+  /* The width/height attributes are only there as an aspect hint for the
+     loader — without height:auto they'd pin the box to 1290px and
+     aspect-ratio would be ignored. */
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  filter: grayscale(0.35) contrast(1.05);
+  transition: filter 0.4s var(--ease);
+}
+
+.about__frame:hover img {
+  filter: grayscale(0) contrast(1);
+}
+
+.about__frame figcaption {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* --- stats -------------------------------------------------------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  padding: 1.4rem 1.5rem;
+}
+
+.stat-card__value {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 2.1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+}
+
+.stat-card p {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 860px) {
+  /* Stacked, but the photo still leads the section — heading, photo, then copy. */
+  .about__layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'header'
+      'photo'
+      'copy';
+    row-gap: 1.75rem;
+  }
+
+  .about__header {
+    margin-bottom: 0;
+  }
+
+  .about__frame {
+    max-width: 340px;
+  }
+}

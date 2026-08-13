@@ -1,3 +1,6 @@
 node_modules
 .idea
+.vscode
 .eslintcache
+.DS_Store
+*.local

@@ -1,0 +1,111 @@
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  /* The clients block is the first .section__group here, so it gets no
+     sibling margin — space it off the cards from this side instead. */
+  margin-bottom: clamp(3rem, 6vw, 4.5rem);
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card .panel__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.project-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.project-card__title h3 {
+  font-size: 1.25rem;
+}
+
+.project-card__summary {
+  margin-bottom: 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.project-card__highlights {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.project-card__highlights li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.project-card__highlights li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+
+.project-card__stack {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* --- clients ------------------------------------------------------ */
+
+.client-grid {
+  display: grid;
+  /* Fixed 4 columns: the 8 clients fill two rows exactly, with no orphan. */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.client-grid__cell {
+  display: grid;
+  place-items: center;
+  padding: 1.25rem 0.75rem;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-align: center;
+  transition: color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.client-grid__cell:hover {
+  color: var(--accent-bright);
+  background: var(--surface-2);
+}
+
+@media (max-width: 700px) {
+  .client-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 460px) {
+  .project-card__title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
