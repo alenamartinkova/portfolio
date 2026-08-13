@@ -20,7 +20,7 @@ export default {
   hero: {
     eyebrow: 'Full stack · Produktovo vedený vývoj',
     role: 'Vývojárka & backend tech lead',
-    lead: 'Staviam škálovateľné platformy a produkty založené na dátach. Sústredím sa na návrh odolných backendových architektúr, vedenie vývojových tímov a úzku spoluprácu s dizajnom a produktom, aby bol výsledok rýchly, merateľný a kvalitný.',
+    lead: 'Vyvíjam škálovateľné platformy a produkty založené na dátach. Sústredím sa na návrh backendových architektúr, vedenie vývojových tímov a úzku spoluprácu s dizajnom a produktom, aby bol výsledok rýchly, merateľný a kvalitný.',
     ctaContact: 'Napíšte mi!',
     ctaWork: 'Pozrieť prácu',
   },
@@ -28,7 +28,7 @@ export default {
   terminal: {
     keys: { status: 'stav', location: 'lokalita', email: 'e-mail' },
     status: 'Aktuálne: Backend Lead @ Rankacy',
-    location: 'Pôsobím z Ostravy · remote-friendly',
+    location: 'Pôsobím v Ostrave · remote-friendly',
     focus: [
       'Návrh distribuovaných Python microservices a dátových pipeline',
       'Rozvoj platformy a funkcií bežiacich v reálnom čase',
@@ -41,12 +41,12 @@ export default {
     title:
       'Backend vývojárka s produktovým myslením a dôrazom na čisté, spoľahlivé systémy',
     description:
-      'Som full stack vývojárka so zameraním na backend a staviam rýchle, spoľahlivé webové platformy. Od roku 2019 som dodala všetko od e-shopov a rezervačných systémov po interné nástroje a produkty pracujúce s dátami v reálnom čase — aktuálne vediem backend v Rankacy, predtým Moravio a GIMMEDATA. Úzko spolupracujem s dizajnom a produktom, aby každý release držal pohromade, bol merateľný a výkonný.',
+      'Som full stack vývojárka so zameraním na backend a vyvíjam rýchle, spoľahlivé webové platformy. Od roku 2019 som dodávala všetko od e-shopov a rezervačných systémov po interné nástroje a produkty pracujúce s dátami v reálnom čase — aktuálne vediem backend v Rankacy, predtým som pracovala pre Moravio a GIMMEDATA. Úzko spolupracujem s dizajnom a produktom, aby každý release držal pohromade, bol merateľný a výkonný.',
     notes: [
       'Môj hlavný stack je Python (FastAPI), PostgreSQL, Redis, RabbitMQ a React. Záleží mi na čistej architektúre, efektívnych riešeniach, observabilite a poctivom testovaní (PyTest, Cypress).',
-      'Baví ma viesť tímy, mentorovať vývojárov a udržať dodávky pokojné a predvídateľné. Mimo kódu ma zaujíma aj kreatívna stránka — čokoľvek, čo zlepší používateľský zážitok.',
+      'Baví ma viesť tímy, mentorovať vývojárov a udržať releasy jasné a predvídateľné. Mimo kódu ma zaujíma aj kreatívna stránka — čokoľvek, čo zlepší užívateľský zážitok.',
     ],
-    caption: 'Aktuálne staviam v Rankacy',
+    caption: 'Aktuálne vyvíjam v Rankacy',
     stats: [
       'Rokov dodávania digitálnych produktov',
       'Produkčných služieb a webových aplikácií dodaných od začiatku do konca',
@@ -74,7 +74,7 @@ export default {
       {
         title: 'Vývoj webových produktov',
         description:
-          'Staviam použiteľné a výkonné produkty — nielen endpointy.',
+          'Vyvíjam použiteľné a efektívne produkty — nielen endpointy.',
         items: [
           'React a základy moderného frontendu',
           'Stav, routing, formuláre a real-time aktualizácie UI',
@@ -193,7 +193,7 @@ export default {
       {
         type: 'Analytická platforma pre e-sport',
         summary:
-          'Staviam backend pre competitive gaming, ktorý poháňa štatistiky hráčov v CS2, spracovanie zápasov a predplatné.',
+          'Vyvíjam backend pre competitive gaming, ktorý analyzuje štatistiky hráčov v CS2, spracováva zápasy a spravuje predplatné.',
         highlights: [
           'Event-driven služby vo FastAPI spracúvajúce dáta zo zápasov vo veľkom objeme',
           'Systém predplatného a fakturácia cez Stripe',

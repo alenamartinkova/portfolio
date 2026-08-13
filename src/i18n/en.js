@@ -16,6 +16,7 @@ export default {
     contact: 'contact',
     status: 'Backend Lead @ Rankacy',
     skip: 'Skip to content',
+    menu: 'Navigation menu',
     sections: 'Sections',
   },
 

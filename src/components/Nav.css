@@ -89,6 +89,68 @@
   white-space: nowrap;
 }
 
+.nav__burger {
+  display: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.nav__burger svg {
+  width: 16px;
+  height: 16px;
+}
+
+.nav__burger:hover,
+.nav__burger[aria-expanded='true'] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nav__menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 55;
+  padding: 0.6rem var(--gutter) 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-mid);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.nav__menu-link {
+  display: block;
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: color var(--dur) var(--ease);
+}
+
+.nav__menu-link:hover,
+.nav__menu-link.is-active {
+  color: var(--accent-bright);
+}
+
+.nav__menu-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
 .nav__progress {
   position: absolute;
   left: 0;
@@ -106,26 +168,26 @@
   }
 }
 
-/* Keep navigation reachable on phones — scroll the rail, never hide it. */
+/* Below this the five labels no longer fit on one line, so the rail is
+   replaced by a menu rather than being squeezed or scrolled. */
 @media (max-width: 620px) {
   .nav__inner {
     gap: 0.75rem;
   }
 
   .nav__links {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    mask-image: linear-gradient(90deg, #000 88%, transparent);
-    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
-  }
-
-  .nav__links::-webkit-scrollbar {
     display: none;
   }
 
-  .nav__link {
-    padding: 0.4rem 0.5rem;
-    font-size: 0.74rem;
+  .nav__burger {
+    display: grid;
+  }
+}
+
+/* Belt and braces: even if the matchMedia listener never fires, the dropdown
+   can never be left stranded on a viewport that has no burger to close it. */
+@media (min-width: 621px) {
+  .nav__menu {
+    display: none;
   }
 }
