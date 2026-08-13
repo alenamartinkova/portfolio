@@ -131,11 +131,12 @@
 
 /* A packet travelling the wire, at a constant speed on every path. */
 .diagram__pulse {
+  --dash: 7;
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--accent-bright);
   stroke-width: 2.5;
   stroke-linecap: round;
-  stroke-dasharray: 4 var(--len);
+  stroke-dasharray: calc(var(--dash) * 1px) calc(var(--len) * 1px);
   animation-name: diagram-flow;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
@@ -143,10 +144,12 @@
 
 @keyframes diagram-flow {
   from {
-    stroke-dashoffset: calc(var(--len) + 4);
+    /* `--len` is a bare number, so it has to be multiplied into a real length —
+       a unitless calc() result is invalid here and the keyframe gets dropped. */
+    stroke-dashoffset: calc((var(--len) + var(--dash)) * 1px);
   }
   to {
-    stroke-dashoffset: 0;
+    stroke-dashoffset: 0px;
   }
 }
 
