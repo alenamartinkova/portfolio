@@ -20,6 +20,7 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-dim);
+  white-space: nowrap;
   transition: color var(--dur) var(--ease),
     border-color var(--dur) var(--ease),
     background-color var(--dur) var(--ease);
@@ -42,11 +43,58 @@
   font-size: 0.68rem;
   color: var(--text-dim);
   opacity: 0.75;
+  white-space: nowrap;
+}
+
+/* No room for the hint beside the tabs — the edge fade and the pointer
+   already signal that the diagram is interactive. */
+@media (max-width: 620px) {
+  .diagram__hint {
+    display: none;
+  }
+}
+
+.diagram__viewport {
+  position: relative;
+}
+
+/* Fades mark the side that still has diagram left, so a clipped node reads as
+   "scroll me" rather than as a rendering bug. */
+.diagram__viewport::before,
+.diagram__viewport::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.diagram__viewport::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--surface), transparent);
+}
+
+.diagram__viewport::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--surface), transparent);
+}
+
+.diagram__viewport[data-edges='start']::before,
+.diagram__viewport[data-edges='both']::before,
+.diagram__viewport[data-edges='end']::after,
+.diagram__viewport[data-edges='both']::after {
+  opacity: 1;
 }
 
 .diagram__scroll {
   overflow-x: auto;
-  padding: clamp(0.75rem, 2vw, 1.25rem);
+  /* Tighter than the other panels: every px of padding here costs diagram
+     width and pushes the scroll threshold higher. */
+  padding: clamp(0.6rem, 1.2vw, 1.25rem);
 }
 
 .diagram__svg {

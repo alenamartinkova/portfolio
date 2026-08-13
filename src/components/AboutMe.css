@@ -102,10 +102,18 @@
 
 /* --- stats -------------------------------------------------------- */
 
+/* Three cards, so it is 3-up or 1-up — a 2-column step would always strand
+   the third on its own row. */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+@media (max-width: 700px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {

@@ -52,6 +52,9 @@
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--text-dim);
+  /* Labels like "o mne" contain a space and would otherwise wrap to two lines
+     and stretch the whole bar. */
+  white-space: nowrap;
   transition: color var(--dur) var(--ease),
     background-color var(--dur) var(--ease);
 }

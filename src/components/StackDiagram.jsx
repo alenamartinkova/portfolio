@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './StackDiagram.css'
 import { useT } from '../i18n'
 
@@ -131,6 +131,33 @@ export default function StackDiagram() {
       : scenario.links.flatMap(i => [LINKS[i].from, LINKS[i].to])
   )
 
+  // The SVG has a legibility floor, so on narrow screens it scrolls. Track
+  // which side still has content so the edge fades can show it.
+  const scrollRef = useRef(null)
+  const [edges, setEdges] = useState('none')
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth
+      if (max <= 1) return setEdges('none')
+      if (el.scrollLeft <= 1) return setEdges('end')
+      if (el.scrollLeft >= max - 1) return setEdges('start')
+      setEdges('both')
+    }
+
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [])
+
   const detail = selected ? LAYERS[selected] : null
   const activeOption = detail?.options.find(o => o.name === choices[selected])
 
@@ -157,7 +184,8 @@ export default function StackDiagram() {
         <span className="diagram__hint">{t.diagram.hint}</span>
       </div>
 
-      <div className="diagram__scroll">
+      <div className="diagram__viewport" data-edges={edges}>
+        <div className="diagram__scroll" ref={scrollRef}>
         <svg
           className="diagram__svg"
           viewBox="0 0 1000 386"
@@ -319,7 +347,8 @@ export default function StackDiagram() {
               async
             </text>
           </g>
-        </svg>
+          </svg>
+        </div>
       </div>
 
       {detail && (
