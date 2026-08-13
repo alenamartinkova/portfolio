@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './StackDiagram.css'
+import { useT } from '../i18n'
 
 const BOX_W = 186
 const BOX_H = 76
@@ -14,8 +15,6 @@ const LAYERS = {
     x: 16,
     y: 56,
     icon: 'monitor',
-    blurb:
-      'The rendering layer. Component state, routing and forms, with real-time updates pushed from the API.',
     options: [
       { name: 'React', usedIn: ['Rankacy', 'SVX', 'Moravio', 'WAPS'] },
       { name: 'Vue', usedIn: ['GIMMEDATA', 'Moravio'] },
@@ -26,8 +25,6 @@ const LAYERS = {
     y: 56,
     icon: 'server',
     accent: true,
-    blurb:
-      'The request boundary. Validation, auth and business rules live here; anything slower than a request gets handed to the queue.',
     options: [
       { name: 'FastAPI', usedIn: ['Rankacy', 'SVX'] },
       { name: 'Django', usedIn: ['Rankacy'] },
@@ -39,16 +36,12 @@ const LAYERS = {
     x: 516,
     y: 56,
     icon: 'queue',
-    blurb:
-      'Decouples the request path from slow work. Publishing is cheap, so the API stays responsive under load.',
     options: [{ name: 'RabbitMQ', usedIn: ['Rankacy'] }],
   },
   workers: {
     x: 766,
     y: 56,
     icon: 'cpu',
-    blurb:
-      'Consumers doing the expensive work — match processing, imports, scheduled jobs — and writing results back.',
     options: [
       { name: 'Python', usedIn: ['Rankacy'] },
       { name: 'PHP', usedIn: ['Moravio', 'WAPS'] },
@@ -58,19 +51,17 @@ const LAYERS = {
     x: 266,
     y: 232,
     icon: 'database',
-    blurb:
-      'The source of truth. Schema design, migrations and query plans matter more here than anywhere else in the stack.',
     options: [
       { name: 'PostgreSQL', usedIn: ['Rankacy', 'SVX'] },
       { name: 'MySQL', usedIn: ['Moravio'] },
+      // No project on this page to attribute it to, so it carries no credits.
+      { name: 'NoSQL' },
     ],
   },
   cache: {
     x: 516,
     y: 232,
     icon: 'bolt',
-    blurb:
-      'Hot reads and ephemeral state. The API reads through it; workers refresh it once the real work is done.',
     options: [{ name: 'Redis', usedIn: ['Rankacy'] }],
   },
 }
@@ -84,19 +75,30 @@ const LINKS = [
   { from: 'api', to: 'queue', d: 'M452 94 H516', len: 64, label: 'publish', lx: 484, ly: 84, async: true },
   { from: 'queue', to: 'workers', d: 'M702 94 H766', len: 64, label: 'consume', lx: 734, ly: 84, async: true },
   { from: 'api', to: 'database', d: 'M359 132 V232', len: 100, label: 'SQL', lx: 373, ly: 203, anchor: 'start' },
-  { from: 'api', to: 'cache', d: 'M359 170 H562 V232', len: 265, label: 'read', lx: 462, ly: 161 },
+  // Label sits below its own line — above it collided with the workers→database
+  // run at y=155.
+  { from: 'api', to: 'cache', d: 'M359 170 H562 V232', len: 265, label: 'read', lx: 462, ly: 183 },
   { from: 'workers', to: 'cache', d: 'M859 132 V196 H656 V232', len: 303, label: 'write', lx: 758, ly: 187 },
+  // Branches off the same workers trunk at y=155, mirroring the API side.
+  // Labelled by protocol, not direction — workers both read and write here.
+  { from: 'workers', to: 'database', d: 'M859 155 H410 V232', len: 526, label: 'SQL', lx: 560, ly: 146 },
 ]
 
 const SCENARIOS = [
-  { id: 'all', label: 'all', links: [0, 1, 2, 3, 4, 5] },
-  { id: 'request', label: 'http request', links: [0, 4, 3] },
-  { id: 'job', label: 'async job', links: [1, 2, 5] },
+  { id: 'all', links: [0, 1, 2, 3, 4, 5, 6] },
+  { id: 'request', links: [0, 4, 3] },
+  { id: 'job', links: [1, 2, 5, 6] },
 ]
 
 const PORTS = [
   [202, 94], [266, 94], [452, 94], [516, 94], [702, 94], [766, 94],
-  [359, 132], [859, 132], [359, 232], [562, 232], [656, 232],
+  [359, 132], [859, 132], [359, 232], [410, 232], [562, 232], [656, 232],
+]
+
+// Where a branch leaves a shared trunk.
+const JUNCTIONS = [
+  [359, 170],
+  [859, 155],
 ]
 
 // 16×16 glyphs, stroked — one per node type.
@@ -117,6 +119,7 @@ const DEFAULT_CHOICES = Object.fromEntries(
 )
 
 export default function StackDiagram() {
+  const t = useT()
   const [scenario, setScenario] = useState(SCENARIOS[0])
   const [selected, setSelected] = useState(null)
   const [choices, setChoices] = useState(DEFAULT_CHOICES)
@@ -148,17 +151,17 @@ export default function StackDiagram() {
             className={`diagram__tab${scenario.id === item.id ? ' is-active' : ''}`}
             onClick={() => setScenario(item)}
           >
-            {item.label}
+            {t.diagram.scenarios[item.id]}
           </button>
         ))}
-        <span className="diagram__hint">click a node to inspect</span>
+        <span className="diagram__hint">{t.diagram.hint}</span>
       </div>
 
       <div className="diagram__scroll">
         <svg
           className="diagram__svg"
           viewBox="0 0 1000 386"
-          aria-label="Interactive architecture diagram. Select a flow, or a node to see its alternatives."
+          aria-label={t.diagram.aria}
         >
           <defs>
             <marker
@@ -239,7 +242,15 @@ export default function StackDiagram() {
             <circle className="diagram__port" key={`${x}-${y}`} cx={x} cy={y} r="2.5" />
           ))}
 
-          <circle className="diagram__junction" cx="359" cy="170" r="3" />
+          {JUNCTIONS.map(([x, y]) => (
+            <circle
+              className="diagram__junction"
+              key={`${x}-${y}`}
+              cx={x}
+              cy={y}
+              r="3"
+            />
+          ))}
 
           {NODE_KEYS.map(key => {
             const node = LAYERS[key]
@@ -319,17 +330,17 @@ export default function StackDiagram() {
               type="button"
               className="diagram__close"
               onClick={() => setSelected(null)}
-              aria-label="Close details"
+              aria-label={t.diagram.close}
             >
               esc ×
             </button>
           </div>
 
-          <p className="diagram__detail-blurb">{detail.blurb}</p>
+          <p className="diagram__detail-blurb">{t.diagram.layers[selected]}</p>
 
           {detail.options.length > 1 && (
             <div className="diagram__options">
-              <span className="diagram__options-key">swap:</span>
+              <span className="diagram__options-key">{t.diagram.swap}</span>
               <div className="chip-row">
                 {detail.options.map(option => (
                   <button
@@ -349,12 +360,14 @@ export default function StackDiagram() {
 
           {/* Credits follow the selected technology, not the layer — picking
               PHP should surface Moravio, not whatever the default was. */}
-          <p className="diagram__detail-used">
-            <span className="diagram__options-key">
-              {choices[selected]} used in:
-            </span>
-            {activeOption?.usedIn.join(' · ')}
-          </p>
+          {activeOption?.usedIn?.length > 0 && (
+            <p className="diagram__detail-used">
+              <span className="diagram__options-key">
+                {choices[selected]} {t.diagram.usedIn}
+              </span>
+              {activeOption.usedIn.join(' · ')}
+            </p>
+          )}
         </div>
       )}
     </div>

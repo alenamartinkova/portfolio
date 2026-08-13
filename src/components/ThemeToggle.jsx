@@ -1,11 +1,15 @@
 import './ThemeToggle.css'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../hooks'
+import { useT } from '../i18n'
 
 export default function ThemeToggle() {
+  const t = useT()
   const [theme, toggle] = useTheme()
   const isLight = theme === 'light'
-  const label = `Switch to ${isLight ? 'dark' : 'light'} theme`
+  const label = t.appearance.theme(
+    isLight ? t.appearance.themeDark : t.appearance.themeLight
+  )
 
   return (
     <button

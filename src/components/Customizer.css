@@ -122,3 +122,7 @@
     width: 190px;
   }
 }
+
+.custom__options--three {
+  grid-template-columns: repeat(3, 1fr);
+}

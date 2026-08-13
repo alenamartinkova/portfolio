@@ -1,37 +1,33 @@
 import './Header.css'
 import { ArrowDown, Mail } from 'lucide-react'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
+import { useT } from '../i18n'
 import HeroTerminal from './HeroTerminal'
 
 export default function Header() {
+  const t = useT()
+
   return (
     <header id="top" className="hero">
       <div className="shell hero__grid">
         <div className="hero__intro">
-          <p className="hero__eyebrow">
-            Full stack · Product-led engineering
-          </p>
+          <p className="hero__eyebrow">{t.hero.eyebrow}</p>
 
           <h1 className="hero__title">
             Alena Martinková
-            <span>Engineer &amp; backend tech lead</span>
+            <span>{t.hero.role}</span>
           </h1>
 
-          <p className="hero__lead">
-            I build scalable platforms and data-driven products. My focus is on
-            designing resilient backend architectures, leading engineering
-            teams, and partnering closely with design &amp; product to deliver
-            fast, measurable, high-quality experiences.
-          </p>
+          <p className="hero__lead">{t.hero.lead}</p>
 
           <div className="hero__actions">
             <a href="#contact" className="button-primary">
               <Mail aria-hidden="true" />
-              Contact me!
+              {t.hero.ctaContact}
             </a>
             <a href="#projects" className="button-secondary">
               <ArrowDown aria-hidden="true" />
-              See recent work
+              {t.hero.ctaWork}
             </a>
           </div>
 

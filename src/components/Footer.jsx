@@ -1,8 +1,11 @@
 import './Footer.css'
 import { ArrowUp } from 'lucide-react'
+import { useT } from '../i18n'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
 
 export default function Footer() {
+  const t = useT()
+
   return (
     <footer className="footer">
       <div className="shell footer__inner">
@@ -34,7 +37,7 @@ export default function Footer() {
           </a>
           <a href="#top" className="footer__top">
             <ArrowUp aria-hidden="true" />
-            top
+            {t.footer.top}
           </a>
         </div>
       </div>

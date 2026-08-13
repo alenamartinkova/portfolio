@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react'
 import './Nav.css'
 import { useActiveSection, useScrollProgress } from '../hooks'
+import { useT } from '../i18n'
 import ThemeToggle from './ThemeToggle'
 import Customizer from './Customizer'
 
-const links = [
-  { id: 'about', label: 'about' },
-  { id: 'skills', label: 'stack' },
-  { id: 'journey', label: 'journey' },
-  { id: 'projects', label: 'work' },
-  { id: 'contact', label: 'contact' },
+// Section ids are part of the URL, so they stay in English regardless of locale.
+const LINKS = [
+  { id: 'about', key: 'about' },
+  { id: 'skills', key: 'stack' },
+  { id: 'journey', key: 'journey' },
+  { id: 'projects', key: 'work' },
+  { id: 'contact', key: 'contact' },
 ]
 
-const ids = links.map(link => link.id)
+const ids = LINKS.map(link => link.id)
 
 export default function Nav() {
+  const t = useT()
   const progress = useScrollProgress()
   const active = useActiveSection(ids)
   const [stuck, setStuck] = useState(false)
@@ -27,7 +30,7 @@ export default function Nav() {
   }, [])
 
   return (
-    <nav className={`nav${stuck ? ' nav--stuck' : ''}`} aria-label="Sections">
+    <nav className={`nav${stuck ? ' nav--stuck' : ''}`} aria-label={t.nav.sections}>
       <div className="nav__inner shell">
         <a className="nav__mark" href="#top">
           <span className="nav__mark-bracket">[</span>
@@ -36,14 +39,14 @@ export default function Nav() {
         </a>
 
         <ul className="nav__links">
-          {links.map(link => (
+          {LINKS.map(link => (
             <li key={link.id}>
               <a
                 href={`#${link.id}`}
                 className={`nav__link${active === link.id ? ' is-active' : ''}`}
                 aria-current={active === link.id ? 'true' : undefined}
               >
-                {link.label}
+                {t.nav[link.key]}
               </a>
             </li>
           ))}
@@ -52,7 +55,7 @@ export default function Nav() {
         <div className="nav__end">
           <p className="nav__status">
             <span className="status-dot" />
-            Backend Lead @ Rankacy
+            {t.nav.status}
           </p>
           <ThemeToggle />
           <Customizer />

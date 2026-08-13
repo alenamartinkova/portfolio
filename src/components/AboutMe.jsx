@@ -1,51 +1,29 @@
 import './AboutMe.css'
 import { Handshake, Rocket, Wrench } from 'lucide-react'
+import { useT } from '../i18n'
 import Reveal from './Reveal'
 
 // Above 860px the photo column is ~430px wide; below it the frame is capped
 // at 340px. Retina picks the 2x variants from the same srcset.
 const IMAGE_SIZES = '(min-width: 861px) 430px, 340px'
 
-const stats = [
-  { value: '6+', label: 'Years shipping digital products' },
-  {
-    value: '20+',
-    label: 'Production services & web apps delivered end-to-end',
-  },
-  { value: '2', label: 'Cross-functional teams led' },
-]
-
-const notes = [
-  {
-    Icon: Wrench,
-    text: 'My go-to stack is Python (FastAPI), PostgreSQL, Redis, RabbitMQ, React. I care about clean architecture, efficient solutions, observability, and proper testing (PyTest, Cypress).',
-  },
-  {
-    Icon: Handshake,
-    text: 'I enjoy leading teams, mentoring engineers, and keeping delivery calm and predictable. Outside the code, I like getting involved in the creative side—anything that improves the user experience.',
-  },
-]
+const STAT_VALUES = ['6+', '20+', '2']
+const NOTE_ICONS = [Wrench, Handshake]
 
 export default function AboutMe() {
+  const t = useT()
+
   return (
     <section className="section shell" id="about">
       <div className="about__layout">
         <Reveal className="section__header about__header">
           <p className="section__index">
-            <b>01</b> / about
+            <b>01</b> / {t.about.index}
           </p>
-          <h2>
-            Backend engineer with a product mindset and focus on clean, reliable
-            systems
-          </h2>
+          <h2>{t.about.title}</h2>
           <p className="section__description">
             <Rocket className="about__inline-icon" aria-hidden="true" />
-            I’m a backend-leaning full-stack developer who builds fast, reliable
-            web platforms. Since 2019 I’ve shipped everything from e-commerce
-            and booking systems to internal tools and real-time data
-            products—currently leading backend at Rankacy, previously at
-            Moravio and GIMMEDATA. I partner closely with design and product so
-            each release is cohesive, measurable, and performant.
+            {t.about.description}
           </p>
         </Reveal>
 
@@ -74,28 +52,31 @@ export default function AboutMe() {
             </picture>
             <figcaption>
               <span className="status-dot" />
-              Currently building at Rankacy
+              {t.about.caption}
             </figcaption>
           </figure>
         </Reveal>
 
         <Reveal className="about__copy">
-          {notes.map(({ Icon, text }) => (
-            <p className="about__note" key={text}>
-              <span className="about__note-icon">
-                <Icon aria-hidden="true" />
-              </span>
-              {text}
-            </p>
-          ))}
+          {t.about.notes.map((text, index) => {
+            const Icon = NOTE_ICONS[index]
+            return (
+              <p className="about__note" key={text}>
+                <span className="about__note-icon">
+                  <Icon aria-hidden="true" />
+                </span>
+                {text}
+              </p>
+            )
+          })}
         </Reveal>
       </div>
 
       <Reveal className="stat-grid">
-        {stats.map(stat => (
-          <article className="stat-card panel panel--hover" key={stat.label}>
-            <span className="stat-card__value">{stat.value}</span>
-            <p>{stat.label}</p>
+        {t.about.stats.map((label, index) => (
+          <article className="stat-card panel panel--hover" key={label}>
+            <span className="stat-card__value">{STAT_VALUES[index]}</span>
+            <p>{label}</p>
           </article>
         ))}
       </Reveal>

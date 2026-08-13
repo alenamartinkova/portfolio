@@ -87,12 +87,6 @@
   height: auto;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  filter: grayscale(0.35) contrast(1.05);
-  transition: filter 0.4s var(--ease);
-}
-
-.about__frame:hover img {
-  filter: grayscale(0) contrast(1);
 }
 
 .about__frame figcaption {

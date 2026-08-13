@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import './HeroTerminal.css'
+import { useT } from '../i18n'
 
 const EMAIL = 'martinkova.a@gmail.com'
 
-const focus = [
-  'Architecting distributed Python microservices and data pipelines',
-  'Driving platform evolution and real-time features',
-  'Working in cross-functional collaboration across product, design and engineering',
-]
+// Shell command names stay English — they read as commands, not prose.
+const COMMANDS = ['whoami', 'focus', 'stack', 'contact']
 
-const stack = [
+const STACK = [
   'Python · FastAPI',
   'PostgreSQL · SQLAlchemy',
   'Redis · RabbitMQ',
@@ -18,43 +16,52 @@ const stack = [
   'PyTest · Cypress',
 ]
 
-const OUTPUTS = {
-  whoami: (
-    <dl className="term__spec">
-      <div>
-        <dt>status</dt>
-        <dd>
-          <span className="status-dot" />
-          Currently: Backend Lead @ Rankacy
-        </dd>
-      </div>
-      <div>
-        <dt>location</dt>
-        <dd>Based in Ostrava · remote-friendly</dd>
-      </div>
-      <div>
-        <dt>email</dt>
-        <dd>
-          <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-        </dd>
-      </div>
-    </dl>
-  ),
-  focus: (
-    <ul className="term__list">
-      {focus.map(item => (
-        <li key={item}>{item}</li>
-      ))}
-    </ul>
-  ),
-  stack: (
-    <ul className="term__list term__list--tight">
-      {stack.map(item => (
-        <li key={item}>{item}</li>
-      ))}
-    </ul>
-  ),
-  contact: (
+function Output({ cmd, t }) {
+  if (cmd === 'whoami') {
+    return (
+      <dl className="term__spec">
+        <div>
+          <dt>{t.terminal.keys.status}</dt>
+          <dd>
+            <span className="status-dot" />
+            {t.terminal.status}
+          </dd>
+        </div>
+        <div>
+          <dt>{t.terminal.keys.location}</dt>
+          <dd>{t.terminal.location}</dd>
+        </div>
+        <div>
+          <dt>{t.terminal.keys.email}</dt>
+          <dd>
+            <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          </dd>
+        </div>
+      </dl>
+    )
+  }
+
+  if (cmd === 'focus') {
+    return (
+      <ul className="term__list">
+        {t.terminal.focus.map(item => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    )
+  }
+
+  if (cmd === 'stack') {
+    return (
+      <ul className="term__list term__list--tight">
+        {STACK.map(item => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    )
+  }
+
+  return (
     <ul className="term__links">
       <li>
         <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
@@ -78,12 +85,11 @@ const OUTPUTS = {
         </a>
       </li>
     </ul>
-  ),
+  )
 }
 
-const COMMANDS = Object.keys(OUTPUTS)
-
 export default function HeroTerminal() {
+  const t = useT()
   const [history, setHistory] = useState([{ cmd: 'whoami', id: 0 }])
   const [flash, setFlash] = useState(null)
   const nextId = useRef(1)
@@ -139,7 +145,9 @@ export default function HeroTerminal() {
             <p className="term__prompt">
               <span>$</span> {entry.cmd}
             </p>
-            <div className="term__output">{OUTPUTS[entry.cmd]}</div>
+            <div className="term__output">
+              <Output cmd={entry.cmd} t={t} />
+            </div>
           </div>
         ))}
 

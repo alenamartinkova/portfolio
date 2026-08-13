@@ -1,4 +1,5 @@
 import './App.css'
+import { LocaleProvider, useT } from './i18n'
 import Nav from './components/Nav'
 import Header from './components/Header'
 import AboutMe from './components/AboutMe'
@@ -8,11 +9,13 @@ import References from './components/References'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 
-export default function App() {
+function Page() {
+  const t = useT()
+
   return (
     <>
       <a className="skip-link" href="#main">
-        Skip to content
+        {t.nav.skip}
       </a>
 
       <Nav />
@@ -28,5 +31,13 @@ export default function App() {
 
       <Footer />
     </>
+  )
+}
+
+export default function App() {
+  return (
+    <LocaleProvider>
+      <Page />
+    </LocaleProvider>
   )
 }

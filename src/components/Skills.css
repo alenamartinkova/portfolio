@@ -1,7 +1,15 @@
+/* Four cards, so a fixed 2×2 rather than auto-fit — three across would leave
+   the fourth stranded on its own row. */
 .skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+@media (max-width: 720px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .skill-card {
