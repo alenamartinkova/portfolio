@@ -1,12 +1,7 @@
 import './Header.css'
 import { ArrowDown, Mail } from 'lucide-react'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
-
-const focus = [
-  'Architecting distributed Python microservices and data pipelines',
-  'Driving platform evolution and real-time features',
-  'Working in cross-functional collaboration across product, design and engineering',
-]
+import HeroTerminal from './HeroTerminal'
 
 export default function Header() {
   return (
@@ -62,43 +57,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="hero__spec panel">
-          <div className="panel__chrome">
-            <span className="panel__chrome-dot panel__chrome-dot--accent" />
-            profile.yaml
-          </div>
-
-          <dl className="spec">
-            <div className="spec__row">
-              <dt>status</dt>
-              <dd>
-                <span className="status-dot" />
-                Currently: Backend Lead @ Rankacy
-              </dd>
-            </div>
-            <div className="spec__row">
-              <dt>location</dt>
-              <dd>Based in Ostrava · remote-friendly</dd>
-            </div>
-            <div className="spec__row">
-              <dt>email</dt>
-              <dd>
-                <a href="mailto:martinkova.a@gmail.com">
-                  martinkova.a@gmail.com
-                </a>
-              </dd>
-            </div>
-          </dl>
-
-          <div className="spec__focus">
-            <p className="spec__focus-key">focus:</p>
-            <ul>
-              {focus.map(item => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <HeroTerminal />
       </div>
     </header>
   )

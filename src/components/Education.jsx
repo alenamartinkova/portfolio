@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import './Education.css'
+import { ChevronDown } from 'lucide-react'
 import Reveal from './Reveal'
 
 // Ordered strictly by start date, newest first — the previous order jumped
@@ -72,37 +74,66 @@ const education = [
   },
 ]
 
+function TimelineEntry({ item, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const current = item.period.includes('Present')
+
+  return (
+    <li
+      className={[
+        'timeline__item',
+        current ? 'timeline__item--current' : '',
+        open ? 'is-open' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <span className="timeline__node" aria-hidden="true" />
+
+      <div className="timeline__body">
+        <button
+          type="button"
+          className="timeline__summary"
+          aria-expanded={open}
+          onClick={() => setOpen(value => !value)}
+        >
+          <span className="timeline__period">
+            {item.period}
+            {current && <span className="status-dot" />}
+          </span>
+          <span className="timeline__title">{item.title}</span>
+          <ChevronDown className="timeline__chevron" aria-hidden="true" />
+        </button>
+
+        <div className="timeline__detail" hidden={!open}>
+          <p className="timeline__description">{item.description}</p>
+          {item.details?.length > 0 && (
+            <ul className="timeline__points">
+              {item.details.map(point => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          )}
+          <div className="chip-row">
+            {item.tags.map(tag => (
+              <span className="chip" key={tag}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </li>
+  )
+}
+
 function Timeline({ items }) {
   return (
     <ol className="timeline">
-      {items.map(item => {
-        const current = item.period.includes('Present')
-
-        return (
-          <li
-            className={`timeline__item${current ? ' timeline__item--current' : ''}`}
-            key={item.title}
-          >
-            <span className="timeline__node" aria-hidden="true" />
-
-            <div className="timeline__body">
-              <p className="timeline__period">
-                {item.period}
-                {current && <span className="status-dot" />}
-              </p>
-              <h3 className="timeline__title">{item.title}</h3>
-              <p className="timeline__description">{item.description}</p>
-              <div className="chip-row">
-                {item.tags.map(tag => (
-                  <span className="chip" key={tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </li>
-        )
-      })}
+      {items.map((item, index) => (
+        // The newest entry starts open so the section never reads as empty.
+        <TimelineEntry key={item.title} item={item} defaultOpen={index === 0} />
+      ))}
     </ol>
   )
 }

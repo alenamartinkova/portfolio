@@ -3,6 +3,47 @@
   overflow: hidden;
 }
 
+/* --- toolbar ------------------------------------------------------ */
+
+.diagram__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem clamp(0.75rem, 2vw, 1.25rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.diagram__tab {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  transition: color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.diagram__tab:hover {
+  color: var(--text);
+  background: var(--tint-strong);
+}
+
+.diagram__tab.is-active {
+  color: var(--accent-bright);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.diagram__hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  opacity: 0.75;
+}
+
 .diagram__scroll {
   overflow-x: auto;
   padding: clamp(0.75rem, 2vw, 1.25rem);
@@ -12,7 +53,7 @@
   display: block;
   width: 100%;
   /* Below this the labels stop being readable, so scroll instead of shrink. */
-  min-width: 720px;
+  min-width: 780px;
   height: auto;
 }
 
@@ -32,6 +73,18 @@
   stroke-dasharray: 4 5;
 }
 
+/* Outer runtime boundary — longer dash so it reads as a different kind of
+   grouping than the data layer nested inside it. */
+.diagram__group--runtime rect {
+  fill: none;
+  stroke: var(--line-mid);
+  stroke-dasharray: 9 6;
+}
+
+.diagram__group--runtime text {
+  fill: var(--text-muted);
+}
+
 .diagram__group text {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -41,6 +94,10 @@
 }
 
 /* --- nodes -------------------------------------------------------- */
+
+.diagram__node {
+  cursor: pointer;
+}
 
 .diagram__node rect {
   fill: var(--node);
@@ -52,6 +109,48 @@
 .diagram__node:hover rect {
   stroke: var(--accent-line);
   fill: var(--surface-3);
+}
+
+.diagram__node:focus-visible {
+  outline: none;
+}
+
+.diagram__node:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.diagram__node.is-selected rect {
+  stroke: var(--accent);
+  stroke-width: 1.75;
+  fill: var(--accent-soft);
+}
+
+/* Count of available alternatives, shown only on swappable nodes. */
+.diagram__swap {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--text-dim);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.diagram__node:hover .diagram__swap,
+.diagram__node.is-selected .diagram__swap,
+.diagram__node:focus-visible .diagram__swap {
+  opacity: 1;
+}
+
+/* --- scenario dimming --------------------------------------------- */
+
+.diagram__node,
+.diagram__wire {
+  transition: opacity var(--dur) var(--ease);
+}
+
+.diagram__node.is-dimmed,
+.diagram__wire.is-dimmed {
+  opacity: 0.28;
 }
 
 .diagram__node--accent rect {
@@ -151,6 +250,72 @@
   to {
     stroke-dashoffset: 0px;
   }
+}
+
+/* --- detail panel -------------------------------------------------- */
+
+.diagram__detail {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-top: 1px solid var(--line);
+  background: var(--tint);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+.diagram__detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.diagram__detail-key {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.diagram__close {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  transition: color var(--dur) var(--ease);
+}
+
+.diagram__close:hover {
+  color: var(--text);
+}
+
+.diagram__detail-blurb {
+  max-width: 68ch;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.diagram__options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.diagram__options-key {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.diagram__detail-used {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 /* --- legend ------------------------------------------------------- */

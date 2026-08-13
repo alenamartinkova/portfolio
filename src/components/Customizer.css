@@ -1,0 +1,124 @@
+.custom {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.custom__trigger {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.custom__trigger svg {
+  width: 15px;
+  height: 15px;
+}
+
+.custom__trigger:hover,
+.custom__trigger.is-open {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.custom__panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 60;
+  width: 210px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid var(--line-mid);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.custom__group {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.custom__group legend {
+  padding: 0 0 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* --- accent swatches ----------------------------------------------- */
+
+.custom__swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.4rem;
+}
+
+.custom__swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--line-mid);
+  transition: transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.custom__swatch:hover {
+  transform: scale(1.15);
+}
+
+.custom__swatch.is-active {
+  border-color: var(--surface);
+  box-shadow: 0 0 0 2px var(--swatch);
+}
+
+/* --- cursor options ------------------------------------------------ */
+
+.custom__options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+
+.custom__option {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.custom__option:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.custom__option.is-active {
+  color: var(--accent-bright);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+@media (max-width: 420px) {
+  .custom__panel {
+    right: -0.5rem;
+    width: 190px;
+  }
+}

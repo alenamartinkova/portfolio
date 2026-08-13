@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './Nav.css'
 import { useActiveSection, useScrollProgress } from '../hooks'
 import ThemeToggle from './ThemeToggle'
+import Customizer from './Customizer'
 
 const links = [
   { id: 'about', label: 'about' },
@@ -54,6 +55,7 @@ export default function Nav() {
             Backend Lead @ Rankacy
           </p>
           <ThemeToggle />
+          <Customizer />
         </div>
       </div>
 

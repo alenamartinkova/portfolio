@@ -178,3 +178,51 @@ h4 {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------
+   Lego cursor
+
+   32×32 PNG data URIs rather than SVG: Safari does not support SVG
+   cursors and would silently fall back to the system arrow. Two
+   variants keep the click affordance — a brick over the page, a
+   brighter brick over anything interactive.
+
+   Only applied where a real pointing device is present; the cursor
+   is meaningless on touch and the images would be dead weight.
+   --------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: var(--cursor-default, url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABDElEQVR42mNgGAWjgACwla8IAOL7QPwfDfcjqenHIg/SE0Cp5QJA/N5Ht/N/VdgeOE52XASzJAGKwWLIakB6QHpBZlDiAAeQ4SADt/f+R8FQBzRAMYY8SA9UjcPQcwA03vcD8XmQIaDgjLGahYKR4hmcPtDloVHwH2rGfqLTA1BhAUijs0rD/1CjWVTBILOgjikgxgHv/XUn/p+W9v3/nOz/VMEgs0BmgswmKs5zXPdQzXIYBplJME0MWgdMTftGFqaaAxrDbpKFh08IjCbCUQeMOoCeDgC1gP5Hmy+iugNAZkIdIECoQgK370C1F8jV1MDQmhClHUnIEQ3Q9tx/KmGQWQ2jTfxRMAqwAQA+mh7Ma7V36gAAAABJRU5ErkJggg=='))
+        4 4,
+      auto;
+  }
+
+  a,
+  button,
+  summary,
+  [role='button'],
+  .diagram__node {
+    cursor: var(--cursor-pointer, url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABDElEQVR42mNgGAWjgADwUp8cAMT3gfg/Gu5HUtOPRR6kJ4BSywWA+H201YL//UUn4bg0bCvMkgQoBoshqwHpAekFmUGJAxxAhoMMvLLnPwqGOqABijHkQXqgahyGngOg8b4fiM+DDAEFZ47POhSMFM/g9IEuD42C/1Az9hOdHoAKC0AaA3Vn/U91WEcVDDIL6pgCYhzwPs5q+f8N7T/+b+/9TxUMMgtkJshsouK8Ieok1SyHYZCZBNPEoHXA+rbvZGGqOWBGwUOy8PAJgdFEOOqAUQfQ0wEC4KrVfSvVHQAyE+oAAUIVErh9B6q9QK6mBobWhCjtSEKOaIC25/5TCYPMahht4o+CUYANAADqfZJAg+UqoAAAAABJRU5ErkJggg=='))
+        4 4,
+      pointer;
+  }
+}
+
+/* Visitor opted out of the custom cursor. */
+[data-cursor='off'] body,
+[data-cursor='off'] a,
+[data-cursor='off'] button,
+[data-cursor='off'] summary,
+[data-cursor='off'] [role='button'],
+[data-cursor='off'] .diagram__node {
+  cursor: auto;
+}
+
+[data-cursor='off'] a,
+[data-cursor='off'] button,
+[data-cursor='off'] summary,
+[data-cursor='off'] [role='button'],
+[data-cursor='off'] .diagram__node {
+  cursor: pointer;
+}

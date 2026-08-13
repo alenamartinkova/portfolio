@@ -113,3 +113,89 @@
 
   color-scheme: light;
 }
+
+/* ---------------------------------------------------------------
+   Accent presets
+   No block for the default violet: leaving [data-accent] unset keeps
+   the base tokens above untouched.
+   --------------------------------------------------------------- */
+
+[data-accent='cyan'] {
+  --accent: #45d8d0;
+  --accent-bright: #7ae6e0;
+  --accent-soft: rgba(69, 216, 208, 0.1);
+  --accent-line: rgba(69, 216, 208, 0.38);
+  --bloom: rgba(69, 216, 208, 0.16);
+}
+
+[data-theme='light'][data-accent='cyan'] {
+  --accent: #0c7873;
+  --accent-bright: #085450;
+  --accent-soft: rgba(12, 120, 115, 0.08);
+  --accent-line: rgba(12, 120, 115, 0.32);
+  --bloom: rgba(12, 120, 115, 0.09);
+}
+
+[data-accent='lime'] {
+  --accent: #a6e34d;
+  --accent-bright: #c2ed88;
+  --accent-soft: rgba(166, 227, 77, 0.1);
+  --accent-line: rgba(166, 227, 77, 0.38);
+  --bloom: rgba(166, 227, 77, 0.16);
+}
+
+[data-theme='light'][data-accent='lime'] {
+  --accent: #4d7a12;
+  --accent-bright: #3b5e0d;
+  --accent-soft: rgba(77, 122, 18, 0.08);
+  --accent-line: rgba(77, 122, 18, 0.32);
+  --bloom: rgba(77, 122, 18, 0.09);
+}
+
+[data-accent='amber'] {
+  --accent: #f0b23c;
+  --accent-bright: #f7cd7a;
+  --accent-soft: rgba(240, 178, 60, 0.1);
+  --accent-line: rgba(240, 178, 60, 0.38);
+  --bloom: rgba(240, 178, 60, 0.16);
+}
+
+[data-theme='light'][data-accent='amber'] {
+  --accent: #96610a;
+  --accent-bright: #734a06;
+  --accent-soft: rgba(150, 97, 10, 0.08);
+  --accent-line: rgba(150, 97, 10, 0.32);
+  --bloom: rgba(150, 97, 10, 0.09);
+}
+
+[data-accent='rose'] {
+  --accent: #ff6b9c;
+  --accent-bright: #ff9bbb;
+  --accent-soft: rgba(255, 107, 156, 0.1);
+  --accent-line: rgba(255, 107, 156, 0.38);
+  --bloom: rgba(255, 107, 156, 0.16);
+}
+
+[data-theme='light'][data-accent='rose'] {
+  --accent: #c2185b;
+  --accent-bright: #9c1348;
+  --accent-soft: rgba(194, 24, 91, 0.08);
+  --accent-line: rgba(194, 24, 91, 0.32);
+  --bloom: rgba(194, 24, 91, 0.09);
+}
+
+[data-accent='blue'] {
+  --accent: #6b8bff;
+  --accent-bright: #96abff;
+  --accent-soft: rgba(107, 139, 255, 0.1);
+  --accent-line: rgba(107, 139, 255, 0.38);
+  --bloom: rgba(107, 139, 255, 0.16);
+}
+
+[data-theme='light'][data-accent='blue'] {
+  --accent: #2f4bc4;
+  --accent-bright: #243b9c;
+  --accent-soft: rgba(47, 75, 196, 0.08);
+  --accent-line: rgba(47, 75, 196, 0.32);
+  --bloom: rgba(47, 75, 196, 0.09);
+}

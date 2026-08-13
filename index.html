@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#07070b" />
 
-    <!-- Applies a stored light-theme choice before first paint. Dark is the
-         default, so no attribute is set unless the visitor picked light. -->
+    <!-- Applies stored appearance choices before first paint. Dark + violet
+         are the defaults and carry no attribute, so nothing is set unless the
+         visitor picked something else. -->
     <script>
       try {
+        var root = document.documentElement
         if (localStorage.getItem('theme') === 'light') {
-          document.documentElement.dataset.theme = 'light'
+          root.dataset.theme = 'light'
         }
+        var accent = localStorage.getItem('accent')
+        if (accent && accent !== 'violet') root.dataset.accent = accent
+        var cursor = localStorage.getItem('cursor')
+        if (cursor) root.dataset.cursor = cursor
       } catch (e) {}
     </script>
 
