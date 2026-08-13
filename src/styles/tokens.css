@@ -1,19 +1,32 @@
 /* ---------------------------------------------------------------
    Design tokens
    Purple stays the accent — it signals, it doesn't fill surfaces.
+
+   Dark is the default and lives on :root. The light theme overrides
+   only the colour tokens; radii, type and motion are shared.
    --------------------------------------------------------------- */
 
 :root {
   /* surfaces */
   --bg: #07070b;
+  --bg-rgb: 7, 7, 11;
   --surface: #0c0c13;
   --surface-2: #10101a;
   --surface-3: #15151f;
+  /* raised surface used inside the diagram; separate from --surface-2 so the
+     two themes can move it in opposite directions */
+  --node: #10101a;
 
   /* hairlines — depth comes from borders, not shadows */
   --line: rgba(255, 255, 255, 0.07);
   --line-mid: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.2);
+
+  /* overlay washes — white on dark, ink on light */
+  --tint-soft: rgba(255, 255, 255, 0.012);
+  --tint: rgba(255, 255, 255, 0.015);
+  --tint-2: rgba(255, 255, 255, 0.02);
+  --tint-strong: rgba(255, 255, 255, 0.04);
 
   /* text */
   --text: #eceef6;
@@ -26,10 +39,15 @@
   --accent-soft: rgba(156, 107, 255, 0.1);
   --accent-line: rgba(156, 107, 255, 0.38);
   --accent-cold: #6b8bff;
+  /* text that sits on top of --accent */
+  --on-accent: #0a0616;
+  --bloom: rgba(156, 107, 255, 0.16);
 
   /* status */
   --ok: #3ddc97;
   --ok-soft: rgba(61, 220, 151, 0.12);
+
+  --scrollbar-thumb: #23232f;
 
   /* radii — sharp, engineered, consistent */
   --r-sm: 4px;
@@ -51,4 +69,47 @@
   /* motion */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --dur: 0.22s;
+
+  /* native form controls, scrollbars and caret follow the theme */
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  /* Paper rather than pure white, so the white panels still read as raised. */
+  --bg: #f2f2f7;
+  --bg-rgb: 242, 242, 247;
+  --surface: #ffffff;
+  --surface-2: #f6f6fb;
+  --surface-3: #e9e9f2;
+  --node: #ffffff;
+
+  --line: rgba(18, 18, 40, 0.11);
+  --line-mid: rgba(18, 18, 40, 0.17);
+  --line-strong: rgba(18, 18, 40, 0.3);
+
+  --tint-soft: rgba(18, 18, 40, 0.015);
+  --tint: rgba(18, 18, 40, 0.022);
+  --tint-2: rgba(18, 18, 40, 0.03);
+  --tint-strong: rgba(18, 18, 40, 0.06);
+
+  --text: #14141d;
+  --text-muted: #4c4e61;
+  --text-dim: #5f6175;
+
+  /* #9c6bff only reaches 3.4:1 on white, so light mode drops to a deeper
+     violet of the same family and flips --accent-bright to mean "darker". */
+  --accent: #6633d6;
+  --accent-bright: #5124ad;
+  --accent-soft: rgba(102, 51, 214, 0.08);
+  --accent-line: rgba(102, 51, 214, 0.32);
+  --accent-cold: #2f4bc4;
+  --on-accent: #ffffff;
+  --bloom: rgba(102, 51, 214, 0.09);
+
+  --ok: #0c8a5c;
+  --ok-soft: rgba(12, 138, 92, 0.12);
+
+  --scrollbar-thumb: #c4c4d4;
+
+  color-scheme: light;
 }

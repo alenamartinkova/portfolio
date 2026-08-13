@@ -26,7 +26,7 @@
 /* --- data layer boundary ------------------------------------------ */
 
 .diagram__group rect {
-  fill: rgba(255, 255, 255, 0.012);
+  fill: var(--tint-soft);
   stroke: var(--line);
   stroke-width: 1;
   stroke-dasharray: 4 5;
@@ -43,7 +43,7 @@
 /* --- nodes -------------------------------------------------------- */
 
 .diagram__node rect {
-  fill: var(--surface-2);
+  fill: var(--node);
   stroke: var(--line-mid);
   stroke-width: 1;
   transition: stroke var(--dur) var(--ease), fill var(--dur) var(--ease);

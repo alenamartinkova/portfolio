@@ -137,7 +137,7 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--tint);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
 
@@ -181,7 +181,7 @@
 
 .button-primary {
   background: var(--accent);
-  color: #0a0616;
+  color: var(--on-accent);
   border: 1px solid var(--accent);
 }
 
@@ -227,7 +227,7 @@
   padding: 0.24rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--tint-2);
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);

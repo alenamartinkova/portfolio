@@ -9,7 +9,7 @@
 
 .nav--stuck {
   border-bottom-color: var(--line);
-  background: rgba(7, 7, 11, 0.82);
+  background: rgba(var(--bg-rgb), 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -58,12 +58,19 @@
 
 .nav__link:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--tint-strong);
 }
 
 .nav__link.is-active {
   color: var(--accent-bright);
   background: var(--accent-soft);
+}
+
+.nav__end {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .nav__status {

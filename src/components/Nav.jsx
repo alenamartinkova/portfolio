@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './Nav.css'
 import { useActiveSection, useScrollProgress } from '../hooks'
+import ThemeToggle from './ThemeToggle'
 
 const links = [
   { id: 'about', label: 'about' },
@@ -47,10 +48,13 @@ export default function Nav() {
           ))}
         </ul>
 
-        <p className="nav__status">
-          <span className="status-dot" />
-          Backend Lead @ Rankacy
-        </p>
+        <div className="nav__end">
+          <p className="nav__status">
+            <span className="status-dot" />
+            Backend Lead @ Rankacy
+          </p>
+          <ThemeToggle />
+        </div>
       </div>
 
       <div

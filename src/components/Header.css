@@ -137,7 +137,7 @@
 .spec__focus {
   padding: 1.1rem;
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--tint);
   border-radius: 0 0 var(--r-lg) var(--r-lg);
 }
 

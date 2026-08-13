@@ -1,0 +1,56 @@
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  background: transparent;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Both icons share one cell and cross-fade, so the button never reflows. */
+.theme-toggle__icons {
+  position: relative;
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  inset: 0;
+  width: 15px;
+  height: 15px;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+/* Dark theme is showing → offer the sun. */
+.theme-toggle__icon--sun {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle__icon--moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+[data-theme='light'] .theme-toggle__icon--sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+[data-theme='light'] .theme-toggle__icon--moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
