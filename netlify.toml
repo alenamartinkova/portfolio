@@ -5,7 +5,8 @@
 [build.environment]
   # Vite 8 requires Node ^20.19.0 || >=22.12.0. Without this the site builds on
   # Netlify's legacy Node 16 default and fails on `styleText` from node:util.
-  NODE_VERSION = "22"
+  # Pinned to 24 to match the version used locally.
+  NODE_VERSION = "24"
 
 # Vite fingerprints these filenames, so their contents never change.
 [[headers]]
