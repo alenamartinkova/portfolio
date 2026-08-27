@@ -125,21 +125,6 @@
 }
 
 /* ---------------------------------------------------------------
-   Mono label ("eyebrow")
-   --------------------------------------------------------------- */
-
-.mono-label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-.mono-label--accent {
-  color: var(--accent);
-}
-
-/* ---------------------------------------------------------------
    Panels — flat surfaces, 1px borders, optional IDE-style chrome
    --------------------------------------------------------------- */
 

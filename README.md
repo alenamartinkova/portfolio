@@ -19,13 +19,19 @@ npm run preview # serve the production build locally
 ## Structure
 
 ```
-index.html                 page shell, meta + OG tags, fonts
+index.html                 page shell, meta + OG + JSON-LD, font preloads
+scripts/prerender.mjs      injects SSR markup and derives /sk/ at build time
 src/main.jsx               entry point
+src/entry-server.jsx       SSR entry used only by the prerender
 src/App.jsx                page composition
 src/App.css                layout + shared components (panels, chips, buttons)
 src/styles/tokens.css      colors, radii, type scale, spacing
 src/styles/base.css        reset, grid background, focus & scrollbar styles
+src/styles/fonts.css       self-hosted variable fonts (files in public/fonts)
+src/i18n/                  locale context + en/sk dictionaries (all copy)
 src/hooks.js               scroll progress, active section, copy-to-clipboard
+src/glow.js                background bloom that trails the pointer
+src/cursors.js             accent-coloured cursor bitmaps
 src/components/            one .jsx + .css per section
 public/                    static assets served from /
 ```
@@ -54,8 +60,12 @@ The OG image is a square crop offset from the top so the head is not clipped
 
 - The build output goes to `build/` (not Vite's default `dist/`) so the existing
   deployment setup keeps working.
-- Content lives in plain arrays at the top of each section component —
-  `experience` and `education` in `Education.jsx`, `projects` and `clients` in
-  `References.jsx`, `skillGroups` in `Skills.jsx`.
+- The build emits two pages: `/` (English) and `/sk/` (Slovak), each fully
+  prerendered with its own metadata and cross-linked via hreflang. The language
+  toggle syncs the URL with `history.replaceState`.
+- All translatable copy lives in `src/i18n/en.js` and `src/i18n/sk.js`.
+  Locale-invariant data stays in the components — project names, URLs and
+  stacks in `References.jsx`, timeline tags in `Career.jsx`, panel file names
+  in `Skills.jsx`, diagram geometry in `StackDiagram.jsx`.
 - The architecture diagram in `StackDiagram.jsx` is hand-authored SVG; node
   positions are a simple coordinate grid at the top of the file.

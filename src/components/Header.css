@@ -94,95 +94,9 @@
   height: 15px;
 }
 
-/* --- right column: the spec sheet -------------------------------- */
-
-.hero__spec {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-}
-
-.spec {
-  padding: 0.4rem 0;
-}
-
-.spec__row {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-  padding: 0.65rem 1.1rem;
-  align-items: baseline;
-}
-
-.spec__row + .spec__row {
-  border-top: 1px dashed var(--line);
-}
-
-.spec__row dt {
-  color: var(--text-dim);
-}
-
-.spec__row dd {
-  color: var(--text);
-  word-break: break-word;
-}
-
-.spec__row dd a {
-  border-bottom: 1px solid var(--line-mid);
-  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-
-.spec__row dd a:hover {
-  color: var(--accent-bright);
-  border-color: var(--accent-line);
-}
-
-.spec__row .status-dot {
-  margin-right: 0.5rem;
-  vertical-align: baseline;
-}
-
-.spec__focus {
-  padding: 1.1rem;
-  border-top: 1px solid var(--line);
-  background: var(--tint);
-  border-radius: 0 0 var(--r-lg) var(--r-lg);
-}
-
-.spec__focus-key {
-  margin-bottom: 0.75rem;
-  color: var(--text-dim);
-}
-
-.spec__focus ul {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.spec__focus li {
-  position: relative;
-  padding-left: 1.4rem;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.55;
-}
-
-.spec__focus li::before {
-  content: '-';
-  position: absolute;
-  left: 0.35rem;
-  color: var(--accent);
-}
-
 @media (max-width: 900px) {
   .hero__grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
-  .spec__row {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
-  }
-}
