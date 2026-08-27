@@ -9,27 +9,20 @@ export const LOCALES = [
 
 const DICTIONARIES = { en, sk }
 
-// Czech is mutually intelligible with Slovak, so cs browsers get sk rather
-// than falling back to English.
-const ALIASES = { cs: 'sk' }
 const STORAGE_KEY = 'locale'
 
 const LocaleContext = createContext({ locale: 'en', t: en, setLocale: () => {} })
 
 function initialLocale() {
+  // English is the default for everyone; only an explicit choice changes it.
+  // Browser-language detection would otherwise flip Slovak visitors away from
+  // the version most recruiters land on.
+  if (typeof localStorage === 'undefined') return 'en'
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored && DICTIONARIES[stored]) return stored
   } catch {
-    // storage unavailable — fall through to detection
-  }
-
-  // Czech and Slovak visitors get their own language; everyone else English.
-  const preferred = navigator.languages || [navigator.language || 'en']
-  for (const tag of preferred) {
-    const base = tag.toLowerCase().split('-')[0]
-    const resolved = ALIASES[base] || base
-    if (DICTIONARIES[resolved]) return resolved
+    // storage unavailable
   }
   return 'en'
 }

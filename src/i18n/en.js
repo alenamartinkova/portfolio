@@ -11,7 +11,6 @@ export default {
   nav: {
     about: 'about',
     stack: 'stack',
-    journey: 'journey',
     work: 'work',
     contact: 'contact',
     status: 'Backend Lead @ Rankacy',
@@ -22,7 +21,7 @@ export default {
 
   hero: {
     eyebrow: 'Full stack · Product-led engineering',
-    role: 'Engineer & backend tech lead',
+    role: 'Full stack developer focused on backend',
     lead: 'I build scalable platforms and data-driven products. My focus is on designing resilient backend architectures, leading engineering teams, and partnering closely with design & product to deliver fast, measurable, high-quality experiences.',
     ctaContact: 'Contact me!',
     ctaWork: 'See recent work',
@@ -110,118 +109,72 @@ export default {
     ],
   },
 
-  journey: {
-    index: 'journey',
-    title: 'Experience & education milestones',
-    description:
-      'Every role sharpened a different muscle—architecture, velocity, empathy, or leadership. Together they help me build products that scale gracefully.',
-    experienceLabel: 'Roles that shaped my skills',
-    educationLabel: 'Academic foundation',
-    experience: [
-      {
-        period: 'Mar 2024 — Present',
-        title: 'Backend Lead Developer · Rankacy',
-        description:
-          'Oversee an e-sports software team, guide solution design end to end, and keep daily delivery running — from API architecture to implementation reviews.',
-        tags: ['Python', 'Team leadership', 'E-sports'],
-      },
-      {
-        period: 'Jan 2024 — Mar 2024',
-        title: 'Full Stack Developer · Rankacy',
-        description:
-          'Handled both the backend API and front-end application during the early Rankacy build, providing diagrams, database architecture, and Jira-ready specs.',
-        tags: ['Django', 'Python', 'Client comms'],
-      },
-      {
-        period: 'Jul 2023 — Jan 2024',
-        title: 'Frontend Developer · GIMMEDATA',
-        description:
-          'Delivered modern front-end applications with Vue.js, HTML, CSS, and GraphQL while collaborating remotely across product and QA.',
-        tags: ['Vue', 'GraphQL', 'Remote'],
-      },
-      {
-        period: 'Jan 2022 — Present',
-        title: 'Full Stack Lead Developer · WAPS Technologies (Freelance)',
-        description:
-          'Lead Laravel + React deliveries for hybrid client projects, balancing architecture decisions with hands-on implementation across the stack.',
-        tags: ['PHP', 'React', 'Leadership'],
-      },
-      {
-        period: 'Jul 2020 — Jul 2023',
-        title: 'Full Stack Developer · Moravio',
-        description:
-          'Developed Laravel/Node backends with React/Strapi frontends, owned CI/CD, testing (Cypress + PHP Unit), and presented releases directly to clients.',
-        tags: ['Laravel', 'React', 'CI/CD'],
-      },
-      {
-        period: 'Jan 2019 — Present',
-        title: 'Full Stack Developer · Self-employed',
-        description:
-          'Built static and dynamic sites, complex booking portals, and e-shops. Owned planning, client comms, Cypress/PHPUnit testing, and both FE/BE implementation.',
-        tags: ['Scrum/Kanban', 'Cypress', 'Client delivery'],
-      },
-      {
-        period: '2019 — 2020',
-        title: 'Frontend Web Developer · Moravio',
-        description:
-          'Built Vue, HTML, CSS, and WordPress projects while supporting helpdesk workstreams, testing, and agile ceremonies.',
-        tags: ['Vue', 'WordPress', 'Cypress'],
-      },
-    ],
-    education: [
-      {
-        period: 'Sep 2021 — Jun 2024',
-        title: "Master's Degree · VSB - Technical University of Ostrava",
-        description:
-          'Master thesis focused on blockchain; implemented a custom blockchain framework in Python.',
-        tags: ['Blockchain', 'Python', 'Research'],
-      },
-      {
-        period: '2018 — 2021',
-        title: "Bachelor's Degree · VSB - Technical University of Ostrava",
-        description:
-          'Information Technology program with strong foundation in software engineering fundamentals.',
-        tags: ['PHP', 'Databases', 'Software engineering'],
-      },
-    ],
-  },
 
   work: {
     index: 'work',
     title: 'Partnerships built on trust, delivery, and measurable impact',
     description:
       'I collaborate with founders, agencies, and in-house teams to move from idea to scalable launch—and stick around to iterate.',
-    clientsLabel: 'Clients & teams',
+    clientsLabel: 'Clients',
+    via: 'via',
+    previously: 'Previously',
     projects: [
       {
         type: 'E-sports analytics platform',
+        role: 'Backend Lead Developer',
+        period: 'Mar 2024 — Present',
+        previous: 'Full Stack Developer · Jan 2024 — Mar 2024',
         summary:
-          'Build the competitive gaming backend that powers CS2 player insights, match processing, and subscription revenue.',
+          'The competitive gaming backend behind CS2 player insights, match processing and subscription revenue. I oversee the software team, guide solution design end to end, and keep daily delivery running — from API architecture to implementation reviews.',
         highlights: [
           'Event-driven FastAPI services processing match data at scale',
+          'A PostgreSQL database of millions of match records, tuned for fast reads',
+          'Scaled on AWS to serve players worldwide',
           'Subscription system and Stripe billing flows',
         ],
         linkLabel: 'View platform',
       },
       {
-        type: 'External software & internal tools',
-        summary:
-          'Built features and internal tools for international client projects, ranging from booking engines to business dashboards.',
-        highlights: [
-          'Delivered backend & full-stack features across multiple products',
-          'Collaborated with designers and PMs to ship clean, production-ready solutions',
-        ],
-        linkLabel: 'See agency',
-      },
-      {
         type: 'E-commerce & ERP-connected systems',
         summary:
-          'Built modern e-commerce backend with dynamic pricing, multilingual content, delivery integrations, and internal admin tooling.',
+          'A modern e-commerce backend with dynamic pricing, multilingual content, delivery integrations and internal admin tooling.',
         highlights: [
           'Integrated logistics, shipping, and payment APIs without downtime',
           'Implemented internal administration panel for order & product management',
         ],
         linkLabel: 'Visit site',
+      },
+      {
+        type: 'Client deliveries · Freelance',
+        role: 'Full Stack Lead Developer',
+        period: 'Jan 2022 — Present',
+        summary:
+          'Lead Laravel + React deliveries for hybrid client projects, balancing architecture decisions with hands-on implementation across the stack.',
+        highlights: [],
+        linkLabel: '',
+      },
+      {
+        type: 'External software & internal tools',
+        role: 'Full Stack Developer',
+        period: 'Jul 2020 — Jul 2023',
+        previous: 'Frontend Web Developer · 2019 — 2020',
+        summary:
+          'Features and internal tools for international client projects, from booking engines to business dashboards. I owned CI/CD and testing, and presented releases directly to clients.',
+        highlights: [
+          'Delivered backend & full-stack features across multiple products',
+          'Collaborated with designers and PMs to ship clean, production-ready solutions',
+          'Laravel/Node backends with React/Strapi frontends',
+        ],
+        linkLabel: 'See agency',
+      },
+      {
+        type: 'Frontend applications',
+        role: 'Frontend Developer',
+        period: 'Jul 2023 — Jan 2024',
+        summary:
+          'Delivered modern front-end applications with Vue.js, HTML, CSS, and GraphQL while collaborating remotely across product and QA.',
+        highlights: [],
+        linkLabel: '',
       },
     ],
   },
@@ -242,6 +195,7 @@ export default {
     swap: 'swap:',
     usedIn: 'used in:',
     close: 'Close details',
+    containers: 'Every service runs in its own container.',
     aria: 'Interactive architecture diagram. Select a flow, or a node to see its alternatives.',
     layers: {
       client:

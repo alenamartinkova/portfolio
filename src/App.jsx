@@ -4,7 +4,6 @@ import Nav from './components/Nav'
 import Header from './components/Header'
 import AboutMe from './components/AboutMe'
 import Skills from './components/Skills'
-import Education from './components/Education'
 import References from './components/References'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
@@ -24,7 +23,6 @@ function Page() {
       <main className="page" id="main">
         <AboutMe />
         <Skills />
-        <Education />
         <References />
         <Contact />
       </main>

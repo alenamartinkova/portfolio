@@ -188,7 +188,7 @@ export default function StackDiagram() {
         <div className="diagram__scroll" ref={scrollRef}>
         <svg
           className="diagram__svg"
-          viewBox="0 0 1000 386"
+          viewBox="0 0 1000 348"
           aria-label={t.diagram.aria}
         >
           <defs>
@@ -214,15 +214,8 @@ export default function StackDiagram() {
             </pattern>
           </defs>
 
-          <rect width="1000" height="386" fill="url(#diagram-dots)" />
+          <rect width="1000" height="348" fill="url(#diagram-dots)" />
 
-          {/* Every service ships as a container, the client included. */}
-          <g className="diagram__group diagram__group--runtime">
-            <rect x="4" y="24" width="964" height="316" rx="12" />
-            <text x="18" y="42">
-              docker
-            </text>
-          </g>
 
           <g className="diagram__group">
             <rect x="250" y="210" width="468" height="112" rx="10" />
@@ -338,18 +331,20 @@ export default function StackDiagram() {
           })}
 
           <g className="diagram__legend">
-            <path className="diagram__link" d="M16 366 H44" />
-            <text x="52" y="370">
+            <path className="diagram__link" d="M16 330 H44" />
+            <text x="52" y="334">
               sync
             </text>
-            <path className="diagram__link diagram__link--async" d="M104 366 H132" />
-            <text x="140" y="370">
+            <path className="diagram__link diagram__link--async" d="M104 330 H132" />
+            <text x="140" y="334">
               async
             </text>
           </g>
           </svg>
         </div>
       </div>
+
+      <p className="diagram__note">{t.diagram.containers}</p>
 
       {detail && (
         <div className="diagram__detail">

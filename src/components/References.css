@@ -1,54 +1,99 @@
-/* Same reason as the stat grid: three projects, so 3-up or 1-up only. */
+/* Full-width cards: each engagement now carries a role, clients, a summary and
+   highlights, which no longer fits a multi-column grid. */
 .projects-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  /* The clients block is the first .section__group here, so it gets no
-     sibling margin — space it off the cards from this side instead. */
-  margin-bottom: clamp(3rem, 6vw, 4.5rem);
-}
-
-.project-card {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
 }
 
-.project-card .panel__body {
+.project-card__head {
   display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.project-card__title {
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
 }
 
-.project-card__title h3 {
-  font-size: 1.25rem;
+.project-card__head h3 {
+  font-size: 1.4rem;
+}
+
+/* Meta rail on the left, the actual story on the right. */
+.project-card__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  margin-bottom: 1.6rem;
+}
+
+.project-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.project-card__role {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-bright);
+}
+
+.project-card__period {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.project-card__note {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.project-card__clients {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--line);
+}
+
+.project-card__clients-key {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.project-card__clients li {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.9;
+  color: var(--text-muted);
 }
 
 .project-card__summary {
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.2rem;
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.96rem;
 }
 
 .project-card__highlights {
   display: grid;
-  gap: 0.6rem;
-  margin-bottom: 1.25rem;
+  gap: 0.8rem;
 }
 
 .project-card__highlights li {
   position: relative;
-  padding-left: 1.15rem;
-  font-size: 0.88rem;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
-  line-height: 1.5;
 }
 
 .project-card__highlights li::before {
@@ -57,62 +102,23 @@
   left: 0;
   color: var(--accent);
   font-size: 0.75rem;
-  line-height: 1.7;
+  line-height: 1.9;
 }
 
 .project-card__stack {
-  margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 1.35rem;
   border-top: 1px solid var(--line);
 }
 
-/* --- clients ------------------------------------------------------ */
-
-.client-grid {
-  display: grid;
-  /* Fixed 4 columns: the 8 clients fill two rows exactly, with no orphan. */
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  overflow: hidden;
-}
-
-.client-grid__cell {
-  display: grid;
-  place-items: center;
-  padding: 1.25rem 0.75rem;
-  background: var(--bg);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  text-align: center;
-  transition: color var(--dur) var(--ease),
-    background-color var(--dur) var(--ease);
-}
-
-.client-grid__cell:hover {
-  color: var(--accent-bright);
-  background: var(--surface-2);
-}
-
-@media (max-width: 980px) {
-  .projects-grid {
+@media (max-width: 760px) {
+  .project-card__grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-}
 
-@media (max-width: 700px) {
-  .client-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 460px) {
-  .project-card__title {
+  .project-card__head {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
 }

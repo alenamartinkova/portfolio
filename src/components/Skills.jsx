@@ -23,7 +23,7 @@ export default function Skills() {
         <StackDiagram />
       </Reveal>
 
-      <Reveal className="skills-grid">
+      <Reveal className="skills-grid stagger">
         {t.skills.groups.map((group, index) => (
           <article className="skill-card panel panel--hover" key={group.title}>
             <div className="panel__chrome">

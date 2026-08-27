@@ -9,7 +9,10 @@ const THEME_KEY = 'theme'
  */
 export function useTheme() {
   const [theme, setTheme] = useState(() =>
-    document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+    typeof document !== 'undefined' &&
+    document.documentElement.dataset.theme === 'light'
+      ? 'light'
+      : 'dark'
   )
 
   useEffect(() => {

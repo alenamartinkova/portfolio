@@ -14,7 +14,7 @@
   grid-template-areas:
     'header photo'
     'copy   photo';
-  column-gap: clamp(1.5rem, 4vw, 3rem);
+  column-gap: clamp(2rem, 5vw, 4rem);
   align-items: start;
   margin-bottom: clamp(2rem, 4vw, 3rem);
 }
@@ -32,12 +32,12 @@
   grid-area: copy;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .about__note {
   position: relative;
-  padding: 1.1rem 1.25rem 1.1rem 3.25rem;
+  padding: 1.4rem 1.6rem 1.4rem 3.5rem;
   border: 1px solid var(--line);
   border-left: 1px solid var(--accent-line);
   border-radius: var(--r-md);
@@ -107,7 +107,7 @@
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 @media (max-width: 700px) {
@@ -117,7 +117,7 @@
 }
 
 .stat-card {
-  padding: 1.4rem 1.5rem;
+  padding: 1.9rem 1.75rem;
 }
 
 .stat-card__value {

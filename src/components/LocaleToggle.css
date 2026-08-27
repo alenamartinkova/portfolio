@@ -1,0 +1,32 @@
+.locale {
+  display: flex;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.locale__option {
+  padding: 0 0.5rem;
+  height: 30px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  transition: color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.locale__option + .locale__option {
+  border-left: 1px solid var(--line);
+}
+
+.locale__option:hover {
+  color: var(--text);
+  background: var(--tint-strong);
+}
+
+.locale__option.is-active {
+  color: var(--accent-bright);
+  background: var(--accent-soft);
+}

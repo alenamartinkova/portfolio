@@ -3,6 +3,7 @@ import './Nav.css'
 import { Menu, X } from 'lucide-react'
 import { useActiveSection, useScrollProgress } from '../hooks'
 import { useT } from '../i18n'
+import LocaleToggle from './LocaleToggle'
 import ThemeToggle from './ThemeToggle'
 import Customizer from './Customizer'
 
@@ -10,7 +11,6 @@ import Customizer from './Customizer'
 const LINKS = [
   { id: 'about', key: 'about' },
   { id: 'skills', key: 'stack' },
-  { id: 'journey', key: 'journey' },
   { id: 'projects', key: 'work' },
   { id: 'contact', key: 'contact' },
 ]
@@ -95,6 +95,7 @@ export default function Nav() {
             <span className="status-dot" />
             {t.nav.status}
           </p>
+          <LocaleToggle />
           <ThemeToggle />
           <Customizer />
 

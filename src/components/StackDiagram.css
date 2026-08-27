@@ -121,18 +121,6 @@
   stroke-dasharray: 4 5;
 }
 
-/* Outer runtime boundary — longer dash so it reads as a different kind of
-   grouping than the data layer nested inside it. */
-.diagram__group--runtime rect {
-  fill: none;
-  stroke: var(--line-mid);
-  stroke-dasharray: 9 6;
-}
-
-.diagram__group--runtime text {
-  fill: var(--text-muted);
-}
-
 .diagram__group text {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -379,4 +367,13 @@
   .diagram__pulse {
     display: none;
   }
+}
+
+/* Replaces the old outer "docker" boundary — the same fact, without another
+   dashed box competing with the data layer inside it. */
+.diagram__note {
+  padding: 0 clamp(0.6rem, 1.2vw, 1.25rem) 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
 }

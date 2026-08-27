@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './Customizer.css'
 import { Palette } from 'lucide-react'
 import { CURSORS, applyCursor } from '../cursors'
-import { LOCALES, useLocale, useT } from '../i18n'
+import { useT } from '../i18n'
 
 const ACCENTS = [
   { id: 'violet', label: 'violet', swatch: '#9c6bff' },
@@ -14,6 +14,7 @@ const ACCENTS = [
 ]
 
 const read = (key, fallback) => {
+  if (typeof localStorage === 'undefined') return fallback
   try {
     return localStorage.getItem(key) || fallback
   } catch {
@@ -31,7 +32,6 @@ const write = (key, value) => {
 
 export default function Customizer() {
   const t = useT()
-  const [locale, setLocale] = useLocale()
   const [open, setOpen] = useState(false)
   const [accent, setAccent] = useState(() => read('accent', 'violet'))
   const [cursor, setCursor] = useState(() => read('cursor', 'brick'))
@@ -131,23 +131,6 @@ export default function Customizer() {
             </div>
           </fieldset>
 
-          <fieldset className="custom__group">
-            <legend>{t.appearance.language}</legend>
-            <div className="custom__options custom__options--three">
-              {LOCALES.map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`custom__option${locale === item.id ? ' is-active' : ''}`}
-                  onClick={() => setLocale(item.id)}
-                  aria-pressed={locale === item.id}
-                  lang={item.id}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
         </div>
       )}
     </div>

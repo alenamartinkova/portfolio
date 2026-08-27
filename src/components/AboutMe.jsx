@@ -7,7 +7,7 @@ import Reveal from './Reveal'
 // at 340px. Retina picks the 2x variants from the same srcset.
 const IMAGE_SIZES = '(min-width: 861px) 430px, 340px'
 
-const STAT_VALUES = ['6+', '20+', '2']
+const STAT_VALUES = ['8+', '25+', '2']
 const NOTE_ICONS = [Wrench, Handshake]
 
 export default function AboutMe() {
@@ -72,7 +72,7 @@ export default function AboutMe() {
         </Reveal>
       </div>
 
-      <Reveal className="stat-grid">
+      <Reveal className="stat-grid stagger">
         {t.about.stats.map((label, index) => (
           <article className="stat-card panel panel--hover" key={label}>
             <span className="stat-card__value">{STAT_VALUES[index]}</span>

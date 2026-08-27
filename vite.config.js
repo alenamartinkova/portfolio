@@ -5,10 +5,17 @@ const SITE_ORIGIN = 'https://martinkova.dev'
 
 // Emitted at build time so <lastmod> can never go stale in the repo.
 function sitemap(origin) {
+  let isSsrBuild = false
+
   return {
     name: 'sitemap',
     apply: 'build',
+    configResolved(config) {
+      isSsrBuild = !!config.build.ssr
+    },
     generateBundle() {
+      if (isSsrBuild) return
+
       const lastmod = new Date().toISOString().slice(0, 10)
       this.emitFile({
         type: 'asset',

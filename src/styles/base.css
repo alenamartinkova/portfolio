@@ -20,7 +20,7 @@ html {
 body {
   font-family: var(--font-sans);
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--text);
   background-color: var(--bg);
   min-height: 100vh;
@@ -65,6 +65,18 @@ body::after {
     var(--bloom),
     transparent 65%
   );
+}
+
+/* A second, colder wash low on the page so the lower half is not a flat
+   field of one colour. */
+body {
+  background-image: radial-gradient(
+    ellipse 70% 45% at 50% 78%,
+    var(--bloom-2),
+    transparent 70%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 #root {

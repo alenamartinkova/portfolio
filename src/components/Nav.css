@@ -19,7 +19,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  height: 60px;
+  /* minus the bar's own 1px bottom border, so the nav occupies exactly
+     --nav-h and the hero below it lands flush with the fold */
+  height: calc(var(--nav-h) - 1px);
 }
 
 .nav__mark {

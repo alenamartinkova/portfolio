@@ -8,30 +8,30 @@
 
 :root {
   /* surfaces */
-  --bg: #07070b;
-  --bg-rgb: 7, 7, 11;
-  --surface: #0c0c13;
-  --surface-2: #10101a;
-  --surface-3: #15151f;
+  --bg: #101018;
+  --bg-rgb: 16, 16, 24;
+  --surface: #17171f;
+  --surface-2: #1d1d27;
+  --surface-3: #25252f;
   /* raised surface used inside the diagram; separate from --surface-2 so the
      two themes can move it in opposite directions */
-  --node: #10101a;
+  --node: #1d1d27;
 
   /* hairlines — depth comes from borders, not shadows */
-  --line: rgba(255, 255, 255, 0.07);
-  --line-mid: rgba(255, 255, 255, 0.12);
-  --line-strong: rgba(255, 255, 255, 0.2);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-mid: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.24);
 
   /* overlay washes — white on dark, ink on light */
-  --tint-soft: rgba(255, 255, 255, 0.012);
-  --tint: rgba(255, 255, 255, 0.015);
-  --tint-2: rgba(255, 255, 255, 0.02);
-  --tint-strong: rgba(255, 255, 255, 0.04);
+  --tint-soft: rgba(255, 255, 255, 0.016);
+  --tint: rgba(255, 255, 255, 0.022);
+  --tint-2: rgba(255, 255, 255, 0.03);
+  --tint-strong: rgba(255, 255, 255, 0.055);
 
   /* text */
   --text: #eceef6;
-  --text-muted: #9599ac;
-  --text-dim: #63677a;
+  --text-muted: #a2a6ba;
+  --text-dim: #82869c;
 
   /* accent */
   --accent: #9c6bff;
@@ -41,13 +41,15 @@
   --accent-cold: #6b8bff;
   /* text that sits on top of --accent */
   --on-accent: #0a0616;
-  --bloom: rgba(156, 107, 255, 0.16);
+  --bloom: rgba(156, 107, 255, 0.22);
+  /* second, colder light source low on the page */
+  --bloom-2: rgba(107, 139, 255, 0.1);
 
   /* status */
   --ok: #3ddc97;
   --ok-soft: rgba(61, 220, 151, 0.12);
 
-  --scrollbar-thumb: #23232f;
+  --scrollbar-thumb: #2f2f3d;
 
   /* radii — sharp, engineered, consistent */
   --r-sm: 4px;
@@ -62,9 +64,11 @@
     Consolas, monospace;
 
   /* rhythm */
-  --page-w: 1120px;
+  --page-w: 1200px;
   --gutter: clamp(1.25rem, 5vw, 4rem);
-  --section-gap: clamp(4rem, 9vw, 7.5rem);
+  /* the sticky nav's own height — the hero subtracts it to fill exactly one
+     screen without pushing itself past the fold */
+  --nav-h: 60px;
 
   /* motion */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -105,6 +109,7 @@
   --accent-cold: #2f4bc4;
   --on-accent: #ffffff;
   --bloom: rgba(102, 51, 214, 0.09);
+  --bloom-2: rgba(47, 75, 196, 0.06);
 
   --ok: #0c8a5c;
   --ok-soft: rgba(12, 138, 92, 0.12);
