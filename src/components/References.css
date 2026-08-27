@@ -1,5 +1,4 @@
-/* Full-width cards: each engagement now carries a role, clients, a summary and
-   highlights, which no longer fits a multi-column grid. */
+/* Full-width feature cards: summary + highlights + stack, one per system. */
 .projects-grid {
   display: flex;
   flex-direction: column;
@@ -20,62 +19,17 @@
   font-size: 1.4rem;
 }
 
-/* Meta rail on the left, the actual story on the right. */
-.project-card__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr);
-  gap: clamp(1.5rem, 3vw, 3rem);
-  margin-bottom: 1.6rem;
-}
-
-.project-card__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.project-card__role {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--accent-bright);
-}
-
-.project-card__period {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 .project-card__note {
+  margin-bottom: 0.9rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   line-height: 1.6;
   color: var(--text-dim);
 }
 
-.project-card__clients {
-  margin-top: 0.9rem;
-  padding-top: 0.9rem;
-  border-top: 1px dashed var(--line);
-}
-
-.project-card__clients-key {
-  margin-bottom: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.project-card__clients li {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  line-height: 1.9;
-  color: var(--text-muted);
+.project-card__content {
+  max-width: 72ch;
+  margin-bottom: 1.6rem;
 }
 
 .project-card__summary {
@@ -110,12 +64,68 @@
   border-top: 1px solid var(--line);
 }
 
-@media (max-width: 760px) {
-  .project-card__grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
+/* --- the longer tail: one compact linked card per delivery ---------- */
 
+.projects-grid + .section__group {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.mini-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mini-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.mini-card__head svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.mini-card:hover .mini-card__head svg {
+  color: var(--accent-bright);
+  transform: translate(2px, -2px);
+}
+
+.mini-card__summary {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.mini-card__stack {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+@media (max-width: 760px) {
   .project-card__head {
     flex-direction: column;
     align-items: flex-start;

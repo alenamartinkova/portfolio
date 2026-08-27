@@ -1,25 +1,27 @@
 export default {
   meta: {
     lang: 'sk',
-    title: 'Alena Martinková — backend engineer & tech lead',
+    title: 'Alena Martinková — full stack vývojárka · tech & team lead',
     description:
-      'Alena Martinková — full stack vývojárka so zameraním na backend a tech lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React.',
+      'Full stack vývojárka so zameraním na backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Vediem backend v Rankacy.',
   },
 
   nav: {
     about: 'o mne',
     stack: 'stack',
     work: 'práca',
+    career: 'kariéra',
     contact: 'kontakt',
     status: 'Backend Lead @ Rankacy',
     skip: 'Preskočiť na obsah',
+    menu: 'Navigačné menu',
     sections: 'Sekcie',
   },
 
   hero: {
-    eyebrow: 'Full stack · Produktovo vedený vývoj',
+    eyebrow: 'Tech & team lead · Ostrava / remote',
     role: 'Full stack vývojárka so zameraním na backend',
-    lead: 'Vyvíjam škálovateľné platformy a produkty založené na dátach. Sústredím sa na návrh backendových architektúr, vedenie vývojových tímov a úzku spoluprácu s dizajnom a produktom, aby bol výsledok rýchly, merateľný a kvalitný.',
+    lead: 'V Rankacy vediem backend analytickej platformy pre CS2 a popri tom robím klientske projekty naprieč celým stackom. Potrpím si na architektúru, ktorá dáva zmysel aj o rok, API, ktoré vydržia, a termíny, ktoré platia.',
     ctaContact: 'Napíšte mi!',
     ctaWork: 'Pozrieť prácu',
   },
@@ -29,158 +31,186 @@ export default {
     status: 'Aktuálne: Backend Lead @ Rankacy',
     location: 'Pôsobím v Ostrave · remote-friendly',
     focus: [
-      'Návrh distribuovaných Python microservices a dátových pipeline',
-      'Rozvoj platformy a funkcií bežiacich v reálnom čase',
-      'Spolupráca naprieč produktom, dizajnom a vývojom',
+      'Pipeline na dáta zo zápasov a štatistické API v Rankacy',
+      'Event-driven služby: FastAPI · RabbitMQ · PostgreSQL',
+      'Mentoring, code review a architektúra naprieč tímom',
     ],
   },
 
   about: {
     index: 'o mne',
-    title:
-      'Backend vývojárka s produktovým myslením a dôrazom na čisté, spoľahlivé systémy',
+    title: 'Od prvého diagramu po produkciu',
     description:
-      'Som full stack vývojárka so zameraním na backend a vyvíjam rýchle, spoľahlivé webové platformy. Od roku 2019 som dodávala všetko od e-shopov a rezervačných systémov po interné nástroje a produkty pracujúce s dátami v reálnom čase — aktuálne vediem backend v Rankacy, predtým som pracovala pre Moravio a GIMMEDATA. Úzko spolupracujem s dizajnom a produktom, aby každý release držal pohromade, bol merateľný a výkonný.',
+      'Začínala som v roku 2019 v agentúrach — e-shopy, rezervačné systémy a interné nástroje pre medzinárodných klientov — a z frontendu som cez full stack prerástla k vedeniu tímu. Vedenie ma o kód nepripravilo: veľkú časť ho stále píšem sama.',
     notes: [
-      'Môj hlavný stack je Python (FastAPI), PostgreSQL, Redis, RabbitMQ a React. Záleží mi na čistej architektúre, efektívnych riešeniach, observabilite a poctivom testovaní (PyTest, Cypress).',
-      'Baví ma viesť tímy, mentorovať vývojárov a udržať releasy jasné a predvídateľné. Mimo kódu ma zaujíma aj kreatívna stránka — čokoľvek, čo zlepší užívateľský zážitok.',
+      'Môj denný stack je Python (FastAPI), PostgreSQL, Redis a RabbitMQ, vpredu React. Záleží mi na čistej architektúre, testoch, ktoré si na seba zarobia (PyTest, Cypress), a observabilite, z ktorej sa dá naozaj debugovať.',
+      'Viesť tím pre mňa znamená jasné zadania, úprimné code review a mentoring bez mikromanažmentu. Mimo kódu ma baví kreatívna stránka — čokoľvek, vďaka čomu sa produkt lepšie používa.',
     ],
     caption: 'Aktuálne vyvíjam v Rankacy',
     stats: [
-      'Rokov dodávania digitálnych produktov',
-      'Produkčných služieb a webových aplikácií dodaných od začiatku do konca',
-      'Vedené cross-funkčné tímy',
+      'Rokov dodávania produktov',
+      'Služieb a aplikácií dodaných od návrhu po produkciu',
+      'Vedené tímy',
     ],
   },
 
   skills: {
     index: 'stack',
-    title: 'Systémové myslenie, čistá architektúra a dodávky, ktoré držia',
+    title: 'Stack, ktorému verím, a ako s ním pracujem',
     description:
-      'Rada beriem zložité zadania a mením ich na prehľadné, škálovateľné systémy. Moja práca stojí na pomedzí inžinierstva, produktovej jasnosti a premysleného používateľského zážitku. Záleží mi na správnosti, udržateľnosti a na tom, aby tím dodával v pokoji — nie v chaose.',
+      'Diagram je tvar, ktorý má väčšina mojich systémov — pokojne klikajte, každý uzol má alternatívy.',
     groups: [
       {
         title: 'Backend a platformové inžinierstvo',
         description:
-          'Návrh a škálovanie backendových systémov, ktoré zostanú rýchle, predvídateľné a pochopiteľné aj keď vyrastú.',
+          'API, fronty a dátové modely, ktoré si držia tvar aj pod reálnou záťažou.',
         items: [
           'Python · FastAPI',
           'PostgreSQL · SQLAlchemy',
           'Redis · RabbitMQ',
-          'Návrh API',
+          'Návrh API a event-driven služby',
         ],
       },
       {
-        title: 'Vývoj webových produktov',
+        title: 'Produkt a frontend',
         description:
-          'Vyvíjam použiteľné a efektívne produkty — nielen endpointy.',
+          'Full stack znamená, že fungovať musí produkt, nielen endpointy.',
         items: [
-          'React a základy moderného frontendu',
-          'Stav, routing, formuláre a real-time aktualizácie UI',
-          'Plynulá spolupráca',
-          'Prístupnosť a ohľad na výkon',
+          'React · Vue',
+          'Stav, formuláre a real-time UI',
+          'Úzka spolupráca s dizajnom a produktom',
+          'Prístupnosť a výkon',
         ],
       },
       {
-        title: 'Nasadenie, testovanie a spoľahlivosť',
+        title: 'Dodávky a spoľahlivosť',
         description:
           'Mám rada systémy, ktoré sa nerozsypú o druhej ráno. Alebo horšie — pri piatkovom release.',
         items: [
           'CI/CD pipeline',
-          'Dockerizované služby · Kubernetes',
-          'PyTest a integračné testy',
+          'Docker · Kubernetes',
+          'PyTest · Cypress · integračné testy',
           'Metriky a logovanie',
         ],
       },
       {
-        title: 'Vývoj s podporou AI',
+        title: 'Vedenie tímu a práca s AI',
         description:
-          'AI nástroje sú bežnou súčasťou mojej práce, nie experiment na okraji — používam ich tam, kde reálne zrýchlia veci, a nechávam ich mimo tam, kde nie.',
+          'Systému má rozumieť celý tím, nie jeden človek, ktorý drží všetko v hlave.',
         items: [
-          'Písanie kódu a code review s podporou AI',
-          'Kontext a prompty, ktoré fungujú na reálnom codebase',
-          'Architektonické rozhodnutia zostávajú na vývojárovi',
-          'Pomáham tímu osvojiť si to bez zľavovania z kvality',
+          'Mentoring a kultúra code review',
+          'Zadania, odhady a plánovanie',
+          'AI tam, kde nás reálne zrýchli',
+          'Architektonické rozhodnutia zostávajú na vývojároch',
         ],
       },
     ],
   },
 
-
   work: {
     index: 'práca',
-    title: 'Spolupráca postavená na dôvere, dodávkach a merateľnom dopade',
+    title: 'Projekty, pod ktoré sa rada podpíšem',
     description:
-      'Spolupracujem so zakladateľmi, agentúrami a internými tímami na ceste od nápadu k škálovateľnému spusteniu — a zostávam aj na iterácie.',
-    clientsLabel: 'Klienti',
+      'Výber z produktovej práce aj klientskych dodávok. Väčšina beží v produkcii dodnes — a práve na to som hrdá.',
     via: 'cez',
-    previously: 'Predtým',
+    moreLabel: 'Ďalšie klientske projekty',
     projects: [
       {
         type: 'Analytická platforma pre e-sport',
-        role: 'Backend Lead Developer',
-        period: 'mar 2024 — súčasnosť',
-        previous: 'Full Stack Developer · jan 2024 — mar 2024',
         summary:
-          'Backend pre competitive gaming, ktorý poháňa štatistiky hráčov v CS2, spracovanie zápasov a predplatné. Vediem softvérový tím, riadim návrh riešenia od začiatku do konca a držím v chode každodenné dodávky — od architektúry API po review implementácií.',
+          'Rankacy hovorí hráčom CS2, v čom sa zlepšiť. Ja mám na starosti backend, ktorý to umožňuje — príjem a spracovanie zápasov, štatistické API, predplatné — od prvého architektonického rozhodnutia po posledné review.',
         highlights: [
-          'Event-driven služby vo FastAPI spracúvajúce dáta zo zápasov vo veľkom objeme',
-          'PostgreSQL databáza s miliónmi záznamov o zápasoch, ladená na rýchle čítanie',
-          'Škálovanie na AWS pre hráčov po celom svete',
-          'Systém predplatného a fakturácia cez Stripe',
+          'Event-driven služby vo FastAPI — spracovanie zápasov rozdelené cez RabbitMQ',
+          'PostgreSQL s miliónmi záznamov o zápasoch, Redis ako cache na časté čítania',
+          'Beží na AWS pre hráčov po celom svete',
+          'Predplatné a fakturácia cez Stripe',
         ],
         linkLabel: 'Pozrieť platformu',
       },
       {
-        type: 'E-commerce a systémy prepojené s ERP',
+        type: 'E-commerce prepojený s ERP',
         summary:
-          'Moderný e-commerce backend s dynamickými cenami, viacjazyčným obsahom, integráciami dopravy a internou administráciou.',
+          'E-shop s priemyselným sortimentom postavený ako plne custom systém — FastAPI backend, storefront aj administrácia v Reacte: dynamické ceny, viacjazyčný katalóg, synchronizácia s ERP.',
         highlights: [
-          'Integrovala som logistiku, dopravu a platobné API bez odstávky',
-          'Implementovala som internú administráciu na správu objednávok a produktov',
+          'Integrácie logistiky, dopravy a platieb nasadzované bez odstávok',
+          'Interná administrácia objednávok a produktov',
         ],
         linkLabel: 'Pozrieť web',
       },
       {
-        type: 'Klientske dodávky · na voľnej nohe',
-        role: 'Full Stack Lead Developer',
-        period: 'jan 2022 — súčasnosť',
+        type: 'Rezervačná platforma pre kúpele',
         summary:
-          'Vediem dodávky v Laraveli a Reacte pre hybridné klientske projekty a vyvažujem architektonické rozhodnutia s vlastnou implementáciou cez celý stack.',
-        highlights: [],
-        linkLabel: '',
-      },
-      {
-        type: 'Softvér na zákazku a interné nástroje',
-        role: 'Full Stack Developer',
-        period: 'júl 2020 — júl 2023',
-        previous: 'Frontend Web Developer · 2019 — 2020',
-        summary:
-          'Funkcie a interné nástroje pre medzinárodné klientske projekty, od rezervačných systémov po business dashboardy. Mala som na starosti CI/CD a testovanie a releasy som prezentovala priamo klientom.',
+          'Rezervačný portál pre kúpeľné pobyty v štýle Bookingu, napísaný od nuly v Laraveli a Reacte — verejný web aj interná administrácia ako jeden custom systém. Môj posledný a najväčší agentúrny projekt.',
         highlights: [
-          'Dodala som backendové a full-stack funkcie naprieč viacerými produktmi',
-          'Spolupracovala som s dizajnérmi a PM na čistých, produkčne pripravených riešeniach',
-          'Backendy v Laraveli a Node s frontendmi v Reacte a Strapi',
+          'Vlastný systém dostupnosti a rezervácií — bez hotového booking enginu',
+          'Verejný portál a administrácia postavené ako jeden celok',
         ],
-        linkLabel: 'Pozrieť agentúru',
+        linkLabel: 'Pozrieť portál',
+      },
+    ],
+    more: [
+      { summary: 'Web pre vzťahy s investormi nápojovej skupiny Kofola' },
+      {
+        summary:
+          'Portfólio českých webov Veolie vrátane systému verejných zákaziek',
+      },
+      { summary: 'Web a predaj vstupeniek ostravskej filharmónie' },
+      { summary: 'E-shopy outdoorovej značky na štyroch trhoch' },
+      { summary: 'Viacjazyčný web výrobcu cukroviniek značky Pedro' },
+      { summary: 'Portál pre 12 športovísk v Ostrave' },
+      { summary: 'Web jednej z najväčších kníhtlačiarní v strednej Európe' },
+      { summary: 'Web tradičného výrobcu nábytku z masívu' },
+      { summary: 'Web najväčšej školy varenia v Česku' },
+      { summary: 'Web a mobilná appka predajcu doplnkov výživy' },
+      { summary: 'Webová prezentácia strechárskej firmy' },
+      { summary: 'Web českej advokátskej kancelárie' },
+    ],
+  },
+
+  career: {
+    index: 'kariéra',
+    title: 'Kariéra v skratke',
+    description:
+      'Skrátená verzia — každá zastávka ma naučila niečo iné.',
+    linkedin: 'Celá história na LinkedIne',
+    items: [
+      {
+        period: '2024 — súčasnosť',
+        title: 'Backend Lead Developer · Rankacy',
+        description:
+          'Nastúpila som ako full stack vývojárka, po dvoch mesiacoch som prevzala vedenie backendu. Architektúra, plánovanie, review — a každodenný chod platformového tímu.',
       },
       {
-        type: 'Frontendové aplikácie',
-        role: 'Frontend Developer',
-        period: 'júl 2023 — jan 2024',
-        summary:
-          'Dodávala som moderné frontendové aplikácie vo Vue.js, HTML, CSS a GraphQL, remote a v úzkej spolupráci s produktom a QA.',
-        highlights: [],
-        linkLabel: '',
+        period: '2023 — 2024',
+        title: 'Frontend Developer · GIMMEDATA',
+        description:
+          'Frontend v Reacte a GraphQL pre dátové klientske produkty.',
+      },
+      {
+        period: '2022 — súčasnosť',
+        title: 'Full Stack Lead Developer · WAPS Technologies · freelance',
+        description:
+          'Na voľnej nohe od 2019; od 2022 vediem full stack klientske dodávky pre WAPS — architektonické rozhodnutia aj implementácia.',
+      },
+      {
+        period: '2019 — 2023',
+        title: 'Frontend → Full Stack Developer · Moravio',
+        description:
+          'Začínala som na frontendoch (Vue, WordPress) a prerástla k full stack práci v Laraveli a Next.js. Mala som na starosti CI/CD a testovanie, releasy som prezentovala priamo medzinárodným klientom.',
+      },
+      {
+        period: '2018 — 2024',
+        title: 'Bc. & Ing. · VŠB-TUO, Ostrava',
+        description:
+          'Informatika. Diplomová práca: blockchain framework napísaný od nuly v Pythone.',
       },
     ],
   },
 
   contact: {
     index: 'kontakt',
-    title:
-      'Hľadáte vývojárku s produktovým myslením alebo tech leada na čiastočnú kapacitu?',
-    note: 'Napíšte pár riadkov a dáme reč.',
+    title: 'Staviate backend alebo hľadáte tech leada?',
+    note: 'Napíšte mi pár riadkov o tom, čo chystáte — či je to nový projekt, alebo tím, ktorému treba pomôcť — a spojíme sa.',
     ctaEmail: 'Napísať e-mail',
     ctaLinkedIn: 'Spojiť sa na LinkedIne',
     copy: 'Kopírovať',
@@ -195,19 +225,6 @@ export default {
     close: 'Zavrieť detail',
     containers: 'Každá služba beží vo vlastnom kontajneri.',
     aria: 'Interaktívny diagram architektúry. Vyberte tok alebo uzol pre zobrazenie alternatív.',
-    layers: {
-      client:
-        'Vykresľovacia vrstva. Stav komponentov, routing a formuláre, s aktualizáciami z API v reálnom čase.',
-      api: 'Hranica requestu. Tu žije validácia, autorizácia a business pravidlá; čokoľvek pomalšie než request sa odovzdáva do fronty.',
-      queue:
-        'Oddeľuje request od pomalej práce. Publikovanie je lacné, takže API zostáva pod záťažou responzívne.',
-      workers:
-        'Consumeri, ktorí robia náročnú prácu — spracovanie zápasov, importy, naplánované joby — a čítajú aj zapisujú do dátovej vrstvy.',
-      database:
-        'Zdroj pravdy, do ktorého zapisuje API aj workeri. Návrh schémy, migrácie a query plány tu hrajú väčšiu rolu než kdekoľvek inde v stacku.',
-      cache:
-        'Časté čítanie a krátkodobý stav. API číta cez cache, workeri ju obnovia, keď je hotová skutočná práca.',
-    },
   },
 
   appearance: {

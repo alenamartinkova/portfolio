@@ -3,8 +3,9 @@ import { ArrowUpRight } from 'lucide-react'
 import { useT } from '../i18n'
 import Reveal from './Reveal'
 
-// Locale-invariant: names, URLs, stacks, client lists and whether the
-// engagement is still running. Merged with the translated copy by index.
+// Locale-invariant: names, URLs, stacks and attribution. Merged with the
+// translated copy by index. Career history (roles, dates) lives in the Career
+// timeline, so these cards stay purely about what was built.
 const PROJECTS = [
   {
     name: 'Rankacy',
@@ -15,25 +16,80 @@ const PROJECTS = [
   {
     name: 'SVX',
     link: 'https://www.svx.cz',
-    stack: 'FastAPI · PostgreSQL · React · Payment & shipping APIs',
+    stack: 'Python · FastAPI · React · PostgreSQL · Payment & shipping APIs',
     via: 'WAPS Technologies',
   },
   {
-    name: 'WAPS Technologies',
-    stack: 'Laravel · React · PHP',
-    current: true,
-    clients: ['Kausta Ondruš', 'SVX'],
+    name: 'Spanamo',
+    link: 'https://www.spanamo.com',
+    stack: 'Laravel · React · MySQL',
+    via: 'Moravio',
+  },
+]
+
+// The longer tail of client deliveries — one line each, biggest names first.
+// Attribution (which agency the work ran through) lives in the Career
+// timeline; repeating it on every card would just be noise.
+const MORE = [
+  {
+    name: 'Kofola',
+    link: 'https://investor.kofola.cz',
+    stack: 'WordPress · PHP',
   },
   {
-    name: 'Moravio',
-    link: 'https://moravio.com',
-    stack: 'Laravel · Node · React · Strapi · WordPress · MySQL · Docker',
-    clients: ['Kofola', 'Stamaco', 'Můj Chlupáč'],
+    name: 'Veolia',
+    link: 'https://www.vecr.cz',
+    stack: 'Drupal · PHP',
   },
   {
-    name: 'GIMMEDATA',
-    stack: 'Vue.js · GraphQL · HTML · CSS',
-    clients: ['Tiketo'],
+    name: 'Janáčkova filharmonie',
+    link: 'https://www.jfo.cz',
+    stack: 'WordPress · Shopsys · PHP',
+  },
+  {
+    name: 'Bushman',
+    link: 'https://bushman.cz',
+    stack: 'PHP · e-commerce',
+  },
+  {
+    name: 'Pedro · Candy Plus',
+    link: 'https://www.candyplus.cz',
+    stack: 'WordPress · PHP',
+  },
+  {
+    name: 'Sareza',
+    link: 'https://www.sareza.cz',
+    stack: 'WordPress · Laravel',
+  },
+  {
+    name: 'FINIDR',
+    link: 'https://www.finidr.cz',
+    stack: 'WordPress · PHP',
+  },
+  {
+    name: 'Jelínek',
+    link: 'https://www.jelinek.eu',
+    stack: 'WordPress · PHP',
+  },
+  {
+    name: 'Chefparade',
+    link: 'https://www.chefparade.cz',
+    stack: 'WordPress · PHP',
+  },
+  {
+    name: 'Finclub',
+    link: 'https://www.finclub.cz',
+    stack: 'Shopsys · PHP',
+  },
+  {
+    name: 'Stamaco',
+    link: 'https://stamaco.cz',
+    stack: 'WordPress · PHP',
+  },
+  {
+    name: 'Kausta & Partners',
+    link: 'https://kaustaondrus.cz',
+    stack: 'WordPress · PHP',
   },
 ]
 
@@ -43,6 +99,7 @@ function ProjectCard({ project, copy, t }) {
       <div className="panel__chrome">
         <span className="panel__chrome-dot" />
         {copy.type}
+        {project.current && <span className="status-dot" />}
       </div>
 
       <div className="panel__body">
@@ -61,53 +118,22 @@ function ProjectCard({ project, copy, t }) {
           )}
         </div>
 
-        <div className="project-card__grid">
-          <div className="project-card__meta">
-            {copy.role && (
-              <p className="project-card__role">
-                {project.current && <span className="status-dot" />}
-                {copy.role}
-              </p>
-            )}
-            {copy.period && (
-              <p className="project-card__period">{copy.period}</p>
-            )}
-            {copy.previous && (
-              <p className="project-card__note">
-                {t.work.previously}: {copy.previous}
-              </p>
-            )}
-            {project.via && (
-              <p className="project-card__note">
-                {t.work.via} {project.via}
-              </p>
-            )}
+        <div className="project-card__content">
+          {project.via && (
+            <p className="project-card__note">
+              {t.work.via} {project.via}
+            </p>
+          )}
 
-            {project.clients && (
-              <div className="project-card__clients">
-                <p className="project-card__clients-key">
-                  {t.work.clientsLabel}
-                </p>
-                <ul>
-                  {project.clients.map(client => (
-                    <li key={client}>{client}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          <p className="project-card__summary">{copy.summary}</p>
 
-          <div className="project-card__content">
-            <p className="project-card__summary">{copy.summary}</p>
-
-            {copy.highlights?.length > 0 && (
-              <ul className="project-card__highlights">
-                {copy.highlights.map(item => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {copy.highlights?.length > 0 && (
+            <ul className="project-card__highlights">
+              {copy.highlights.map(item => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="project-card__stack chip-row">
@@ -119,6 +145,24 @@ function ProjectCard({ project, copy, t }) {
         </div>
       </div>
     </article>
+  )
+}
+
+function MiniCard({ project, copy }) {
+  return (
+    <a
+      className="mini-card panel panel--hover"
+      href={project.link}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <p className="mini-card__head">
+        <span className="mini-card__name">{project.name}</span>
+        <ArrowUpRight aria-hidden="true" />
+      </p>
+      <p className="mini-card__summary">{copy.summary}</p>
+      <p className="mini-card__stack">{project.stack}</p>
+    </a>
   )
 }
 
@@ -142,6 +186,24 @@ export default function References() {
             project={project}
             copy={t.work.projects[index]}
             t={t}
+          />
+        ))}
+      </Reveal>
+
+      <Reveal className="section__group">
+        <div className="section__subheader">
+          <h3>{t.work.moreLabel}</h3>
+        </div>
+      </Reveal>
+
+      {/* .stagger must sit on the .reveal element itself — is-visible lands
+          there, and the child-fade selectors key off the pair. */}
+      <Reveal className="mini-grid stagger">
+        {MORE.map((project, index) => (
+          <MiniCard
+            key={project.name}
+            project={project}
+            copy={t.work.more[index]}
           />
         ))}
       </Reveal>

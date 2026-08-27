@@ -13,11 +13,20 @@ const STORAGE_KEY = 'locale'
 
 const LocaleContext = createContext({ locale: 'en', t: en, setLocale: () => {} })
 
+/** '/sk/' (any depth) → 'sk', everything else → null. */
+function localeFromPath(pathname) {
+  const first = pathname.split('/').filter(Boolean)[0]
+  return first && DICTIONARIES[first] ? first : null
+}
+
 function initialLocale() {
-  // English is the default for everyone; only an explicit choice changes it.
-  // Browser-language detection would otherwise flip Slovak visitors away from
+  // Each language lives on its own URL (/ and /sk/) so both are crawlable;
+  // the path always wins. On the root URL a stored explicit choice applies —
+  // browser-language detection would otherwise flip Slovak visitors away from
   // the version most recruiters land on.
-  if (typeof localStorage === 'undefined') return 'en'
+  if (typeof window === 'undefined') return 'en'
+  const fromPath = localeFromPath(window.location.pathname)
+  if (fromPath) return fromPath
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored && DICTIONARIES[stored]) return stored
@@ -27,8 +36,8 @@ function initialLocale() {
   return 'en'
 }
 
-export function LocaleProvider({ children }) {
-  const [locale, setLocale] = useState(initialLocale)
+export function LocaleProvider({ children, ssrLocale }) {
+  const [locale, setLocale] = useState(ssrLocale || initialLocale)
   const t = DICTIONARIES[locale] || en
 
   useEffect(() => {
@@ -37,6 +46,14 @@ export function LocaleProvider({ children }) {
 
     const description = document.querySelector('meta[name="description"]')
     if (description) description.setAttribute('content', t.meta.description)
+
+    // Keep the URL in step with the language so reloads and shared links stay
+    // in the visitor's locale. replaceState: switching language is not a
+    // navigation, so it should not grow history.
+    const path = locale === 'en' ? '/' : `/${locale}/`
+    if (window.location.pathname !== path) {
+      window.history.replaceState(null, '', path + window.location.hash)
+    }
 
     try {
       localStorage.setItem(STORAGE_KEY, locale)

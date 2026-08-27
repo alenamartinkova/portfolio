@@ -1,3 +1,4 @@
+@import './styles/fonts.css';
 @import './styles/tokens.css';
 @import './styles/base.css';
 
@@ -395,6 +396,14 @@
 }
 .js .stagger.is-visible > *:nth-child(6) {
   transition-delay: 450ms;
+}
+.js .stagger.is-visible > *:nth-child(7) {
+  transition-delay: 540ms;
+}
+/* Anything past the seventh child arrives together as the closing wave —
+   per-child delays would drag on in a twelve-card grid. */
+.js .stagger.is-visible > *:nth-child(n + 8) {
+  transition-delay: 540ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

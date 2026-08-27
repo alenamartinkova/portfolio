@@ -7,7 +7,9 @@ import Reveal from './Reveal'
 // at 340px. Retina picks the 2x variants from the same srcset.
 const IMAGE_SIZES = '(min-width: 861px) 430px, 340px'
 
-const STAT_VALUES = ['8+', '25+', '2']
+// now() − first client work, so the counter never goes stale in the repo.
+const CAREER_START = 2019
+const STAT_VALUES = [`${new Date().getFullYear() - CAREER_START}+`, '40+', '2']
 const NOTE_ICONS = [Wrench, Handshake]
 
 export default function AboutMe() {
@@ -75,7 +77,11 @@ export default function AboutMe() {
       <Reveal className="stat-grid stagger">
         {t.about.stats.map((label, index) => (
           <article className="stat-card panel panel--hover" key={label}>
-            <span className="stat-card__value">{STAT_VALUES[index]}</span>
+            {/* The prerender bakes in the build-time year, which can lag the
+                visitor's clock across a New Year. */}
+            <span className="stat-card__value" suppressHydrationWarning>
+              {STAT_VALUES[index]}
+            </span>
             <p>{label}</p>
           </article>
         ))}

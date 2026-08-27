@@ -15,7 +15,7 @@ export default function Contact() {
     <section className="section shell" id="contact">
       <Reveal className="section__header contact__header">
         <p className="section__index">
-          <b>04</b> / {t.contact.index}
+          <b>05</b> / {t.contact.index}
         </p>
       </Reveal>
 

@@ -4,7 +4,7 @@ import Reveal from './Reveal'
 import StackDiagram from './StackDiagram'
 
 // Panel file names read as code, so they are the same in every locale.
-const FILES = ['backend.py', 'product.tsx', 'delivery.yml', 'workflow.md']
+const FILES = ['backend.py', 'product.tsx', 'delivery.yml', 'leading.md']
 
 export default function Skills() {
   const t = useT()

@@ -324,13 +324,6 @@
   color: var(--text);
 }
 
-.diagram__detail-blurb {
-  max-width: 68ch;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
 .diagram__options {
   display: flex;
   align-items: center;

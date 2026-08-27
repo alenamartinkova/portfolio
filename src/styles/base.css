@@ -49,21 +49,20 @@ body::before {
   );
 }
 
-/* One restrained purple bloom behind the fold — not a full-page wash. */
+/* One restrained purple bloom — it rests at the top of the page and drifts
+   after the pointer once src/glow.js takes over (fine pointers only). The
+   custom-property fallbacks ARE the no-JS / touch / reduced-motion position,
+   so without the script this stays the original static glow. */
 body::after {
   content: '';
   position: fixed;
-  top: -30vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(1100px, 120vw);
-  height: 70vh;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background: radial-gradient(
-    ellipse at center,
+    ellipse min(400px, 55vw) 28vmin at var(--glow-x, 50%) var(--glow-y, 5vh),
     var(--bloom),
-    transparent 65%
+    transparent 70%
   );
 }
 

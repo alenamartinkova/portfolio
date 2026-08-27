@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#07070b" />
+    <meta name="theme-color" content="#101018" />
 
     <!-- Applies stored appearance choices before first paint. Dark + violet
          are the defaults and carry no attribute, so nothing is set unless the
@@ -21,26 +21,32 @@
       } catch (e) {}
     </script>
 
-    <title>Alena Martinková — Backend Engineer & Tech Lead</title>
+    <title>Alena Martinková — Full Stack Developer · Tech & Team Lead</title>
     <meta
       name="description"
-      content="Alena Martinková — backend-leaning full stack engineer and tech lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React."
+      content="Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy."
     />
-    <meta
-      name="keywords"
-      content="Alena Martinkova, Portfolio, martinkova.dev, Python, FastAPI, PostgreSQL, Backend, React, TypeScript, Laravel"
-    />
+    <meta name="author" content="Alena Martinková" />
     <link rel="canonical" href="https://martinkova.dev/" />
+
+    <!-- The EN and SK versions live on their own URLs so crawlers can index
+         both; scripts/prerender.mjs derives /sk/ from this file. -->
+    <link rel="alternate" hreflang="en" href="https://martinkova.dev/" />
+    <link rel="alternate" hreflang="sk" href="https://martinkova.dev/sk/" />
+    <link rel="alternate" hreflang="x-default" href="https://martinkova.dev/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://martinkova.dev/" />
+    <meta property="og:site_name" content="martinkova.dev" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="sk_SK" />
     <meta
       property="og:title"
-      content="Alena Martinková — Backend Engineer & Tech Lead"
+      content="Alena Martinková — Full Stack Developer · Tech & Team Lead"
     />
     <meta
       property="og:description"
-      content="Backend-leaning full stack engineer and tech lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React."
+      content="Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy."
     />
     <meta property="og:image" content="https://martinkova.dev/images/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -51,11 +57,11 @@
     <meta name="twitter:card" content="summary" />
     <meta
       name="twitter:title"
-      content="Alena Martinková — Backend Engineer & Tech Lead"
+      content="Alena Martinková — Full Stack Developer · Tech & Team Lead"
     />
     <meta
       name="twitter:description"
-      content="Backend-leaning full stack engineer and tech lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React."
+      content="Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy."
     />
     <meta name="twitter:image" content="https://martinkova.dev/images/og-image.jpg" />
 
@@ -65,49 +71,92 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Alena Martinková",
-        "alternateName": "Alena Martinkova",
-        "url": "https://martinkova.dev/",
-        "image": "https://martinkova.dev/images/og-image.jpg",
-        "email": "mailto:martinkova.a@gmail.com",
-        "jobTitle": "Backend Lead Developer",
-        "worksFor": {
-          "@type": "Organization",
-          "name": "Rankacy",
-          "url": "https://www.rankacy.com"
-        },
-        "alumniOf": {
-          "@type": "CollegeOrUniversity",
-          "name": "VSB - Technical University of Ostrava"
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Ostrava",
-          "addressCountry": "CZ"
-        },
-        "knowsAbout": [
-          "Backend engineering",
-          "Python",
-          "FastAPI",
-          "PostgreSQL",
-          "Redis",
-          "RabbitMQ",
-          "React",
-          "Software architecture"
-        ],
-        "sameAs": [
-          "https://www.linkedin.com/in/alena-martinkova/",
-          "https://github.com/alenamartinkova"
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://martinkova.dev/#person",
+            "name": "Alena Martinková",
+            "alternateName": "Alena Martinkova",
+            "url": "https://martinkova.dev/",
+            "image": "https://martinkova.dev/images/og-image.jpg",
+            "email": "mailto:martinkova.a@gmail.com",
+            "jobTitle": "Backend Lead Developer",
+            "description": "Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy.",
+            "worksFor": {
+              "@type": "Organization",
+              "name": "Rankacy",
+              "url": "https://www.rankacy.com"
+            },
+            "alumniOf": {
+              "@type": "CollegeOrUniversity",
+              "name": "VSB — Technical University of Ostrava",
+              "url": "https://www.vsb.cz"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Ostrava",
+              "addressCountry": "CZ"
+            },
+            "knowsLanguage": ["sk", "cs", "en"],
+            "knowsAbout": [
+              "Backend engineering",
+              "Python",
+              "FastAPI",
+              "PostgreSQL",
+              "Redis",
+              "RabbitMQ",
+              "React",
+              "Software architecture",
+              "Team leadership"
+            ],
+            "sameAs": [
+              "https://www.linkedin.com/in/alena-martinkova/",
+              "https://github.com/alenamartinkova"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://martinkova.dev/#website",
+            "url": "https://martinkova.dev/",
+            "name": "Alena Martinková — portfolio",
+            "inLanguage": ["en", "sk"],
+            "about": { "@id": "https://martinkova.dev/#person" }
+          },
+          {
+            "@type": "ProfilePage",
+            "@id": "https://martinkova.dev/#page",
+            "url": "https://martinkova.dev/",
+            "isPartOf": { "@id": "https://martinkova.dev/#website" },
+            "mainEntity": { "@id": "https://martinkova.dev/#person" },
+            "inLanguage": "en"
+          }
         ]
       }
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts are self-hosted (src/styles/fonts.css); their URLs live inside
+         the bundled stylesheet, so preload the latin faces the first paint
+         needs. /sk/ additionally preloads latin-ext (see prerender.mjs). -->
     <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="preload"
+      href="/fonts/space-grotesk-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/inter-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/jetbrains-mono-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
 
     <script

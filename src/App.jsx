@@ -5,6 +5,7 @@ import Header from './components/Header'
 import AboutMe from './components/AboutMe'
 import Skills from './components/Skills'
 import References from './components/References'
+import Career from './components/Career'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 
@@ -24,6 +25,7 @@ function Page() {
         <AboutMe />
         <Skills />
         <References />
+        <Career />
         <Contact />
       </main>
 
@@ -32,9 +34,9 @@ function Page() {
   )
 }
 
-export default function App() {
+export default function App({ ssrLocale }) {
   return (
-    <LocaleProvider>
+    <LocaleProvider ssrLocale={ssrLocale}>
       <Page />
     </LocaleProvider>
   )

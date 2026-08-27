@@ -12,6 +12,7 @@ const LINKS = [
   { id: 'about', key: 'about' },
   { id: 'skills', key: 'stack' },
   { id: 'projects', key: 'work' },
+  { id: 'journey', key: 'career' },
   { id: 'contact', key: 'contact' },
 ]
 

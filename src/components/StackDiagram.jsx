@@ -360,8 +360,6 @@ export default function StackDiagram() {
             </button>
           </div>
 
-          <p className="diagram__detail-blurb">{t.diagram.layers[selected]}</p>
-
           {detail.options.length > 1 && (
             <div className="diagram__options">
               <span className="diagram__options-key">{t.diagram.swap}</span>
