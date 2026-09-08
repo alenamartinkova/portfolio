@@ -1215,7 +1215,7 @@ body {
   .game-reference-navigation {
     display: none;
   }
-  .game-instruction > p:not(.game-eyebrow),
+  .game-workspace:not(.is-sandbox) .game-instruction > p:not(.game-eyebrow),
   .game-instruction progress {
     display: none;
   }

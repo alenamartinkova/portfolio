@@ -74,14 +74,16 @@ export default function Workspace({ state, dispatch, onReady }) {
           hidden={sandbox}
         />
         <aside className="game-panel game-instruction">
-          <p className="game-eyebrow">{sandbox ? t.sandbox : t.booklet}</p>
-          <h2>
-            {sandbox
-              ? t.freeTitle
-              : state.difficulty === 'easy' && state.booklet
-                ? t.step(step, progress.total)
-                : t.progress(progress.correct.size, progress.total)}
-          </h2>
+          {!sandbox && (
+            <>
+              <p className="game-eyebrow">{t.booklet}</p>
+              <h2>
+                {state.difficulty === 'easy' && state.booklet
+                  ? t.step(step, progress.total)
+                  : t.progress(progress.correct.size, progress.total)}
+              </h2>
+            </>
+          )}
           <p>
             {sandbox
               ? t.freeGuide
