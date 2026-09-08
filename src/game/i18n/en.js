@@ -81,7 +81,9 @@ export default {
   reference: 'Blueprint',
   expand: 'Expand blueprint',
   shrink: 'Shrink blueprint',
-  referenceHint: 'Drag to rotate · scroll to zoom',
+  enlarge: 'Enlarge',
+  resetReference: 'Reset blueprint view',
+  referenceHint: 'Drag to rotate · scroll or pinch to zoom',
   layers: 'Peel back the layers',
   allLayers: 'All layers',
   baseplate: 'Baseplate',
@@ -134,7 +136,7 @@ export default {
   back: 'Back to building',
   helpTitle: 'Good things click together.',
   helpIntro:
-    'Rebuild the blueprint by matching each brick’s position, shape and colour. Or try free building.',
+    'Rebuild the blueprint anywhere on the baseplate. Match the shape, colour and arrangement of the bricks; the whole model can be shifted. Or try free building.',
   helpSteps: [
     [
       'Pick. Point. Click.',

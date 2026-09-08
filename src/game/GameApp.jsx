@@ -30,6 +30,7 @@ function Game() {
     const help = event => {
       if (
         !state.dialog &&
+        !event.target.closest?.('.game-reference.is-expanded') &&
         !event.target.closest?.(
           'input,textarea,select,[contenteditable="true"]'
         ) &&

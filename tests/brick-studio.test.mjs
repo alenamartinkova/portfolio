@@ -7,7 +7,9 @@ import {
   validateModel,
   validatePlacement,
   brickKey,
+  footprint,
 } from '../src/game/models.js'
+import { matchModel } from '../src/game/matching.js'
 import {
   gameReducer,
   initialState,
@@ -92,6 +94,110 @@ test('support, collision and undo/redo preserve valid builds without mutating ol
   game.send({ type: 'remove', brick: top })
   game.send({ type: 'remove', brick: bottom })
   assert.deepEqual(game.state.bricks, [])
+})
+
+test('every model completes at each corner of the plate without position penalties', () => {
+  for (const difficulty of Object.keys(DIFFICULTIES)) {
+    for (const model of LEVELS) {
+      const minX = Math.min(...model.bricks.map(b => b.x))
+      const minZ = Math.min(...model.bricks.map(b => b.z))
+      const maxX = Math.max(...model.bricks.map(b => b.x + footprint(b).w))
+      const maxZ = Math.max(...model.bricks.map(b => b.z + footprint(b).d))
+      for (const dx of [-minX, 24 - maxX]) {
+        for (const dz of [-minZ, 24 - maxZ]) {
+          const game = controller()
+          game.send({ type: 'difficulty', value: difficulty })
+          game.send({ type: 'start', levelId: model.id })
+          for (const brick of model.bricks) {
+            game.send({
+              type: 'place',
+              brick: { ...brick, x: brick.x + dx, z: brick.z + dz },
+            })
+          }
+          const label = `${model.id}/${difficulty}/${dx},${dz}`
+          assert.equal(game.state.mistakes, 0, label)
+          assert.deepEqual(game.state.result, { stars: 3 }, label)
+          assert.equal(progressFor(game.state).missing.length, 0, label)
+        }
+      }
+    }
+  }
+})
+
+test('translated progress, guide steps, hints and comparisons share actual build coordinates', () => {
+  const game = controller(null, 'quick')
+  const model = LEVELS[0]
+  const moved = model.bricks.map(b => ({ ...b, x: b.x - 10, z: b.z + 10 }))
+  game.send({ type: 'place', brick: moved[0] })
+  let progress = progressFor(game.state)
+  assert.deepEqual(progress.offset, { x: -10, z: 10 })
+  assert.deepEqual(progress.missing, moved.slice(1))
+  assert.deepEqual([...progress.correct], [brickKey(moved[0])])
+  assert.equal(progress.missingIndices[0], 1)
+  game.send({ type: 'hint' })
+  assert.deepEqual(game.state.hintBrick, moved[1])
+  game.send({ type: 'place', brick: moved[1] })
+  assert.equal(game.state.hintBrick, null)
+  game.send({ type: 'undo' })
+  assert.deepEqual(progressFor(game.state), progress)
+  game.send({ type: 'redo' })
+  const restored = controller(savedFromState(game.state), 'quick')
+  assert.deepEqual(restored.state.bricks, moved.slice(0, 2))
+  assert.deepEqual(progressFor(restored.state).missing, moved.slice(2))
+  for (const brick of moved.slice(2)) restored.send({ type: 'place', brick })
+  assert.deepEqual(restored.state.result, { stars: 3 })
+})
+
+test('one common translation still rejects wrong shapes, colours, heights and relative positions', () => {
+  const model = LEVELS[0]
+  for (const change of [
+    { x: 12 },
+    { color: 'white' },
+    { type: 'b12' },
+    { y: 2 },
+  ]) {
+    const build = model.bricks.map((b, i) =>
+      i === 1 ? { ...b, ...change } : b
+    )
+    assert.equal(
+      matchModel(model.bricks, build).correct.size,
+      model.bricks.length - 1
+    )
+  }
+  const first = { type: 'b11', color: 'blue', x: 10, z: 10, y: 0, rot: 0 }
+  const reference = [first, { ...first, x: 13 }]
+  const scattered = [
+    { ...first, x: 0 },
+    { ...first, x: 23 },
+  ]
+  assert.equal(matchModel(reference, scattered).correct.size, 1)
+  const slope = { ...first, type: 's22' }
+  assert.equal(matchModel([slope], [{ ...slope, rot: 2 }]).correct.size, 0)
+  const rectangle = { ...first, type: 'b12' }
+  assert.equal(
+    matchModel([rectangle], [{ ...rectangle, rot: 1 }]).correct.size,
+    0
+  )
+  assert.equal(
+    matchModel([rectangle], [{ ...rectangle, x: 0, rot: 2 }]).correct.size,
+    1
+  )
+})
+
+test('extra pieces prevent completion and a misplaced relative part still counts as a mistake', () => {
+  const game = controller(null, 'quick')
+  const model = LEVELS[0]
+  for (const brick of model.bricks.slice(0, -1))
+    game.send({ type: 'place', brick })
+  const wrong = { ...model.bricks.at(-1), x: 12 }
+  game.send({ type: 'place', brick: wrong })
+  assert.equal(game.state.mistakes, 1)
+  assert.equal(game.state.result, null)
+  game.send({ type: 'place', brick: model.bricks.at(-1) })
+  assert.equal(progressFor(game.state).correct.size, model.bricks.length)
+  assert.equal(game.state.result, null, 'the spare part must be removed')
+  game.send({ type: 'remove', brick: wrong })
+  assert.deepEqual(game.state.result, { stars: 3 })
 })
 
 test('build codes round-trip every model and reject invalid data', () => {

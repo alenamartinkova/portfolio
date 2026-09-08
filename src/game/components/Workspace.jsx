@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
-import { Expand, Minimize2, Maximize, ArrowRight } from 'lucide-react'
+import { Maximize, ArrowRight } from 'lucide-react'
 import { useT } from '../i18n'
 import { footprint, TYPES } from '../models.js'
 import { isSandbox, levelFor } from '../state.js'
 import useStudio from '../hooks/useStudio'
 import Palette from './Palette'
 import Toolbar from './Toolbar'
+import Blueprint from './Blueprint'
 
 export const formatTime = seconds =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
@@ -20,7 +21,6 @@ export default function Workspace({ state, dispatch, onReady }) {
   const maxLayer = level
     ? Math.max(...level.bricks.map(brick => brick.y + footprint(brick).h))
     : 60
-  const [peel, setPeel] = useState(maxLayer)
   const labels = useMemo(
     () => ({ workspace: t.workspace, reference: t.referenceLabel }),
     [t]
@@ -32,11 +32,12 @@ export default function Workspace({ state, dispatch, onReady }) {
     dispatch,
     labels,
     onReady,
+    paused: expanded,
   })
   const name = sandbox ? t.freeTitle : t.modelNames[state.levelId]
   const next = progress.missing[0]
   const nextType = next && TYPES.find(type => type.id === next.type)
-  const step = next ? level.bricks.indexOf(next) + 1 : progress.total
+  const step = next ? progress.missingIndices[0] + 1 : progress.total
   const pct = progress.total
     ? Math.round((progress.correct.size / progress.total) * 100)
     : 0
@@ -62,77 +63,43 @@ export default function Workspace({ state, dispatch, onReady }) {
           </span>
         )}
       </div>
-      <aside
-        className={`game-panel game-reference${expanded ? ' is-expanded' : ''}`}
-        hidden={sandbox}
-      >
-        <div className="game-reference-heading">
-          <div>
-            <p className="game-eyebrow">{t.reference}</p>
-            <h2>{name}</h2>
-          </div>
-          <button
-            className="game-icon-button"
-            aria-label={expanded ? t.shrink : t.expand}
-            title={expanded ? t.shrink : t.expand}
-            aria-expanded={expanded}
-            onClick={() => setExpanded(value => !value)}
-          >
-            {expanded ? <Minimize2 /> : <Expand />}
-          </button>
-        </div>
-        <div className="game-reference-canvas" ref={referenceRef} />
-        <p className="game-reference-hint">{t.referenceHint}</p>
-        <label className="game-peel">
-          <span>
-            {t.layers}
-            <span>
-              {peel === maxLayer
-                ? t.allLayers
-                : peel === 0
-                  ? t.baseplate
-                  : t.layer((peel / 3).toFixed(peel % 3 ? 1 : 0))}
-            </span>
-          </span>
-          <input
-            type="range"
-            min="0"
-            max={maxLayer}
-            value={peel}
-            onChange={event => {
-              const value = Number(event.target.value)
-              setPeel(value)
-              studio?.setPeel(value)
-            }}
-          />
-        </label>
-      </aside>
+      <div className="game-guide-column">
+        <Blueprint
+          canvasRef={referenceRef}
+          name={name}
+          maxLayer={maxLayer}
+          studio={studio}
+          expanded={expanded}
+          onExpand={setExpanded}
+          hidden={sandbox}
+        />
+        <aside className="game-panel game-instruction">
+          <p className="game-eyebrow">{sandbox ? t.sandbox : t.booklet}</p>
+          <h2>
+            {sandbox
+              ? t.freeTitle
+              : state.difficulty === 'easy' && state.booklet
+                ? t.step(step, progress.total)
+                : t.progress(progress.correct.size, progress.total)}
+          </h2>
+          <p>
+            {sandbox
+              ? t.freeGuide
+              : state.difficulty === 'easy' && state.booklet && next
+                ? `${t.colours[next.color]} · ${nextType.w} × ${nextType.d}. ${t.follow}`
+                : state.difficulty === 'hard'
+                  ? t.hardGuide
+                  : t.guide}
+          </p>
+          {!sandbox && <progress max="100" value={pct} aria-label={name} />}
+          {!sandbox && state.difficulty === 'easy' && (
+            <button onClick={() => dispatch({ type: 'booklet' })}>
+              {state.booklet ? t.hideBooklet : t.showBooklet}
+            </button>
+          )}
+        </aside>
+      </div>
       <Palette state={state} dispatch={dispatch} />
-      <aside className="game-panel game-instruction">
-        <p className="game-eyebrow">{sandbox ? t.sandbox : t.booklet}</p>
-        <h2>
-          {sandbox
-            ? t.freeTitle
-            : state.difficulty === 'easy' && state.booklet
-              ? t.step(step, progress.total)
-              : t.progress(progress.correct.size, progress.total)}
-        </h2>
-        <p>
-          {sandbox
-            ? t.freeGuide
-            : state.difficulty === 'easy' && state.booklet && next
-              ? `${t.colours[next.color]} · ${nextType.w} × ${nextType.d}. ${t.follow}`
-              : state.difficulty === 'hard'
-                ? t.hardGuide
-                : t.guide}
-        </p>
-        {!sandbox && <progress max="100" value={pct} aria-label={name} />}
-        {!sandbox && state.difficulty === 'easy' && (
-          <button onClick={() => dispatch({ type: 'booklet' })}>
-            {state.booklet ? t.hideBooklet : t.showBooklet}
-          </button>
-        )}
-      </aside>
       <div
         className="game-camera-tools"
         role="group"
@@ -176,7 +143,7 @@ export default function Workspace({ state, dispatch, onReady }) {
         </span>
         <time>{formatTime(state.elapsed)}</time>
       </footer>
-      {hover && !state.dialog && (
+      {hover && !state.dialog && !expanded && (
         <div
           className="game-ghost-reason"
           style={{

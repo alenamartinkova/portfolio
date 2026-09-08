@@ -7,6 +7,7 @@ import {
   validatePlacement,
   validateModel,
 } from './models.js'
+import { matchModel } from './matching.js'
 import {
   DIFFICULTIES,
   MAX_BRICKS,
@@ -59,14 +60,7 @@ export function remaining(state, type, color) {
 }
 export function progressFor(state) {
   const level = levelFor(state)
-  const placed = new Set(state.bricks.map(brickKey))
-  const missing =
-    level?.bricks.filter(brick => !placed.has(brickKey(brick))) || []
-  const correct = new Set(
-    level?.bricks.filter(brick => placed.has(brickKey(brick))).map(brickKey) ||
-      []
-  )
-  return { missing, correct, total: level?.bricks.length || 0 }
+  return matchModel(level?.bricks || [], state.bricks)
 }
 export function paletteEntries(state) {
   if (isSandbox(state))
@@ -252,15 +246,15 @@ export function gameReducer(state, action) {
       const reason = placementReason(state, action.brick)
       if (reason)
         return notice({ ...state, mistakes: state.mistakes + 1 }, reason)
+      const bricks = [...state.bricks, { ...action.brick }]
       const matches =
         isSandbox(state) ||
-        levelFor(state).bricks.some(
-          brick => brickKey(brick) === brickKey(action.brick)
-        )
-      return edit({ ...state, mistakes: state.mistakes + (matches ? 0 : 1) }, [
-        ...state.bricks,
-        { ...action.brick },
-      ])
+        progressFor({ ...state, bricks }).correct.size >
+          progressFor(state).correct.size
+      return edit(
+        { ...state, mistakes: state.mistakes + (matches ? 0 : 1) },
+        bricks
+      )
     }
     case 'remove': {
       if (state.screen !== 'build' || state.result || !action.brick)

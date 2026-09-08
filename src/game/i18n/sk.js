@@ -81,7 +81,9 @@ export default {
   reference: 'Predloha',
   expand: 'Zväčšiť predlohu',
   shrink: 'Zmenšiť predlohu',
-  referenceHint: 'Ťahaním otočíte · kolieskom priblížite',
+  enlarge: 'Zväčšiť',
+  resetReference: 'Obnoviť pohľad na predlohu',
+  referenceHint: 'Ťahaním otočíte · kolieskom či dvoma prstami priblížite',
   layers: 'Odkryť vrstvy',
   allLayers: 'Všetky vrstvy',
   baseplate: 'Podložka',
@@ -133,7 +135,7 @@ export default {
   back: 'Späť ku stavaniu',
   helpTitle: 'Poďme niečo poskladať.',
   helpIntro:
-    'Poskladajte model podľa predlohy. Záleží na polohe, tvare aj farbe. Alebo si vyskúšajte voľné stavanie.',
+    'Poskladajte model kdekoľvek na podložke. Záleží na tvare, farbe a vzájomnom usporiadaní kociek; celá stavba môže byť posunutá. Alebo si vyskúšajte voľné stavanie.',
   helpSteps: [
     [
       'Vybrať. Namieriť. Kliknúť.',

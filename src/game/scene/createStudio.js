@@ -47,8 +47,8 @@ export function createStudio(
     animationID = 0
   const scene = new THREE.Scene()
   const referenceScene = new THREE.Scene()
-  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 240)
-  const referenceCamera = new THREE.PerspectiveCamera(37, 1, 0.1, 200)
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 300)
+  const referenceCamera = new THREE.PerspectiveCamera(37, 1, 0.1, 300)
   const renderer = new Renderer({
     antialias: true,
     alpha: true,
@@ -96,7 +96,7 @@ export function createStudio(
   controls.enableDamping = true
   controls.dampingFactor = 0.09
   controls.minDistance = 10
-  controls.maxDistance = 85
+  controls.maxDistance = 180
   controls.maxPolarAngle = Math.PI / 2 - 0.04
   controls.enablePan = false
   controls.mouseButtons = {
@@ -113,7 +113,7 @@ export function createStudio(
   referenceControls.dampingFactor = 0.1
   referenceControls.enablePan = false
   referenceControls.minDistance = 5
-  referenceControls.maxDistance = 80
+  referenceControls.maxDistance = 180
   referenceControls.maxPolarAngle = Math.PI / 2 - 0.03
   referenceControls.mouseButtons = {
     LEFT: THREE.MOUSE.ROTATE,
@@ -641,7 +641,12 @@ export function createStudio(
   referenceRenderer.domElement.addEventListener('pointerup', onRefUp)
   function modelBounds(bricks) {
     if (!bricks.length)
-      return { center: new THREE.Vector3(0, 1, 0), span: 14, height: 4 }
+      return {
+        center: new THREE.Vector3(0, 1, 0),
+        span: 14,
+        height: 4,
+        radius: 10,
+      }
     let x1 = 24,
       z1 = 24,
       y1 = 60,
@@ -665,11 +670,16 @@ export function createStudio(
       ),
       span: Math.max(x2 - x1, z2 - z1, (y2 - y1) * 0.4),
       height: (y2 - y1) * 0.4,
+      radius: Math.hypot(x2 - x1, z2 - z1, (y2 - y1) * 0.4 + 0.3) / 2,
     }
   }
   function referenceFrame() {
     const bounds = modelBounds(target),
-      distance = Math.max(9, bounds.span * 2.12)
+      halfFov = Math.atan(
+        Math.tan(THREE.MathUtils.degToRad(referenceCamera.fov / 2)) *
+          Math.min(1, referenceCamera.aspect)
+      ),
+      distance = Math.max(9, (bounds.radius / Math.sin(halfFov)) * 1.1)
     referenceControls.target.copy(bounds.center)
     referenceCamera.position
       .copy(bounds.center)
@@ -731,7 +741,7 @@ export function createStudio(
         Math.min(1, camera.aspect)) *
       1.18
     const distance = Math.min(
-      85,
+      controls.maxDistance,
       Math.max(32, camera.position.distanceTo(controls.target), fit)
     )
     const direction = top
@@ -748,26 +758,47 @@ export function createStudio(
     mainHeight = 0,
     refWidth = 0,
     refHeight = 0
+  function resizeCamera(
+    viewCamera,
+    orbit,
+    aspect,
+    initialized,
+    wideAspect = 1
+  ) {
+    if (initialized) {
+      // Keep the orbit and the user's zoom, compensating for the narrower field
+      // of view when the panel switches between wide and portrait proportions.
+      const scale =
+        Math.min(wideAspect, viewCamera.aspect) / Math.min(wideAspect, aspect)
+      const direction = viewCamera.position.clone().sub(orbit.target)
+      direction.setLength(
+        clamp(direction.length() * scale, orbit.minDistance, orbit.maxDistance)
+      )
+      viewCamera.position.copy(orbit.target).add(direction)
+    }
+    viewCamera.aspect = aspect
+    viewCamera.updateProjectionMatrix()
+    orbit.update()
+  }
   function resize() {
     const rect = mainEl.getBoundingClientRect()
     const rw = Math.round(rect.width),
       rh = Math.round(rect.height)
     if (rw > 0 && rh > 0 && (rw !== mainWidth || rh !== mainHeight)) {
+      renderer.setSize(rw, rh, false)
+      resizeCamera(camera, controls, rw / rh, mainWidth > 0, 1.2)
+      cameraTween = null
       mainWidth = rw
       mainHeight = rh
-      renderer.setSize(rw, rh, false)
-      camera.aspect = rw / rh
-      camera.updateProjectionMatrix()
     }
     const rr = referenceEl.getBoundingClientRect()
     const ww = Math.round(rr.width),
       hh = Math.round(rr.height)
     if (ww > 0 && hh > 0 && (ww !== refWidth || hh !== refHeight)) {
+      referenceRenderer.setSize(ww, hh, false)
+      resizeCamera(referenceCamera, referenceControls, ww / hh, refWidth > 0)
       refWidth = ww
       refHeight = hh
-      referenceRenderer.setSize(ww, hh, false)
-      referenceCamera.aspect = ww / hh
-      referenceCamera.updateProjectionMatrix()
     }
   }
   const resizeObserver = new ResizeObserver(resize)
@@ -999,6 +1030,7 @@ export function createStudio(
       )
     },
     frame,
+    referenceFrame,
     view,
     celebrate,
     resize,

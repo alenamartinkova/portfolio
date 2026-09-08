@@ -75,7 +75,15 @@ test('workspace renders actual palette, blueprint and accessible progress in Slo
   assert.ok(markup.includes('Vaše kocky'))
   assert.ok(markup.includes('Odkryť vrstvy'))
   assert.ok(markup.includes('Krok 1 / 11'))
+  assert.ok(markup.includes('aria-label="Zväčšiť predlohu"'))
+  assert.ok(markup.includes('>Zväčšiť</span>'))
+  assert.ok(markup.includes('aria-expanded="false"'))
   assert.ok(!markup.includes('innerHTML'))
+  const placed = gameReducer(state, {
+    type: 'place',
+    brick: { ...LEVELS[0].bricks[0], x: 0, z: 0 },
+  })
+  assert.ok(render('sk', Workspace, placed).includes('Krok 2 / 11'))
 })
 
 test('save and help dialogs render native dialogs with translated content', () => {

@@ -9,9 +9,10 @@ export default function useStudio({
   dispatch,
   labels,
   onReady,
+  paused = false,
 }) {
-  const latest = useRef({ state, labels, onReady })
-  latest.current = { state, labels, onReady }
+  const latest = useRef({ state, labels, onReady, paused })
+  latest.current = { state, labels, onReady, paused }
   const hoveredBrick = useRef(null)
   const [studio, setStudio] = useState(null)
   const [error, setError] = useState(false)
@@ -36,10 +37,13 @@ export default function useStudio({
           referenceEl: referenceRef.current,
           labels: latest.current.labels,
           getSelection: () => latest.current.state.selection,
-          isPicking: () => latest.current.state.tool === 'pick',
+          isPicking: () =>
+            !latest.current.paused && latest.current.state.tool === 'pick',
           isRemoving: () => latest.current.state.tool === 'remove',
           isBuilding: () =>
-            !latest.current.state.result && !latest.current.state.dialog,
+            !latest.current.state.result &&
+            !latest.current.state.dialog &&
+            !latest.current.paused,
           onPlace: brick => dispatch({ type: 'place', brick }),
           onRemove: brick => dispatch({ type: 'remove', brick }),
           onPick: brick => dispatch({ type: 'select', selection: brick }),
@@ -50,7 +54,8 @@ export default function useStudio({
               candidate &&
               current.tool === 'build' &&
               !current.result &&
-              !current.dialog
+              !current.dialog &&
+              !latest.current.paused
             const reason = active ? placementReason(current, candidate) : ''
             instance?.setGhost(active ? candidate : null, !reason)
             setHover(reason && point ? { reason, ...point } : null)
@@ -58,7 +63,7 @@ export default function useStudio({
         })
         instance.frame(true)
         setStudio(instance)
-        latest.current.onReady(true)
+        latest.current.onReady(!latest.current.paused)
       })
       .catch(error => {
         instance?.dispose()
@@ -73,6 +78,10 @@ export default function useStudio({
       latest.current.onReady(false)
     }
   }, [attempt, dispatch, mainRef, referenceRef])
+
+  useEffect(() => {
+    if (studio) onReady(!paused)
+  }, [studio, paused, onReady])
 
   useEffect(() => {
     if (!studio) return
@@ -128,7 +137,7 @@ export default function useStudio({
     studio.setGhost(null, true)
     setHover(null)
     studio.refreshHover()
-  }, [studio, state.selection, state.tool, state.dialog, state.result])
+  }, [studio, state.selection, state.tool, state.dialog, state.result, paused])
   useEffect(() => {
     if (state.result) studio?.celebrate()
   }, [studio, state.result])
@@ -141,6 +150,7 @@ export default function useStudio({
       const current = latest.current.state
       if (
         current.dialog ||
+        latest.current.paused ||
         current.result ||
         event.target.closest?.('input,textarea,select,[contenteditable="true"]')
       )

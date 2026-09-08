@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import * as THREE from 'three'
 import { createStudio } from '../src/game/scene/createStudio.js'
-import { LEVELS } from '../src/game/models.js'
+import { LEVELS, footprint } from '../src/game/models.js'
 
 class Events {
   listeners = new Map()
@@ -63,6 +63,8 @@ class Renderer {
     this.domElement.height = height
   }
   render(scene, camera) {
+    this.scene = scene
+    this.camera = camera
     scene.updateMatrixWorld(true)
     camera.updateMatrixWorld(true)
     scene.traverse(object => {
@@ -240,4 +242,89 @@ test('failure to create the second WebGL context cleans up the first', t => {
   )
   assert.equal(Renderer.instances[0].disposed, true)
   assert.equal(Renderer.instances[0].domElement.removed, true)
+})
+
+test('blueprint resize keeps models in view across phone, tablet and expanded proportions', t => {
+  const env = environment(t)
+  const mainEl = new Surface(),
+    referenceEl = new Surface()
+  const studio = createStudio(
+    { mainEl, referenceEl, labels: {} },
+    { Renderer, Controls }
+  )
+  for (const level of LEVELS) {
+    referenceEl.width = 280
+    referenceEl.height = 260
+    studio.resize()
+    studio.setTarget(level.bricks)
+    for (const [width, height] of [
+      [148, 88],
+      [358, 600],
+      [820, 260],
+      [1040, 710],
+      [280, 260],
+    ]) {
+      referenceEl.width = width
+      referenceEl.height = height
+      studio.resize()
+      env.frame()
+      const { camera, domElement } = Renderer.instances[1]
+      assert.equal(camera.aspect, width / height)
+      assert.equal(domElement.width, width)
+      assert.equal(domElement.height, height)
+      for (const b of level.bricks) {
+        const f = footprint(b)
+        for (const x of [b.x, b.x + f.w])
+          for (const z of [b.z, b.z + f.d]) {
+            for (const y of [b.y * 0.4, (b.y + f.h) * 0.4 + 0.2]) {
+              const point = new THREE.Vector3(x - 12, y, z - 12).project(camera)
+              assert.ok(
+                Math.abs(point.x) < 1 && Math.abs(point.y) < 1,
+                `${level.id} remains visible at ${width} × ${height}`
+              )
+            }
+          }
+      }
+    }
+    studio.referenceFrame()
+  }
+  studio.dispose()
+})
+
+test('the board remains framed after resizing an existing workspace into portrait', t => {
+  const env = environment(t)
+  const mainEl = new Surface(),
+    referenceEl = new Surface()
+  const studio = createStudio(
+    { mainEl, referenceEl, labels: {} },
+    { Renderer, Controls }
+  )
+  studio.frame(true)
+  for (const [width, height] of [
+    [304, 240],
+    [374, 380],
+    [400, 760],
+    [820, 320],
+  ]) {
+    mainEl.width = width
+    mainEl.height = height
+    studio.resize()
+    env.frame()
+    for (const x of [0, 23])
+      for (const z of [0, 23]) {
+        const point = studio.projectBrick({
+          type: 'b11',
+          color: 'blue',
+          x,
+          z,
+          y: 0,
+          rot: 0,
+        })
+        assert.ok(
+          point.x >= 0 && point.x <= width && point.y >= 0 && point.y <= height,
+          `board corner remains visible at ${width} × ${height}`
+        )
+      }
+  }
+  studio.dispose()
 })

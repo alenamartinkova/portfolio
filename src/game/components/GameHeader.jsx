@@ -94,6 +94,7 @@ export default function GameHeader({ state, dispatch }) {
           {state.screen === 'build' && (
             <button
               className="game-back"
+              aria-label={t.collection}
               onClick={() => dispatch({ type: 'collection' })}
             >
               <ArrowLeft aria-hidden="true" />
