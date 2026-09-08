@@ -9,9 +9,16 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir build-ssr && node scripts/prerender.mjs",
+    "build": "pnpm build:portfolio && pnpm --dir hexhaven build",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.mjs"
+    "test": "pnpm test:portfolio && pnpm --dir hexhaven test",
+    "build:portfolio": "vite build && vite build --ssr src/entry-server.jsx --outDir build-ssr && node scripts/prerender.mjs",
+    "test:portfolio": "node --test tests/*.test.mjs",
+    "typecheck": "pnpm --dir hexhaven typecheck",
+    "lint": "pnpm --dir hexhaven lint",
+    "sim": "pnpm --dir hexhaven sim",
+    "dev:hexhaven": "pnpm --dir hexhaven dev",
+    "e2e": "pnpm --dir hexhaven e2e"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",
@@ -23,5 +30,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.5",
     "vite": "^8.2.1"
-  }
+  },
+  "packageManager": "pnpm@9.9.0"
 }

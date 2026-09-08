@@ -134,20 +134,33 @@ body {
   position: relative;
   z-index: 10;
   flex-shrink: 0;
-  height: 44px;
-  padding: 0 24px;
+  min-height: 44px;
+  padding: 6px 24px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 6px 20px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   font: 12px var(--font-mono);
 }
-.game-site-bar > a,
+.game-site-links,
+.game-site-links a,
 .game-site-actions {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.game-site-links {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.game-site-links a {
+  gap: 8px;
+}
+.game-site-actions {
+  margin-left: auto;
 }
 .game-site-bar svg {
   width: 14px;
@@ -165,7 +178,7 @@ body {
 .game-share-feedback {
   position: absolute;
   right: 12px;
-  top: 48px;
+  top: calc(100% + 4px);
   max-width: calc(100vw - 24px);
   background: var(--surface);
   border: 1px solid var(--accent-line);

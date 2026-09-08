@@ -8,13 +8,13 @@ tokens in `src/styles/tokens.css`.
 ## Scripts
 
 ```bash
-npm install     # install dependencies
-npm run dev     # dev server on http://localhost:3000
-npm run build   # production build into build/
-npm run preview # serve the production build locally
+pnpm install     # install workspace dependencies
+pnpm dev         # portfolio dev server on http://localhost:3000
+pnpm build       # production portfolio and games into build/
+pnpm preview     # serve the production build locally
 ```
 
-`npm start` is kept as an alias for `npm run dev`.
+`pnpm start` is kept as an alias for `pnpm dev`.
 
 ## Structure
 
@@ -60,7 +60,7 @@ The OG image is a square crop offset from the top so the head is not clipped
 
 - The build output goes to `build/` (not Vite's default `dist/`) so the existing
   deployment setup keeps working.
-- The build emits two pages: `/` (English) and `/sk/` (Slovak), each fully
+- The portfolio emits two pages: `/` (English) and `/sk/` (Slovak), each fully
   prerendered with its own metadata and cross-linked via hreflang. The language
   toggle syncs the URL with `history.replaceState`.
 - All translatable copy lives in `src/i18n/en.js` and `src/i18n/sk.js`.
@@ -71,12 +71,40 @@ The OG image is a square crop offset from the top so the head is not clipped
   positions are a simple coordinate grid at the top of the file.
 
 
+## Games
+
+A quiet **Games** link in the portfolio footer opens `/games/`. The standalone
+page lists LEGO and Hexhaven and shares the portfolio's language and appearance
+controls. `?lang=sk` / `?lang=en` preserve the language through the list and LEGO.
+
+To add a game, add its entry in `src/games/catalog.js` and its copy under
+`games.<id>` in both `src/i18n/en.js` and `src/i18n/sk.js`. The list lays out the
+cards automatically. Give each game its own HTML entry or workspace build.
+
+## Hexhaven
+
+[Hexhaven — Traders of the Long Bay](hexhaven/README.md) is an original procedural
+3D trading and settlement game at `/hexhaven/`. It supports local hotseat and
+three bot difficulties, saves to IndexedDB, and exports deterministic replays.
+Its strict TypeScript rules engine has no rendering or browser dependencies.
+
+```sh
+pnpm dev:hexhaven                 # http://127.0.0.1:4174/hexhaven/
+pnpm typecheck && pnpm lint
+pnpm test && pnpm build           # validates both games and the portfolio
+pnpm sim --games=300 --seed=1      # headless tournament with invariants
+pnpm e2e                         # requires build and Playwright Chromium/Chrome
+```
+
+The full static output remains `build/`; no backend or runtime asset service is
+needed. Hexhaven's README includes controls, screenshots and verification data.
+
 ## Brick break
 
 A small LEGO fun fact in About links to the standalone `/lego/` page. It uses
 React 19 and the same CSS tokens, fonts, Lucide icons and Vite build as the
 portfolio. `lego/index.html` is just a document shell mounting the React app.
-The game has its own copy-link button and return link to the portfolio.
+The game has its own copy-link button and return links to Games and the portfolio.
 
 - `src/game/GameApp.jsx`: page composition, lazy workspace and error boundary.
 - `src/game/components/`: collection, SVG previews, palette, toolbar and native dialogs.
@@ -104,8 +132,8 @@ remain compatible. Storage failures are visible and export stays available.
 Sound is off by default.
 
 ```bash
-npm test
-npm run build
+pnpm test
+pnpm build
 ```
 
 Tests import the reducer and persistence modules directly, render real React

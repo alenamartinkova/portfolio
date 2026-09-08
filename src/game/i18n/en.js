@@ -3,6 +3,7 @@ export default {
   description:
     'A little LEGO break. Build a model or make something of your own.',
   portfolio: 'Back to portfolio',
+  games: 'Back to games',
   share: 'Copy game link',
   shared: 'Link copied',
   copyManually: 'Copy the selected link.',

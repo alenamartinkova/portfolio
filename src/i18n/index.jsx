@@ -19,12 +19,16 @@ function localeFromPath(pathname) {
   return first && DICTIONARIES[first] ? first : null
 }
 
-function initialLocale() {
+function initialLocale(page) {
   // Each language lives on its own URL (/ and /sk/) so both are crawlable;
   // the path always wins. On the root URL a stored explicit choice applies —
   // browser-language detection would otherwise flip Slovak visitors away from
   // the version most recruiters land on.
   if (typeof window === 'undefined') return 'en'
+  if (page === 'games') {
+    const lang = new URLSearchParams(window.location.search).get('lang')
+    if (lang === 'en' || lang === 'sk') return lang
+  }
   const fromPath = localeFromPath(window.location.pathname)
   if (fromPath) return fromPath
   try {
@@ -36,23 +40,31 @@ function initialLocale() {
   return 'en'
 }
 
-export function LocaleProvider({ children, ssrLocale }) {
-  const [locale, setLocale] = useState(ssrLocale || initialLocale)
+export function LocaleProvider({ children, ssrLocale, page = 'portfolio' }) {
+  const [locale, setLocale] = useState(() => ssrLocale || initialLocale(page))
   const t = DICTIONARIES[locale] || en
+  const meta = page === 'games' ? t.games.meta : t.meta
 
   useEffect(() => {
-    document.documentElement.lang = t.meta.lang
-    document.title = t.meta.title
+    document.documentElement.lang = locale
+    document.title = meta.title
 
     const description = document.querySelector('meta[name="description"]')
-    if (description) description.setAttribute('content', t.meta.description)
+    if (description) description.setAttribute('content', meta.description)
 
     // Keep the URL in step with the language so reloads and shared links stay
     // in the visitor's locale. replaceState: switching language is not a
     // navigation, so it should not grow history.
-    const path = locale === 'en' ? '/' : `/${locale}/`
-    if (window.location.pathname !== path) {
-      window.history.replaceState(null, '', path + window.location.hash)
+    if (page === 'games') {
+      const url = new URL(window.location.href)
+      url.pathname = '/games/'
+      url.searchParams.set('lang', locale)
+      window.history.replaceState(null, '', url)
+    } else {
+      const path = locale === 'en' ? '/' : `/${locale}/`
+      if (window.location.pathname !== path) {
+        window.history.replaceState(null, '', path + window.location.hash)
+      }
     }
 
     try {
@@ -60,7 +72,7 @@ export function LocaleProvider({ children, ssrLocale }) {
     } catch {
       // Non-persistent choice is still better than none.
     }
-  }, [locale, t])
+  }, [locale, meta, page])
 
   return (
     <LocaleContext.Provider value={{ locale, t, setLocale }}>

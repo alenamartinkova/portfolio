@@ -6,3 +6,5 @@ node_modules
 *.local
 build
 build-ssr
+playwright-report
+test-results

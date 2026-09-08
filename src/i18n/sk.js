@@ -6,6 +6,29 @@ export default {
       'Full stack vývojárka so zameraním na backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Vediem backend v Rankacy.',
   },
 
+  games: {
+    meta: {
+      title: 'Games · Alena Martinková',
+      description: 'Malá zbierka hier na chvíľu oddychu. Začnite s LEGO a poskladajte si niečo vlastné.',
+    },
+    eyebrow: 'trochu mimo hlavnej cesty',
+    intro: 'Našli ste môj malý kútik na hranie. Vyberte si hru a dajte si pauzu.',
+    back: 'Späť na portfólio',
+    list: 'Dostupné hry',
+    play: 'Hrať',
+    more: 'Ďalšie hry pribudnú čoskoro.',
+    lego: {
+      category: '3D stavanie',
+      caption: 'kocku po kocke',
+      description: 'Malá LEGO prestávka. Stavajte podľa predlohy alebo si poskladajte niečo vlastné, kocku po kocke.',
+    },
+    hexhaven: {
+      category: '3D stolová hra · 2–4 hráči',
+      caption: 'Traders of the Long Bay',
+      description: 'Budujte dediny, obchodujte so surovinami a vytvorte najdlhšiu cestu. Hrajte s priateľmi na jednom zariadení alebo proti počítaču.',
+    },
+  },
+
   nav: {
     about: 'o mne',
     stack: 'stack',

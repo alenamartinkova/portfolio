@@ -3,6 +3,7 @@ export default {
   description:
     'Malá LEGO prestávka. Poskladajte model alebo vymyslite vlastnú stavbu.',
   portfolio: 'Späť na portfólio',
+  games: 'Späť na zoznam hier',
   share: 'Kopírovať odkaz na hru',
   shared: 'Odkaz skopírovaný',
   copyManually: 'Skopírujte označený odkaz.',

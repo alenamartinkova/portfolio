@@ -1,0 +1,323 @@
+import {
+  ACESFilmicToneMapping,
+  Color,
+  DirectionalLight,
+  FogExp2,
+  HemisphereLight,
+  Mesh,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  SRGBColorSpace,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
+import type { Material } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type { Board } from '../core/board';
+import type { GameState } from '../core/state';
+import { createBoardMeshes } from './boardMesh';
+import { createFx } from './fx';
+import { ACCESSIBLE_COLORS, PLAYER_COLORS } from './materials';
+import { createPieceMeshes } from './pieceMesh';
+import { createPicking } from './picking';
+import type { SceneTarget } from './picking';
+import { createPositions } from './positions';
+
+export type { SceneTarget } from './picking';
+export interface BoardScene {
+  update(state: GameState): void;
+  setTargets(targets: readonly SceneTarget[], onSelect: (target: SceneTarget) => void): void;
+  highlight(id: string | null): void;
+  focus(id: string): void;
+  setSettings(settings: { reducedMotion: boolean; speed: number; colorBlind: boolean }): void;
+  project(id: string): { x: number; y: number } | null;
+  metrics(): { drawCalls: number; triangles: number; frames: number; frameMs: number };
+  dispose(): void;
+}
+export function createBoardScene(container: HTMLElement, board: Board): BoardScene {
+  const renderer = new WebGLRenderer({
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance',
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.domElement.className = 'hexhaven-canvas';
+  renderer.domElement.setAttribute(
+    'aria-label',
+    'Hexhaven board. Use the placement list or Tab and Enter to choose a legal location.',
+  );
+  renderer.domElement.style.cssText =
+    'display:block;width:100%;height:100%;touch-action:none;outline:none';
+  container.append(renderer.domElement);
+  const scene = new Scene();
+  scene.background = new Color('#251f1a');
+  scene.fog = new FogExp2('#251f1a', 0.022);
+  const camera = new PerspectiveCamera(38, 1, 0.1, 80);
+  camera.position.set(0, 11.2, 14.4);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.085;
+  controls.minPolarAngle = Math.PI / 9;
+  controls.maxPolarAngle = (Math.PI * 7) / 18;
+  controls.minDistance = 8;
+  controls.maxDistance = 22;
+  controls.enablePan = true;
+  controls.panSpeed = 0.25;
+  controls.rotateSpeed = 0.55;
+  controls.zoomSpeed = 0.8;
+  controls.target.set(0, 0, 0);
+  controls.update();
+  const key = new DirectionalLight('#fff1d5', 3.1);
+  key.position.set(-5, 11, 5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -6.6;
+  key.shadow.camera.right = 6.6;
+  key.shadow.camera.top = 6.6;
+  key.shadow.camera.bottom = -6.6;
+  key.shadow.camera.near = 0.5;
+  key.shadow.camera.far = 24;
+  key.shadow.bias = -0.00022;
+  key.shadow.normalBias = 0.025;
+  key.shadow.radius = 3;
+  scene.add(key);
+  scene.add(new HemisphereLight('#d3e1e3', '#6c4933', 2));
+  const rim = new DirectionalLight('#aacbc9', 0.8);
+  rim.position.set(5, 6, -6);
+  scene.add(rim);
+  const positions = createPositions(board),
+    boardMeshes = createBoardMeshes(board, positions),
+    pieces = createPieceMeshes(board, positions),
+    fx = createFx(positions, camera);
+  scene.add(boardMeshes.group, pieces.group, fx.group);
+  let state: GameState | null = null,
+    reducedMotion = false,
+    speed = 1,
+    colorBlind = false,
+    disposed = false,
+    dirty = true,
+    animation = 0,
+    timer = 0,
+    frames = 0,
+    frameMs = 0,
+    lastTime = 0,
+    activeUntil = 0,
+    targetsArmed = false;
+  const focusStart = new Vector3(),
+    focusEnd = new Vector3(),
+    projected = new Vector3();
+  let focusElapsed = 1,
+    focusDuration = 0.6;
+  function requestFrame(): void {
+    timer = 0;
+    if (!disposed && !document.hidden) animation = window.requestAnimationFrame(frame);
+  }
+  function schedule(active = false): void {
+    if (disposed || document.hidden || animation || timer) return;
+    if (active) requestFrame();
+    else timer = window.setTimeout(requestFrame, 42);
+  }
+  function invalidate(): void {
+    dirty = true;
+    activeUntil = performance.now() / 1000 + 0.24;
+    if (timer) {
+      window.clearTimeout(timer);
+      timer = 0;
+    }
+    schedule(true);
+  }
+  const picking = createPicking(
+    renderer.domElement,
+    camera,
+    board,
+    positions,
+    pieces.geometries,
+    invalidate,
+  );
+  scene.add(picking.group);
+  function frame(now: number): void {
+    animation = 0;
+    if (disposed || document.hidden) return;
+    const start = performance.now(),
+      time = now / 1000,
+      delta = Math.min(0.05, lastTime ? time - lastTime : 1 / 60);
+    lastTime = time;
+    if (focusElapsed < focusDuration) {
+      focusElapsed = Math.min(focusDuration, focusElapsed + delta);
+      const t = focusElapsed / focusDuration,
+        ease = t * t * (3 - 2 * t);
+      controls.target.lerpVectors(focusStart, focusEnd, ease);
+      dirty = true;
+    }
+    controls.target.x = Math.max(-0.65, Math.min(0.65, controls.target.x));
+    controls.target.z = Math.max(-0.65, Math.min(0.65, controls.target.z));
+    controls.target.y = 0;
+    const cameraChanged = controls.update();
+    // Apply the pan limit after OrbitControls consumes its pending gesture too.
+    const panX = controls.target.x - Math.max(-0.65, Math.min(0.65, controls.target.x));
+    const panZ = controls.target.z - Math.max(-0.65, Math.min(0.65, controls.target.z));
+    if (panX || panZ || controls.target.y) {
+      camera.position.x -= panX;
+      camera.position.z -= panZ;
+      camera.position.y -= controls.target.y;
+      controls.target.x -= panX;
+      controls.target.z -= panZ;
+      controls.target.y = 0;
+    }
+    const effectActive = fx.tick(delta, time);
+    boardMeshes.seaTime.value = reducedMotion ? 0 : time;
+    picking.pulse(time, reducedMotion);
+    const shake = fx.cameraShake(time);
+    renderer.domElement.style.transform = shake ? `translateX(${shake}px)` : '';
+    if (dirty || cameraChanged || effectActive || targetsArmed || !reducedMotion) {
+      renderer.render(scene, camera);
+      frames++;
+      frameMs = frameMs * 0.9 + (performance.now() - start) * 0.1;
+      dirty = false;
+    }
+    const active =
+      effectActive ||
+      cameraChanged ||
+      focusElapsed < focusDuration ||
+      time < activeUntil ||
+      (targetsArmed && !reducedMotion);
+    if (active || !reducedMotion) schedule(active);
+  }
+  function resize(): void {
+    const width = Math.max(1, container.clientWidth),
+      height = Math.max(1, container.clientHeight);
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    if (width <= 760) {
+      const availableScale = Math.min(1, Math.max(0.6, (height - 502) / (0.74 * width)));
+      camera.fov = Math.max(
+        38,
+        (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / (camera.aspect * availableScale)) * 180) /
+          Math.PI,
+      );
+      camera.setViewOffset(width, height, 0, 0.137 * width * availableScale - 17, width, height);
+    } else {
+      const availableScale = Math.min(1, Math.max(0.45, (height - 348) / (0.6 * height)));
+      camera.fov = (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / availableScale) * 180) / Math.PI;
+      camera.setViewOffset(width, height, 0, 0.075 * height * availableScale - 2, width, height);
+    }
+    camera.updateProjectionMatrix();
+    // A tall viewport keeps the entire island inside the narrow horizontal view.
+    if (width < 600 && camera.position.length() < 16) camera.position.setLength(16);
+    invalidate();
+  }
+  const observer = new ResizeObserver(resize);
+  observer.observe(container);
+  function visibility(): void {
+    if (document.hidden) {
+      if (animation) window.cancelAnimationFrame(animation);
+      if (timer) window.clearTimeout(timer);
+      animation = 0;
+      timer = 0;
+      lastTime = 0;
+    } else invalidate();
+  }
+  document.addEventListener('visibilitychange', visibility);
+  controls.addEventListener('change', invalidate);
+  controls.addEventListener('start', invalidate);
+  resize();
+  function focus(id: string): void {
+    const point = positions.all.get(id);
+    if (!point) return;
+    focusStart.copy(controls.target);
+    focusEnd.copy(point).multiplyScalar(0.14);
+    focusEnd.y = 0;
+    focusEnd.clampScalar(-0.65, 0.65);
+    focusElapsed = 0;
+    focusDuration = reducedMotion ? 0.001 : 0.6 / speed;
+    invalidate();
+  }
+  function update(next: GameState): void {
+    if (next === state) return;
+    pieces.update(next);
+    fx.update(state, next, reducedMotion, speed);
+    const last = next.actions[next.actions.length - 1];
+    if (state && last && next.actions.length !== state.actions.length) {
+      if (last.type === 'moveBandit') focus(last.tile);
+      else if (
+        (last.type === 'placeRoad' || last.type === 'placeVillage' || last.type === 'buildTown') &&
+        next.players[last.player]?.kind === 'bot'
+      )
+        focus('edge' in last ? last.edge : last.vertex);
+    }
+    state = next;
+    picking.setColor(
+      (colorBlind ? ACCESSIBLE_COLORS : PLAYER_COLORS)[next.activePlayer] ?? PLAYER_COLORS[0],
+    );
+    invalidate();
+  }
+  function dispose(): void {
+    disposed = true;
+    if (animation) window.cancelAnimationFrame(animation);
+    if (timer) window.clearTimeout(timer);
+    observer.disconnect();
+    document.removeEventListener('visibilitychange', visibility);
+    controls.removeEventListener('change', invalidate);
+    controls.removeEventListener('start', invalidate);
+    controls.dispose();
+    picking.dispose();
+    const geometries = new Set<import('three').BufferGeometry>(),
+      materials = new Set<Material>();
+    scene.traverse((object) => {
+      if (object instanceof Mesh) {
+        geometries.add(object.geometry);
+        const material = object.material;
+        if (Array.isArray(material)) material.forEach((m) => materials.add(m));
+        else materials.add(material);
+      }
+    });
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
+    renderer.dispose();
+    renderer.domElement.remove();
+  }
+  return {
+    update,
+    focus,
+    dispose,
+    highlight: picking.highlight,
+    setTargets: (targets, onSelect) => {
+      targetsArmed = targets.length > 0;
+      picking.setTargets(targets, onSelect);
+    },
+    setSettings: (settings) => {
+      reducedMotion = settings.reducedMotion;
+      speed = Math.max(0.25, Math.min(4, settings.speed));
+      colorBlind = settings.colorBlind;
+      pieces.setColorBlind(colorBlind);
+      if (state)
+        picking.setColor(
+          (colorBlind ? ACCESSIBLE_COLORS : PLAYER_COLORS)[state.activePlayer] ?? PLAYER_COLORS[0],
+        );
+      invalidate();
+    },
+    project: (id) => {
+      const p = positions.all.get(id);
+      if (!p) return null;
+      projected.copy(p);
+      projected.y = 0.35;
+      projected.project(camera);
+      return {
+        x: (projected.x * 0.5 + 0.5) * container.clientWidth,
+        y: (-0.5 * projected.y + 0.5) * container.clientHeight,
+      };
+    },
+    metrics: () => ({
+      drawCalls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
+      frames,
+      frameMs,
+    }),
+  };
+}

@@ -12,6 +12,29 @@ export default {
       'Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy.',
   },
 
+  games: {
+    meta: {
+      title: 'Games · Alena Martinková',
+      description: 'A small collection of games for a little break. Start with LEGO and build something of your own.',
+    },
+    eyebrow: 'a little off the beaten path',
+    intro: 'You found my little corner for play. Pick a game and take a break.',
+    back: 'Back to portfolio',
+    list: 'Available games',
+    play: 'Play',
+    more: 'More games coming soon.',
+    lego: {
+      category: '3D building',
+      caption: 'brick by brick',
+      description: 'A little LEGO break. Follow a model or build something of your own, one brick at a time.',
+    },
+    hexhaven: {
+      category: '3D board game · 2–4 players',
+      caption: 'Traders of the Long Bay',
+      description: 'Build villages, trade resources and chart the longest route. Play with friends on one device or challenge computer rivals.',
+    },
+  },
+
   nav: {
     about: 'about',
     stack: 'stack',

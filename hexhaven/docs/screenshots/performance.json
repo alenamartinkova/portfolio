@@ -1,0 +1,79 @@
+{
+  "measuredAt": "2026-09-08T14:49:52.080Z",
+  "host": {
+    "platform": "darwin",
+    "release": "25.6.0",
+    "architecture": "arm64",
+    "cpu": "Apple M1 Max"
+  },
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "hardwareConcurrency": 10,
+    "devicePixelRatio": 1,
+    "viewport": {
+      "width": 2560,
+      "height": 1440
+    },
+    "canvas": {
+      "width": 2560,
+      "height": 1440
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)"
+  },
+  "occupancy": {
+    "turn": 109,
+    "roads": 47,
+    "villages": 16,
+    "towns": 5
+  },
+  "active": {
+    "elapsedMs": 2009.0999999940395,
+    "browserRafFrames": 121,
+    "browserRafFps": 60.22597182836045,
+    "rendererFrames": 121,
+    "rendererFps": 60.22597182836045,
+    "rafMedianMs": 16.699999999999818,
+    "rafP95Ms": 16.799999999999727,
+    "rendererCpuEwmaMeanMs": 1.1700828272585893,
+    "renderer": {
+      "drawCalls": 49,
+      "triangles": 19093,
+      "frames": 126,
+      "frameMs": 0.6868155465385489
+    }
+  },
+  "idle": {
+    "elapsedMs": 1810.199999988079,
+    "browserRafFrames": 109,
+    "browserRafFps": 60.21434095719689,
+    "rendererFrames": 36,
+    "rendererFps": 19.887305270266864,
+    "rafMedianMs": 16.699999999999818,
+    "rafP95Ms": 16.800000000000182,
+    "rendererCpuEwmaMeanMs": 0.6129916575394602,
+    "renderer": {
+      "drawCalls": 49,
+      "triangles": 19093,
+      "frames": 335,
+      "frameMs": 0.7271951957027822
+    }
+  },
+  "reducedMotion": {
+    "elapsedMs": 912.5999999940395,
+    "browserRafFrames": 55,
+    "browserRafFps": 60.26736796006928,
+    "rendererFrames": 0,
+    "rendererFps": 0,
+    "rafMedianMs": 16.69999999999891,
+    "rafP95Ms": 16.799999999999272,
+    "rendererCpuEwmaMeanMs": 0.5985950378204974,
+    "renderer": {
+      "drawCalls": 49,
+      "triangles": 19093,
+      "frames": 347,
+      "frameMs": 0.5985950378204971
+    }
+  },
+  "interpretation": "Renderer FPS uses actual rendered-frame counters. Browser RAF is scheduling cadence, not rendered throughput. CPU EWMA is scene work plus WebGL submission time; it excludes asynchronous GPU completion. This headless host measurement is not integrated-GPU certification. Idle sea animation intentionally uses a lower frame rate."
+}

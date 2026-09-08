@@ -50,6 +50,8 @@ export default defineConfig({
   server: { port: 3000, open: true },
   build: {
     outDir: 'build', emptyOutDir: true,
-    rollupOptions: { input: { main: 'index.html', studio: 'lego/index.html' } },
+    rollupOptions: {
+      input: { main: 'index.html', games: 'games/index.html', studio: 'lego/index.html' },
+    },
   },
 })

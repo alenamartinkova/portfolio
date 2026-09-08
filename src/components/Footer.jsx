@@ -1,10 +1,11 @@
 import './Footer.css'
-import { ArrowUp } from 'lucide-react'
-import { useT } from '../i18n'
+import { ArrowUp, Gamepad2 } from 'lucide-react'
+import { useLocale, useT } from '../i18n'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa6'
 
 export default function Footer() {
   const t = useT()
+  const [locale] = useLocale()
 
   return (
     <footer className="footer">
@@ -19,6 +20,10 @@ export default function Footer() {
         </p>
 
         <div className="footer__links">
+          <a href={`/games/?lang=${locale}`}>
+            <Gamepad2 aria-hidden="true" />
+            Games
+          </a>
           <a
             href="https://github.com/alenamartinkova"
             target="_blank"

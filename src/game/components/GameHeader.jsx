@@ -4,6 +4,7 @@ import {
   Blocks,
   Check,
   Copy,
+  Gamepad2,
   HelpCircle,
   Settings,
   Volume2,
@@ -36,13 +37,19 @@ export default function GameHeader({ state, dispatch }) {
   return (
     <>
       <div className="game-site-bar">
-        <a
-          href={locale === 'sk' ? '/sk/#about' : '/#about'}
-          title={t.portfolio}
-        >
-          <ArrowLeft aria-hidden="true" />
-          Alena Martinková
-        </a>
+        <div className="game-site-links">
+          <a
+            href={locale === 'sk' ? '/sk/#about' : '/#about'}
+            title={t.portfolio}
+          >
+            <ArrowLeft aria-hidden="true" />
+            Alena Martinková
+          </a>
+          <a href={`/games/?lang=${locale}`} title={t.games}>
+            <Gamepad2 aria-hidden="true" />
+            Games
+          </a>
+        </div>
         <div className="game-site-actions">
           <button
             onClick={() => {
