@@ -7,10 +7,12 @@ import { replay } from '../core/log';
 import { reduce } from '../core/reducer';
 import { createGame, getPlayer, RESOURCES } from '../core/state';
 import type { GameOptions, GameState } from '../core/state';
+import { localize, logText, resourceName, translateMessage } from '../i18n';
 import { createBoardScene } from '../render/scene';
 import type { BoardScene, SceneTarget } from '../render/scene';
 import { createHUD } from '../ui/hud';
 import type { BuildMode, ViewState } from '../ui/hud';
+import { readSiteAppearance } from '../ui/siteAppearance';
 import { exportReplay, loadGame, parseReplay, saveGame } from './persistence';
 import { loadSettings, saveSettings } from './settings';
 import type { Settings } from './settings';
@@ -73,7 +75,10 @@ export function startApplication(root: HTMLElement): () => void {
   boardHost.setAttribute('role', 'application');
   boardHost.setAttribute(
     'aria-label',
-    'Hexhaven board. Tab chooses a legal location, Enter confirms, Escape cancels.',
+    localize(
+      'Hexhaven board. Tab chooses a legal location, Enter confirms, Escape cancels.',
+      'Herná doska Hexhaven. Tab vyberie dostupné miesto, Enter potvrdí, Escape zruší výber.',
+    ),
   );
   const hudHost = document.createElement('div');
   hudHost.className = 'hud-host';
@@ -91,7 +96,7 @@ export function startApplication(root: HTMLElement): () => void {
   let replayTimer: ReturnType<typeof setTimeout> | null = null;
   let replayIndex: number | null = null;
   let replayState: GameState | null = null;
-  let message = 'Build a home on the Long Bay.';
+  let message: string | (() => string) = 'Build a home on the Long Bay.';
   let saveStatus = 'Games save on this device.';
   let revealedHuman: number | null = null;
   let disposed = false;
@@ -168,10 +173,12 @@ export function startApplication(root: HTMLElement): () => void {
         const panel = document.createElement('div');
         panel.className = 'renderer-error';
         const text = document.createElement('p');
-        text.textContent =
-          'The 3D view could not start. Enable hardware acceleration in your browser and try again. You can still choose locations with the keyboard.';
+        text.textContent = localize(
+          'The 3D view could not start. Enable hardware acceleration in your browser and try again. You can still choose locations with the keyboard.',
+          '3D zobrazenie sa nespustilo. Zapni hardvérovú akceleráciu prehliadača a skús to znova. Miesta môžeš vyberať aj klávesnicou.',
+        );
         const retry = document.createElement('button');
-        retry.textContent = 'Retry 3D view';
+        retry.textContent = localize('Retry 3D view', 'Znova spustiť 3D zobrazenie');
         retry.addEventListener('click', () => {
           updateScene(visibleState() ?? preview);
           paint();
@@ -188,6 +195,7 @@ export function startApplication(root: HTMLElement): () => void {
       colorBlind: settings.colorBlind,
     });
     scene?.update(state);
+    scene?.setAppearance(readSiteAppearance());
   }
 
   function paint(): void {
@@ -201,8 +209,8 @@ export function startApplication(root: HTMLElement): () => void {
       thinking,
       mode,
       selectedAction: selected,
-      message,
-      saveStatus,
+      message: typeof message === 'function' ? message() : translateMessage(message),
+      saveStatus: translateMessage(saveStatus),
       settings,
       canResume: storedGame !== null,
       replayIndex,
@@ -318,7 +326,7 @@ export function startApplication(root: HTMLElement): () => void {
         const chip = document.createElement('div');
         chip.className = 'resource-flight';
         chip.setAttribute('aria-hidden', 'true');
-        chip.textContent = `+${gain} ${resource}`;
+        chip.textContent = `+${gain} ${resourceName(resource).toLowerCase()}`;
         chip.style.left = `${origin.x}px`;
         chip.style.top = `${origin.y}px`;
         root.append(chip);
@@ -360,7 +368,8 @@ export function startApplication(root: HTMLElement): () => void {
       game = next;
       selected = null;
       mode = phaseMode(next);
-      message = next.log.at(-1)?.text ?? 'Choose your next move.';
+      const latest = next.log.at(-1);
+      message = latest ? () => logText(next, latest) : 'Choose your next move.';
       if (getActor(next) !== getActor(before)) revealedHuman = null;
       updateScene(next);
       persist(next);
@@ -516,7 +525,9 @@ export function startApplication(root: HTMLElement): () => void {
       // Replay uses identical topology; keep the existing scene's cached assets.
       replayState = { ...replayState, board: game.board };
       updateScene(replayState);
-      message = replayState.log.at(-1)?.text ?? 'The empty board, before setup.';
+      const shown = replayState;
+      const latest = shown.log.at(-1);
+      message = latest ? () => logText(shown, latest) : 'The empty board, before setup.';
       paint();
     }, 60);
   }
@@ -584,6 +595,47 @@ export function startApplication(root: HTMLElement): () => void {
       colorBlind: settings.colorBlind,
     });
   }
+  function onAppearance(): void {
+    const appearance = readSiteAppearance();
+    scene?.setAppearance(appearance);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', appearance.background);
+  }
+  function onLocale(): void {
+    document.title = localize(
+      'Hexhaven — Traders of the Long Bay',
+      'Hexhaven — Obchodníci z Dlhého zálivu',
+    );
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute(
+        'content',
+        localize(
+          'Build villages, trade resources and chart a route across the Long Bay. A local strategy game for friends and computer rivals.',
+          'Stavaj dediny, obchoduj so surovinami a buduj cesty naprieč Dlhým zálivom. Miestna strategická hra s priateľmi aj počítačovými súpermi.',
+        ),
+      );
+    boardHost.setAttribute(
+      'aria-label',
+      localize(
+        'Hexhaven board. Tab chooses a legal location, Enter confirms, Escape cancels.',
+        'Herná doska Hexhaven. Tab vyberie dostupné miesto, Enter potvrdí, Escape zruší výber.',
+      ),
+    );
+    scene?.refreshLocale();
+    const errorPanel = boardHost.querySelector('.renderer-error');
+    const errorText = errorPanel?.querySelector('p');
+    const errorRetry = errorPanel?.querySelector('button');
+    if (errorText)
+      errorText.textContent = localize(
+        'The 3D view could not start. Enable hardware acceleration in your browser and try again. You can still choose locations with the keyboard.',
+        '3D zobrazenie sa nespustilo. Zapni hardvérovú akceleráciu prehliadača a skús to znova. Miesta môžeš vyberať aj klávesnicou.',
+      );
+    if (errorRetry)
+      errorRetry.textContent = localize('Retry 3D view', 'Znova spustiť 3D zobrazenie');
+    paint();
+  }
   function onGesture(): void {
     if (settings.sound) void sound.unlock();
   }
@@ -591,6 +643,13 @@ export function startApplication(root: HTMLElement): () => void {
   document.addEventListener('visibilitychange', onVisibility);
   document.addEventListener('pointerdown', onGesture);
   motion.addEventListener('change', onMotion);
+  const appearanceObserver = new MutationObserver(onAppearance);
+  appearanceObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'data-accent'],
+  });
+  const localeObserver = new MutationObserver(onLocale);
+  localeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
   if (import.meta.env.DEV) {
     window.__hexhaven = {
@@ -605,7 +664,8 @@ export function startApplication(root: HTMLElement): () => void {
   }
 
   updateScene(preview);
-  paint();
+  onAppearance();
+  onLocale();
   void loadGame()
     .then((snapshot) => {
       if (disposed || game !== null) return;
@@ -635,6 +695,8 @@ export function startApplication(root: HTMLElement): () => void {
     document.removeEventListener('visibilitychange', onVisibility);
     document.removeEventListener('pointerdown', onGesture);
     motion.removeEventListener('change', onMotion);
+    appearanceObserver.disconnect();
+    localeObserver.disconnect();
     scene?.dispose();
     hud.dispose();
     void sound.dispose();

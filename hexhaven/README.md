@@ -6,9 +6,15 @@ or endorsed by the rights holder of any commercial edition.
 Build villages around a miniature island, trade its resources, and grow your
 network to ten victory points. Play locally with two to four traders: pass the
 device between humans or add bots at Easy, Normal or Hard difficulty. All 3D
-geometry, board textures, symbols and sounds are generated in code. Fraunces
-Variable and Public Sans Variable are installed through Fontsource and served
-locally.
+geometry, board textures, symbols and sounds are generated in code. The game
+shares the portfolio's colours, navigation style, Space Grotesk and JetBrains
+Mono fonts. Font files are served locally with the standalone build.
+
+Use **EN / SK** in the header, welcome dialog or settings to switch between
+English and Slovak. Hexhaven shares the website's saved language preference;
+`?lang=sk` opens it directly in Slovak. Switching translates the HUD, existing
+turn log, board labels and accessibility instructions without changing the
+game, camera or replay. The language remains selected after a refresh.
 
 ![The island after setup](docs/screenshots/desktop.png)
 
@@ -94,7 +100,14 @@ player colours also have distinct piece glyphs. Settings provide animation
 speed, an alternate colour-blind palette and synthesized sound, muted by
 default. Reduced motion follows the operating-system preference.
 
+The header's sun/moon control switches the shared light/dark theme. **Settings →
+Website accent** selects the same six accents as the portfolio; both preferences
+persist across visits. The HUD, grid surface, frame and harbour plaques follow
+the selected appearance while terrain and player identities remain readable.
+
 ![380px mobile layout](docs/screenshots/mobile.png)
+
+![Shared light theme](docs/screenshots/desktop-light.png)
 
 ## Save, resume and replay
 
@@ -121,6 +134,8 @@ In development builds only, `window.__hexhaven` exposes `state`, `dispatch`,
   world projection, pick proxies, camera, lighting and transition effects.
 - `src/ui/`: DOM HUD and pure preference definitions. Buttons dispatch canonical
   actions supplied by the application; the HUD does not grant legality.
+- `src/i18n/`: EN/SK presentation helpers, terminology and structured log
+  translation. The headless engine and saved replay data do not depend on it.
 - `src/app/`: reducer wiring, readable 400–900ms bot scheduling, IndexedDB,
   local settings, synthesized audio and the development API.
 - `src/sim/`: deterministic headless tournament with per-action invariants.
@@ -134,10 +149,12 @@ brute force on 500 small random graphs.
 
 ## Verification
 
-The workspace has 101 Hexhaven unit tests and 23 existing portfolio/LEGO tests.
+The workspace has 111 Hexhaven unit tests and 23 existing portfolio/LEGO tests.
 Coverage includes topology (19 tiles, 54 vertices, 72 edges), 100 random layouts,
 all card effects and timing, distance/connectivity, blocked roads, piece limits,
 shortfalls, discards, trade counters, route ties, replay and persistence guards.
+Language tests verify unchanged replay/state and translation of played cards
+after they leave the hand, names, resources, logs and actionable diagnostics.
 
 The 300-game tournament from seed 1 completed 110,943 actions without a rule
 violation. Every action conserved 19 cards of each resource; every game produced
@@ -155,7 +172,13 @@ a 5 + 4 roll supplies two brick, refreshes to identical state, and downloads a
 replay that reproduces that state. It also checks browser errors, mobile
 horizontal overflow, draw-call and triangle budgets, and captures the images
 above. A separate late-game test records rendering measurements at 2560×1440.
-CI runs typecheck, lint, tests, build, the full tournament and browser checks.
+The seven browser tests also verify shared theme/accent persistence and both LEGO
+header layouts across collection, building, languages and themes. The Slovak
+flow checks switching during setup and play, persistent language with and without
+query parameters, historic log translation and unchanged saved state on desktop
+and mobile. [Slovak desktop](docs/screenshots/desktop-sk.png) and
+[Slovak mobile](docs/screenshots/mobile-sk.png) captures show the result. CI runs
+typecheck, lint, tests, build, the full tournament and browser checks.
 
 ## Rendering measurements
 
@@ -166,14 +189,14 @@ and counts actual rendered frames separately from browser animation callbacks.
 
 | Measurement | Result | Budget |
 | --- | --- | --- |
-| Active rendered frames/s | 60.23 | 60 target |
-| Active frame interval: median / p95 | 16.7 / 16.8 ms | — |
+| Active rendered frames/s | 60.29 | 60 target |
+| Active frame interval: median / p95 | 16.7 / 16.7 ms | — |
 | Draw calls | 49 | ≤120 |
 | Triangles | 19,093 | ≤150,000 |
-| Active CPU scene/submission EWMA mean | 1.17 ms | — |
-| Idle sea rendered frames/s | 19.89 | Intentionally throttled |
-| Settled reduced-motion rendered frames | 0 over 913 ms | On demand |
-| Complete game JavaScript, gzip, including Three.js | 165.79 kB | <700 kB excluding Three.js |
+| Active CPU scene/submission EWMA mean | 1.27 ms | — |
+| Idle sea rendered frames/s | 19.85 | Intentionally throttled |
+| Settled reduced-motion rendered frames | 0 over 912 ms | On demand |
+| Complete game JavaScript, gzip, including Three.js | 175.01 kB | <700 kB excluding Three.js |
 
 [Raw measurements](docs/screenshots/performance.json) include viewport, hardware,
 browser, counters and timing methodology. CPU values exclude asynchronous GPU

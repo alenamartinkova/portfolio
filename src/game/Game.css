@@ -1,5 +1,6 @@
 @import '../styles/fonts.css';
 @import '../styles/tokens.css';
+@import '../styles/game-nav.css';
 
 body {
   margin: 0;
@@ -129,57 +130,55 @@ body {
   text-transform: uppercase;
 }
 
-/* Small connection to the portfolio, followed by game navigation. */
-.game-site-bar {
-  position: relative;
-  z-index: 10;
+/* The game uses the same compact navigation frame as the portfolio. */
+.game-header {
   flex-shrink: 0;
-  min-height: 44px;
-  padding: 6px 24px;
-  display: flex;
+}
+.game-header .game-nav__inner {
+  position: relative;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 20px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-  font: 12px var(--font-mono);
+  min-height: 59px;
+  padding-block: 7px;
+  row-gap: 4px;
 }
-.game-site-links,
-.game-site-links a,
-.game-site-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.game-header .game-brand {
+  font: 12px/1.3 var(--font-mono);
 }
-.game-site-links {
-  flex-wrap: wrap;
-  gap: 16px;
+.game-header .game-nav__icon svg {
+  width: 15px;
+  height: 15px;
 }
-.game-site-links a {
-  gap: 8px;
+.game-header .locale__option {
+  padding: 0 8px;
+  height: 42px;
+  font: 11px var(--font-mono);
+  color: var(--text-dim);
 }
-.game-site-actions {
-  margin-left: auto;
+.game-header .locale__option + .locale__option {
+  border-left: 1px solid var(--line);
 }
-.game-site-bar svg {
-  width: 14px;
-  height: 14px;
-}
-.game-site-actions button {
-  padding: 6px 8px;
-  border-radius: var(--r-sm);
-  color: var(--text-muted);
-}
-.game-site-actions button:hover {
-  color: var(--accent-bright);
+.game-header .locale__option.is-active {
   background: var(--accent-soft);
+  color: var(--accent-bright);
+}
+@media (max-width: 760px) {
+  .game-header .game-nav__inner {
+    padding-block: 4px;
+  }
+  .game-header .game-nav__actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .game-header .locale__option {
+    padding-inline: 4px;
+  }
 }
 .game-share-feedback {
   position: absolute;
-  right: 12px;
+  right: 0;
   top: calc(100% + 4px);
-  max-width: calc(100vw - 24px);
+  max-width: 100%;
   background: var(--surface);
   border: 1px solid var(--accent-line);
   border-radius: var(--r-md);
@@ -196,46 +195,6 @@ body {
   background: var(--bg);
   color: var(--text);
 }
-.game-header {
-  flex-shrink: 0;
-  height: 64px;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--line);
-}
-.game-brand {
-  padding: 0;
-  text-align: left;
-  font-family: var(--font-display) !important;
-  font-size: 20px !important;
-  letter-spacing: -0.04em;
-}
-.game-brand > svg {
-  width: 30px;
-  height: 30px;
-  color: var(--accent);
-}
-.game-brand small {
-  display: block;
-  font: 9px var(--font-mono);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.game-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.game-back {
-  font: 12px var(--font-mono) !important;
-  margin-right: 8px;
-  color: var(--text-muted) !important;
-}
-
 /* The collection uses SVG thumbnails; no GPU renderer runs on this screen. */
 .game-collection {
   flex: 1;
@@ -963,38 +922,6 @@ body {
     height: auto;
     min-height: 100dvh;
   }
-  .game-site-bar,
-  .game-header {
-    padding-inline: 12px;
-  }
-  .game-site-bar {
-    font-size: 11px;
-  }
-  .game-site-actions {
-    gap: 3px;
-  }
-  .game-site-actions button {
-    padding-inline: 4px;
-  }
-  .game-site-actions svg {
-    display: none;
-  }
-  .game-header {
-    height: 58px;
-  }
-  .game-brand {
-    font-size: 18px !important;
-  }
-  .game-brand small,
-  .game-back > span {
-    display: none;
-  }
-  .game-back {
-    margin: 0;
-  }
-  .game-header-actions {
-    gap: 6px;
-  }
   .game-collection {
     padding: 24px 16px 36px;
   }
@@ -1240,26 +1167,6 @@ body {
   }
 }
 @media (max-width: 380px) {
-  .game-header {
-    padding-inline: 8px;
-    gap: 6px;
-  }
-  .game-header-actions {
-    gap: 3px;
-  }
-  .game-brand {
-    font-size: 16px !important;
-    gap: 5px !important;
-  }
-  .game-brand > svg {
-    width: 22px;
-    height: 22px;
-  }
-  .game-back {
-    width: 32px;
-    height: 40px;
-    padding: 0;
-  }
   .game-workspace,
   .game-guide-column {
     grid-template-columns: minmax(0, 1fr) 132px;

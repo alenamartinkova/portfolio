@@ -16,6 +16,7 @@ import type { Material } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Board } from '../core/board';
 import type { GameState } from '../core/state';
+import { localize } from '../i18n';
 import { createBoardMeshes } from './boardMesh';
 import { createFx } from './fx';
 import { ACCESSIBLE_COLORS, PLAYER_COLORS } from './materials';
@@ -23,9 +24,14 @@ import { createPieceMeshes } from './pieceMesh';
 import { createPicking } from './picking';
 import type { SceneTarget } from './picking';
 import { createPositions } from './positions';
+import { DEFAULT_APPEARANCE } from './appearance';
+import type { BoardAppearance } from './appearance';
 
 export type { SceneTarget } from './picking';
+export type { BoardAppearance } from './appearance';
 export interface BoardScene {
+  setAppearance(appearance: BoardAppearance): void;
+  refreshLocale(): void;
   update(state: GameState): void;
   setTargets(targets: readonly SceneTarget[], onSelect: (target: SceneTarget) => void): void;
   highlight(id: string | null): void;
@@ -48,16 +54,22 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.domElement.className = 'hexhaven-canvas';
-  renderer.domElement.setAttribute(
-    'aria-label',
-    'Hexhaven board. Use the placement list or Tab and Enter to choose a legal location.',
-  );
+  function updateCanvasLabel(): void {
+    renderer.domElement.setAttribute(
+      'aria-label',
+      localize(
+        'Hexhaven board. Use the placement list or Tab and Enter to choose a legal location.',
+        'Herná doska Hexhaven. Vyberte povolené miesto zo zoznamu alebo klávesmi Tab a Enter.',
+      ),
+    );
+  }
+  updateCanvasLabel();
   renderer.domElement.style.cssText =
     'display:block;width:100%;height:100%;touch-action:none;outline:none';
   container.append(renderer.domElement);
   const scene = new Scene();
-  scene.background = new Color('#251f1a');
-  scene.fog = new FogExp2('#251f1a', 0.022);
+  scene.background = new Color(DEFAULT_APPEARANCE.background);
+  scene.fog = new FogExp2(DEFAULT_APPEARANCE.background, 0.022);
   const camera = new PerspectiveCamera(38, 1, 0.1, 80);
   camera.position.set(0, 11.2, 14.4);
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -73,7 +85,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   controls.zoomSpeed = 0.8;
   controls.target.set(0, 0, 0);
   controls.update();
-  const key = new DirectionalLight('#fff1d5', 3.1);
+  const key = new DirectionalLight('#ffffff', 3.1);
   key.position.set(-5, 11, 5);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -87,8 +99,9 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   key.shadow.normalBias = 0.025;
   key.shadow.radius = 3;
   scene.add(key);
-  scene.add(new HemisphereLight('#d3e1e3', '#6c4933', 2));
-  const rim = new DirectionalLight('#aacbc9', 0.8);
+  const fill = new HemisphereLight('#dfe4ff', '#373243', 2);
+  scene.add(fill);
+  const rim = new DirectionalLight('#cfbde7', 0.8);
   rim.position.set(5, 6, -6);
   scene.add(rim);
   const positions = createPositions(board),
@@ -267,6 +280,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     controls.removeEventListener('start', invalidate);
     controls.dispose();
     picking.dispose();
+    boardMeshes.dispose();
     const geometries = new Set<import('three').BufferGeometry>(),
       materials = new Set<Material>();
     scene.traverse((object) => {
@@ -282,7 +296,32 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     renderer.dispose();
     renderer.domElement.remove();
   }
+  let currentAppearance = DEFAULT_APPEARANCE;
+  function setAppearance(appearance: BoardAppearance): void {
+    if (
+      appearance.background === currentAppearance.background &&
+      appearance.surface === currentAppearance.surface &&
+      appearance.accent === currentAppearance.accent &&
+      appearance.text === currentAppearance.text &&
+      appearance.theme === currentAppearance.theme
+    )
+      return;
+    currentAppearance = appearance;
+    if (scene.background instanceof Color) scene.background.set(appearance.background);
+    scene.fog?.color.set(appearance.background);
+    fill.groundColor.set(appearance.theme === 'dark' ? '#373243' : '#9196a8');
+    boardMeshes.setAppearance(appearance);
+    fx.setAppearance(appearance);
+    picking.setAccent(appearance.accent);
+    invalidate();
+  }
   return {
+    setAppearance,
+    refreshLocale: () => {
+      updateCanvasLabel();
+      boardMeshes.refreshLocale();
+      invalidate();
+    },
     update,
     focus,
     dispose,

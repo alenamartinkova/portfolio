@@ -1,20 +1,60 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
-  Blocks,
   Check,
   Copy,
-  Gamepad2,
   HelpCircle,
+  Moon,
   Settings,
+  Sun,
   Volume2,
   VolumeX,
 } from 'lucide-react'
-import { useLocale, useT } from '../i18n'
+import { readPreference, useLocale, useT } from '../i18n'
+import '../../components/LocaleToggle.css'
+
+function useGameTheme() {
+  const [theme, setTheme] = useState(() =>
+    readPreference('theme', 'dark') === 'light' ? 'light' : 'dark'
+  )
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.theme = theme
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('theme')) {
+      url.searchParams.set('theme', theme)
+      window.history.replaceState(null, '', url)
+    }
+    try {
+      localStorage.setItem('theme', theme)
+    } catch {
+      // Theme still applies for this session when storage is unavailable.
+    }
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute(
+        'content',
+        getComputedStyle(root).getPropertyValue('--bg').trim()
+      )
+  }, [theme])
+  return [
+    theme,
+    () => setTheme(current => (current === 'light' ? 'dark' : 'light')),
+  ]
+}
 
 export default function GameHeader({ state, dispatch }) {
   const t = useT()
   const [locale, setLocale] = useLocale()
+  const [theme, toggleTheme] = useGameTheme()
+  const themeLabel =
+    locale === 'sk'
+      ? theme === 'light'
+        ? 'Prepnúť na tmavý režim'
+        : 'Prepnúť na svetlý režim'
+      : theme === 'light'
+        ? 'Switch to dark theme'
+        : 'Switch to light theme'
   const [share, setShare] = useState(null)
   const input = useRef(null)
   useEffect(() => {
@@ -35,39 +75,126 @@ export default function GameHeader({ state, dispatch }) {
   }
   const open = dialog => dispatch({ type: 'dialog', dialog })
   return (
-    <>
-      <div className="game-site-bar">
-        <div className="game-site-links">
+    <nav
+      className="game-nav game-header"
+      aria-label={locale === 'sk' ? 'Navigácia hry' : 'Game navigation'}
+    >
+      <div className="game-nav__inner">
+        <div className="game-nav__trail">
           <a
+            className="game-nav__mark"
             href={locale === 'sk' ? '/sk/#about' : '/#about'}
             title={t.portfolio}
+            aria-label={t.portfolio}
           >
-            <ArrowLeft aria-hidden="true" />
-            Alena Martinková
+            <span className="game-nav__bracket">[</span>
+            AM
+            <span className="game-nav__bracket">]</span>
           </a>
-          <a href={`/games/?lang=${locale}`} title={t.games}>
-            <Gamepad2 aria-hidden="true" />
+          <span className="game-nav__separator" aria-hidden="true">
+            /
+          </span>
+          <a
+            className="game-nav__crumb"
+            href={`/games/?lang=${locale}`}
+            title={t.games}
+          >
             Games
           </a>
-        </div>
-        <div className="game-site-actions">
+          <span className="game-nav__separator" aria-hidden="true">
+            /
+          </span>
           <button
-            onClick={() => {
-              setLocale(locale === 'sk' ? 'en' : 'sk')
-              setShare(null)
-            }}
-            lang={locale === 'sk' ? 'en' : 'sk'}
-            aria-label={locale === 'sk' ? 'English' : 'Slovenčina'}
+            className="game-nav__current game-brand"
+            onClick={() => dispatch({ type: 'collection' })}
+            title={t.collection}
           >
-            {locale === 'sk' ? 'EN' : 'SK'}
+            brick break
           </button>
-          <button onClick={copyLink}>
+        </div>
+        <div className="game-nav__actions game-header-actions">
+          <div
+            className="locale"
+            role="group"
+            aria-label={locale === 'sk' ? 'Jazyk' : 'Language'}
+          >
+            {['en', 'sk'].map(language => (
+              <button
+                key={language}
+                className={`locale__option${locale === language ? ' is-active' : ''}`}
+                onClick={() => {
+                  setLocale(language)
+                  setShare(null)
+                }}
+                lang={language}
+                aria-label={language === 'en' ? 'English' : 'Slovenčina'}
+                aria-pressed={locale === language}
+              >
+                {language.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button
+            className="game-nav__icon"
+            onClick={toggleTheme}
+            title={themeLabel}
+            aria-label={themeLabel}
+          >
+            {theme === 'light' ? (
+              <Moon aria-hidden="true" />
+            ) : (
+              <Sun aria-hidden="true" />
+            )}
+          </button>
+          {state.screen === 'build' && (
+            <button
+              className="game-nav__icon game-back"
+              aria-label={t.collection}
+              title={t.collection}
+              onClick={() => dispatch({ type: 'collection' })}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </button>
+          )}
+          <button
+            className="game-nav__icon"
+            onClick={copyLink}
+            aria-label={t.share}
+            title={t.share}
+          >
             {share?.copied ? (
               <Check aria-hidden="true" />
             ) : (
               <Copy aria-hidden="true" />
             )}
-            {t.share}
+          </button>
+          <button
+            className="game-nav__icon"
+            onClick={() => dispatch({ type: 'mute' })}
+            title={state.saved.muted ? t.soundOn : t.soundOff}
+            aria-label={state.saved.muted ? t.soundOn : t.soundOff}
+          >
+            {state.saved.muted ? (
+              <VolumeX aria-hidden="true" />
+            ) : (
+              <Volume2 aria-hidden="true" />
+            )}
+          </button>
+          <button
+            className="game-nav__icon"
+            onClick={() => open('settings')}
+            title={t.settings}
+            aria-label={t.settings}
+          >
+            <Settings aria-hidden="true" />
+          </button>
+          <button
+            className="game-nav__icon"
+            onClick={() => open('help')}
+            title={t.help}
+            aria-label={t.help}
+          >
+            <HelpCircle aria-hidden="true" />
           </button>
         </div>
         {share && (
@@ -87,53 +214,6 @@ export default function GameHeader({ state, dispatch }) {
           </div>
         )}
       </div>
-      <header className="game-header">
-        <button
-          className="game-brand"
-          onClick={() => dispatch({ type: 'collection' })}
-        >
-          <Blocks aria-hidden="true" />
-          <span>
-            brick break<small>{t.brand}</small>
-          </span>
-        </button>
-        <div className="game-header-actions">
-          {state.screen === 'build' && (
-            <button
-              className="game-back"
-              aria-label={t.collection}
-              onClick={() => dispatch({ type: 'collection' })}
-            >
-              <ArrowLeft aria-hidden="true" />
-              <span>{t.collection}</span>
-            </button>
-          )}
-          <button
-            className="game-icon-button"
-            onClick={() => dispatch({ type: 'mute' })}
-            title={state.saved.muted ? t.soundOn : t.soundOff}
-            aria-label={state.saved.muted ? t.soundOn : t.soundOff}
-          >
-            {state.saved.muted ? <VolumeX /> : <Volume2 />}
-          </button>
-          <button
-            className="game-icon-button"
-            onClick={() => open('settings')}
-            title={t.settings}
-            aria-label={t.settings}
-          >
-            <Settings />
-          </button>
-          <button
-            className="game-icon-button"
-            onClick={() => open('help')}
-            title={t.help}
-            aria-label={t.help}
-          >
-            <HelpCircle />
-          </button>
-        </div>
-      </header>
-    </>
+    </nav>
   )
 }

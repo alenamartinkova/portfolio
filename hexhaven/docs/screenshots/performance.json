@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-09-08T14:49:52.080Z",
+  "measuredAt": "2026-09-08T15:52:05.976Z",
   "host": {
     "platform": "darwin",
     "release": "25.6.0",
@@ -28,51 +28,51 @@
     "towns": 5
   },
   "active": {
-    "elapsedMs": 2009.0999999940395,
+    "elapsedMs": 2006.800000011921,
     "browserRafFrames": 121,
-    "browserRafFps": 60.22597182836045,
+    "browserRafFps": 60.29499700980727,
     "rendererFrames": 121,
-    "rendererFps": 60.22597182836045,
-    "rafMedianMs": 16.699999999999818,
-    "rafP95Ms": 16.799999999999727,
-    "rendererCpuEwmaMeanMs": 1.1700828272585893,
+    "rendererFps": 60.29499700980727,
+    "rafMedianMs": 16.699999999999932,
+    "rafP95Ms": 16.700000000000273,
+    "rendererCpuEwmaMeanMs": 1.2655226630589447,
     "renderer": {
       "drawCalls": 49,
       "triangles": 19093,
       "frames": 126,
-      "frameMs": 0.6868155465385489
+      "frameMs": 0.6866957405599341
     }
   },
   "idle": {
-    "elapsedMs": 1810.199999988079,
+    "elapsedMs": 1813.6000000238419,
     "browserRafFrames": 109,
-    "browserRafFps": 60.21434095719689,
+    "browserRafFps": 60.10145566749397,
     "rendererFrames": 36,
-    "rendererFps": 19.887305270266864,
+    "rendererFps": 19.850022055319112,
     "rafMedianMs": 16.699999999999818,
-    "rafP95Ms": 16.800000000000182,
-    "rendererCpuEwmaMeanMs": 0.6129916575394602,
+    "rafP95Ms": 16.700000000000728,
+    "rendererCpuEwmaMeanMs": 0.5162376056973124,
     "renderer": {
       "drawCalls": 49,
       "triangles": 19093,
-      "frames": 335,
-      "frameMs": 0.7271951957027822
+      "frames": 336,
+      "frameMs": 0.544500397779935
     }
   },
   "reducedMotion": {
-    "elapsedMs": 912.5999999940395,
+    "elapsedMs": 912.4000000059605,
     "browserRafFrames": 55,
-    "browserRafFps": 60.26736796006928,
+    "browserRafFps": 60.28057869316166,
     "rendererFrames": 0,
     "rendererFps": 0,
     "rafMedianMs": 16.69999999999891,
-    "rafP95Ms": 16.799999999999272,
-    "rendererCpuEwmaMeanMs": 0.5985950378204974,
+    "rafP95Ms": 16.700000000000728,
+    "rendererCpuEwmaMeanMs": 0.5383844012876712,
     "renderer": {
       "drawCalls": 49,
       "triangles": 19093,
-      "frames": 347,
-      "frameMs": 0.5985950378204971
+      "frames": 343,
+      "frameMs": 0.5383844012876704
     }
   },
   "interpretation": "Renderer FPS uses actual rendered-frame counters. Browser RAF is scheduling cadence, not rendered throughput. CPU EWMA is scene work plus WebGL submission time; it excludes asynchronous GPU completion. This headless host measurement is not integrated-GPU certification. Idle sea animation intentionally uses a lower frame rate."

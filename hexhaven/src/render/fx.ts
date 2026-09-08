@@ -18,6 +18,8 @@ import type { GameState } from '../core/state';
 import { TERRAIN_RESOURCE } from '../core/board';
 import { RESOURCE_GLYPHS, canvasTexture, matte, solid } from './materials';
 import type { BoardPositions } from './positions';
+import { DEFAULT_APPEARANCE } from './appearance';
+import type { BoardAppearance } from './appearance';
 
 interface Particle {
   active: boolean;
@@ -29,6 +31,7 @@ interface Particle {
 }
 export interface SceneFx {
   readonly group: Group;
+  setAppearance(appearance: BoardAppearance): void;
   update(before: GameState | null, state: GameState, reduced: boolean, speed: number): void;
   tick(delta: number, time: number): boolean;
   cameraShake(time: number): number;
@@ -81,12 +84,12 @@ function diceAtlas() {
     };
     for (let number = 1; number <= 6; number++) {
       const x = (number - 1) * 128;
-      context.fillStyle = '#ece0b9';
+      context.fillStyle = '#e2e5ef';
       context.fillRect(x, 0, 128, 128);
-      context.strokeStyle = '#d6c69c';
+      context.strokeStyle = '#b7bbcd';
       context.lineWidth = 7;
       context.strokeRect(x + 4, 4, 120, 120);
-      context.fillStyle = '#3a3024';
+      context.fillStyle = '#242432';
       for (const [dx, dy] of coordinates[number] ?? []) {
         context.beginPath();
         context.arc(x + 64 + dx * 30, 64 + dy * 30, 10, 0, Math.PI * 2);
@@ -101,7 +104,7 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
   const diceTray = new Group();
   group.add(diceTray);
   diceTray.position.set(5.15, -0.25, 4.4);
-  const material = matte('#eee2bd');
+  const material = matte('#e2e5ef');
   material.map = diceAtlas();
   const dice = [new Mesh(diceGeometry(), material), new Mesh(diceGeometry(), material)];
   const finals = [new Vector3(), new Vector3()];
@@ -111,15 +114,15 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
     die.position.set(index === 0 ? -0.33 : 0.33, 0.27, 0);
     diceTray.add(die);
   });
-  const tray = new Mesh(new BoxGeometry(1.4, 0.11, 0.73), matte('#493526', true));
+  const tray = new Mesh(new BoxGeometry(1.4, 0.11, 0.73), solid('#353543'));
   tray.position.set(0, -0.02, 0);
   tray.receiveShadow = true;
   diceTray.add(tray);
-  const inset = new Mesh(new BoxGeometry(1.23, 0.015, 0.6), solid('#2e4946'));
+  const inset = new Mesh(new BoxGeometry(1.23, 0.015, 0.6), solid(DEFAULT_APPEARANCE.surface));
   inset.position.set(0, 0.043, 0);
   diceTray.add(inset);
   const pulseMaterial = new MeshBasicMaterial({
-    color: '#f5d88b',
+    color: DEFAULT_APPEARANCE.accent,
     transparent: true,
     opacity: 0,
     depthWrite: false,
@@ -134,8 +137,8 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
   group.add(pulses);
   const resourceTexture = canvasTexture('resource-flight', 320, 64, (context) => {
     ['lumber', 'grain', 'wool', 'brick', 'ore'].forEach((r, index) => {
-      context.fillStyle = '#f8e9bd';
-      context.font = '700 45px "Public Sans Variable", sans-serif';
+      context.fillStyle = '#f0eff8';
+      context.font = '700 45px "JetBrains Mono", monospace';
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.fillText(RESOURCE_GLYPHS[r] ?? '◆', index * 64 + 32, 32);
@@ -157,6 +160,7 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
   particles.count = 40;
   particles.frustumCulled = false;
   group.add(particles);
+  const flightColor = new Color(DEFAULT_APPEARANCE.accent);
   const flights: Particle[] = Array.from({ length: 40 }, () => ({
     active: false,
     age: 0,
@@ -260,7 +264,7 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
             flight.start.set(from.x + card * 0.08, 0.55, from.z);
             const angle = -Math.PI / 2 + (person.id * Math.PI) / 2;
             flight.end.set(Math.sin(angle) * 5.5, 0.3, Math.cos(angle) * 5.5);
-            flight.color.set('#f5df9c');
+            flight.color.copy(flightColor);
             resourceIndices.setX(flights.indexOf(flight), RESOURCES.indexOf(resource));
             resourceIndices.needsUpdate = true;
           }
@@ -327,5 +331,11 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
     update,
     tick,
     cameraShake: (time) => (time < shakeUntil ? Math.sin(time * 97) * 1.8 : 0),
+    setAppearance: (appearance) => {
+      tray.material.color.set(appearance.theme === 'dark' ? '#353543' : '#b8bac8');
+      inset.material.color.set(appearance.surface);
+      pulseMaterial.color.set(appearance.accent);
+      flightColor.set(appearance.accent);
+    },
   };
 }

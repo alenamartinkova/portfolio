@@ -18,7 +18,19 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Board, Terrain } from '../core/board';
-import { PALETTE, RESOURCE_GLYPHS, canvasTexture, matte, solid } from './materials';
+import { getLocale, localize, resourceName } from '../i18n';
+import {
+  PALETTE,
+  RESOURCE_GLYPHS,
+  canvasTexture,
+  createCanvasTextureCache,
+  gridTexture,
+  matte,
+  solid,
+} from './materials';
+import type { CanvasTextureCache } from './materials';
+import { DEFAULT_APPEARANCE } from './appearance';
+import type { BoardAppearance } from './appearance';
 import { beveledPrism } from './geometry';
 import type { BoardPositions } from './positions';
 
@@ -26,10 +38,16 @@ export interface BoardMeshes {
   readonly group: Group;
   readonly seaTime: { value: number };
   readonly tokenFaces: Mesh;
+  setAppearance(appearance: BoardAppearance): void;
+  refreshLocale(): void;
+  dispose(): void;
 }
 function merged(parts: BufferGeometry[]): BufferGeometry {
   const result = mergeGeometries(parts, false);
-  if (!result) throw new Error('Unable to combine miniature geometry.');
+  if (!result)
+    throw new Error(
+      localize('Unable to combine miniature geometry.', 'Nepodarilo sa vytvoriť modely krajiny.'),
+    );
   for (const part of parts) part.dispose();
   return result;
 }
@@ -134,47 +152,59 @@ function miniatures(board: Board, positions: BoardPositions, group: Group): void
     group.add(mesh);
   }
 }
-function harbours(board: Board, positions: BoardPositions, group: Group): void {
+function harbours(
+  board: Board,
+  positions: BoardPositions,
+  group: Group,
+  localizedTextures: CanvasTextureCache,
+): { setAppearance(appearance: BoardAppearance): void } {
   const dummy = new Object3D();
   const planks = new InstancedMesh(
     new BoxGeometry(0.43, 0.045, 0.073),
-    matte('#866447', true),
+    matte('#646675'),
     board.harbours.length * 7,
   );
   const piles = new InstancedMesh(
     new CylinderGeometry(0.037, 0.045, 0.3, 6),
-    solid('#533d29'),
+    solid('#3f414e'),
     board.harbours.length * 4,
   );
   const labels: BufferGeometry[] = [];
-  const atlas = canvasTexture('harbour-labels', 512, 512, (context) => {
-    for (let index = 0; index < board.harbours.length; index++) {
-      const harbour = board.harbours[index];
-      if (!harbour) continue;
-      const x = (index % 3) * 170,
-        y = Math.floor(index / 3) * 170;
-      context.fillStyle = '#243d3e';
-      context.beginPath();
-      context.roundRect(x + 3, y + 28, 164, 112, 14);
-      context.fill();
-      context.strokeStyle = '#d6b66a';
-      context.lineWidth = 2;
-      context.stroke();
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillStyle = '#eadcb7';
-      context.font = '600 48px "Fraunces Variable", serif';
-      context.fillText(harbour.resource ? '2 : 1' : '3 : 1', x + 85, y + 69);
-      context.font = '500 27px "Public Sans Variable", sans-serif';
-      context.fillText(
-        harbour.resource
-          ? `${RESOURCE_GLYPHS[harbour.resource] ?? ''} ${harbour.resource}`
-          : 'Any resource',
-        x + 85,
-        y + 112,
-      );
-    }
-  });
+  const atlas = (appearance: BoardAppearance) =>
+    localizedTextures.texture(
+      `harbour-labels-${getLocale()}-${appearance.surface}-${appearance.text}-${appearance.accent}`,
+      512,
+      512,
+      (context) => {
+        for (let index = 0; index < board.harbours.length; index++) {
+          const harbour = board.harbours[index];
+          if (!harbour) continue;
+          const x = (index % 3) * 170,
+            y = Math.floor(index / 3) * 170;
+          context.fillStyle = appearance.surface;
+          context.beginPath();
+          context.roundRect(x + 3, y + 28, 164, 112, 5);
+          context.fill();
+          context.strokeStyle = appearance.accent;
+          context.lineWidth = 2;
+          context.stroke();
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillStyle = appearance.text;
+          context.font = '600 48px "Space Grotesk", sans-serif';
+          context.fillText(harbour.resource ? '2 : 1' : '3 : 1', x + 85, y + 69);
+          context.font = '500 21px "JetBrains Mono", monospace';
+          context.fillText(
+            harbour.resource
+              ? `${RESOURCE_GLYPHS[harbour.resource] ?? ''} ${resourceName(harbour.resource)}`
+              : localize('Any resource', 'Ľubovoľná'),
+            x + 85,
+            y + 112,
+            152,
+          );
+        }
+      },
+    );
   for (let index = 0; index < board.harbours.length; index++) {
     const harbour = board.harbours[index];
     if (!harbour) continue;
@@ -215,23 +245,33 @@ function harbours(board: Board, positions: BoardPositions, group: Group): void {
   piles.castShadow = true;
   planks.receiveShadow = true;
   group.add(planks, piles);
-  group.add(
-    new Mesh(
-      merged(labels),
-      new MeshBasicMaterial({
-        map: atlas,
-        transparent: true,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-      }),
-    ),
-  );
+  const labelMaterial = new MeshBasicMaterial({
+    map: atlas(DEFAULT_APPEARANCE),
+    fog: false,
+    toneMapped: false,
+    transparent: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+  });
+  group.add(new Mesh(merged(labels), labelMaterial));
+  return {
+    setAppearance: (appearance) => {
+      labelMaterial.map = atlas(appearance);
+      labelMaterial.needsUpdate = true;
+    },
+  };
 }
 export function createBoardMeshes(board: Board, positions: BoardPositions): BoardMeshes {
   const group = new Group();
+  const localizedTextures = createCanvasTextureCache();
   const dummy = new Object3D();
-  const table = new Mesh(new BoxGeometry(40, 0.5, 36), matte('#36291f', true));
+  const tableMaterial = new MeshStandardMaterial({
+    map: gridTexture(DEFAULT_APPEARANCE),
+    roughness: 1,
+    metalness: 0,
+  });
+  const table = new Mesh(new BoxGeometry(40, 0.5, 36), tableMaterial);
   table.position.y = -0.57;
   table.receiveShadow = true;
   group.add(table);
@@ -251,16 +291,24 @@ export function createBoardMeshes(board: Board, positions: BoardPositions): Boar
   sea.position.y = -0.15;
   sea.receiveShadow = true;
   group.add(sea);
-  const frame = new Mesh(new TorusGeometry(5.85, 0.19, 8, 96), matte('#4A3524', true));
+  const frameMaterial = new MeshStandardMaterial({
+    color: '#30303d',
+    roughness: 0.72,
+    metalness: 0.22,
+  });
+  const frame = new Mesh(new TorusGeometry(5.85, 0.19, 8, 96), frameMaterial);
   frame.rotation.x = Math.PI / 2;
   frame.position.y = -0.1;
   frame.castShadow = true;
   frame.receiveShadow = true;
   group.add(frame);
-  const brass = new Mesh(new RingGeometry(5.805, 5.827, 96), solid('#a78945'));
-  brass.rotation.x = -Math.PI / 2;
-  brass.position.y = 0.081;
-  group.add(brass);
+  const accentInset = new Mesh(
+    new RingGeometry(5.805, 5.827, 96),
+    new MeshBasicMaterial({ color: DEFAULT_APPEARANCE.accent, transparent: true, opacity: 0.62 }),
+  );
+  accentInset.rotation.x = -Math.PI / 2;
+  accentInset.position.y = 0.081;
+  group.add(accentInset);
   const shore = new Mesh(
     new RingGeometry(5.53, 5.57, 96),
     new MeshBasicMaterial({ color: '#67877b', transparent: true, opacity: 0.3 }),
@@ -296,8 +344,8 @@ export function createBoardMeshes(board: Board, positions: BoardPositions): Boar
         y = Math.floor(index / 6) * 128;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.fillStyle = number === 6 || number === 8 ? '#a0362b' : '#2c281e';
-      context.font = '650 70px "Fraunces Variable", serif';
+      context.fillStyle = number === 6 || number === 8 ? '#a03644' : '#252533';
+      context.font = '650 70px "Space Grotesk", sans-serif';
       context.fillText(String(number), x + 64, y + 54);
       const pips = 6 - Math.abs(7 - number);
       for (let pip = 0; pip < pips; pip++) {
@@ -309,7 +357,7 @@ export function createBoardMeshes(board: Board, positions: BoardPositions): Boar
   });
   const tokens = new InstancedMesh(
     beveledPrism(0.235, 0.065, 32, 0.012),
-    matte('#ede3c1'),
+    matte('#e3e5ee'),
     numbered.length,
   );
   tokens.castShadow = true;
@@ -333,36 +381,38 @@ export function createBoardMeshes(board: Board, positions: BoardPositions): Boar
   );
   group.add(tokenFaces);
   miniatures(board, positions, group);
-  harbours(board, positions, group);
-  const compassTexture = canvasTexture('compass', 256, 256, (context) => {
-    context.translate(128, 128);
-    context.strokeStyle = '#bfaa76';
-    context.fillStyle = '#bfaa76';
-    context.lineWidth = 1.5;
-    context.beginPath();
-    context.arc(0, 0, 83, 0, Math.PI * 2);
-    context.stroke();
-    for (let i = 0; i < 8; i++) {
-      context.save();
-      context.rotate((i * Math.PI) / 4);
+  const harbourMeshes = harbours(board, positions, group, localizedTextures);
+  const compassTexture = () =>
+    localizedTextures.texture(`compass-${getLocale()}`, 256, 256, (context) => {
+      context.translate(128, 128);
+      context.strokeStyle = '#ffffff';
+      context.fillStyle = '#ffffff';
+      context.lineWidth = 1.5;
       context.beginPath();
-      context.moveTo(0, -75);
-      context.lineTo(11, 0);
-      context.lineTo(0, 23);
-      context.lineTo(-11, 0);
-      context.closePath();
-      if (i % 2 === 0) context.fill();
-      else context.stroke();
-      context.restore();
-    }
-    context.font = '500 24px "Public Sans Variable", sans-serif';
-    context.textAlign = 'center';
-    context.fillText('N', 0, -98);
-  });
+      context.arc(0, 0, 83, 0, Math.PI * 2);
+      context.stroke();
+      for (let i = 0; i < 8; i++) {
+        context.save();
+        context.rotate((i * Math.PI) / 4);
+        context.beginPath();
+        context.moveTo(0, -75);
+        context.lineTo(11, 0);
+        context.lineTo(0, 23);
+        context.lineTo(-11, 0);
+        context.closePath();
+        if (i % 2 === 0) context.fill();
+        else context.stroke();
+        context.restore();
+      }
+      context.font = '500 24px "JetBrains Mono", monospace';
+      context.textAlign = 'center';
+      context.fillText(localize('N', 'S'), 0, -98);
+    });
   const compass = new Mesh(
     new PlaneGeometry(0.74, 0.74),
     new MeshBasicMaterial({
-      map: compassTexture,
+      map: compassTexture(),
+      color: DEFAULT_APPEARANCE.accent,
       transparent: true,
       opacity: 0.6,
       depthWrite: false,
@@ -371,5 +421,31 @@ export function createBoardMeshes(board: Board, positions: BoardPositions): Boar
   compass.rotation.x = -Math.PI / 2;
   compass.position.set(-4.55, -0.105, 2.9);
   group.add(compass);
-  return { group, seaTime, tokenFaces };
+  let currentAppearance = DEFAULT_APPEARANCE;
+  function setAppearance(appearance: BoardAppearance): void {
+    currentAppearance = appearance;
+    tableMaterial.map = gridTexture(appearance);
+    tableMaterial.needsUpdate = true;
+    frameMaterial.color
+      .set(appearance.surface)
+      .lerp(new Color(appearance.text), appearance.theme === 'dark' ? 0.025 : 0.42);
+    frameMaterial.color.lerp(new Color(appearance.accent), 0.035);
+    accentInset.material.color.set(appearance.accent);
+    compass.material.color.set(appearance.accent);
+    harbourMeshes.setAppearance(appearance);
+    seaMaterial.color.set(appearance.theme === 'dark' ? '#b8c2d0' : '#ffffff');
+  }
+  setAppearance(DEFAULT_APPEARANCE);
+  return {
+    group,
+    seaTime,
+    tokenFaces,
+    setAppearance,
+    refreshLocale: () => {
+      harbourMeshes.setAppearance(currentAppearance);
+      compass.material.map = compassTexture();
+      compass.material.needsUpdate = true;
+    },
+    dispose: () => localizedTextures.dispose(),
+  };
 }

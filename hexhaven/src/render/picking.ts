@@ -24,6 +24,7 @@ export interface BoardPicking {
   readonly group: Group;
   setTargets(targets: readonly SceneTarget[], select: (target: SceneTarget) => void): void;
   setColor(color: string): void;
+  setAccent(color: string): void;
   pulse(time: number, reducedMotion: boolean): void;
   highlight(id: string | null): void;
   dispose(): void;
@@ -47,7 +48,7 @@ export function createPicking(
   proxies.frustumCulled = false;
   group.add(proxies);
   const markerMaterial = new MeshBasicMaterial({
-    color: '#ebd398',
+    color: '#9c6bff',
     transparent: true,
     opacity: 0.66,
     depthWrite: false,
@@ -61,7 +62,7 @@ export function createPicking(
   markers.frustumCulled = false;
   group.add(markers);
   const ghostMaterial = new MeshBasicMaterial({
-    color: '#f0d698',
+    color: '#9c6bff',
     transparent: true,
     opacity: 0.6,
     depthWrite: false,
@@ -71,7 +72,7 @@ export function createPicking(
   group.add(ghost);
   const halo = new Mesh(
     new RingGeometry(0.36, 0.4, 48).rotateX(-Math.PI / 2),
-    new MeshBasicMaterial({ color: '#f5de9e', transparent: true, opacity: 0.9, depthWrite: false }),
+    new MeshBasicMaterial({ color: '#9c6bff', transparent: true, opacity: 0.9, depthWrite: false }),
   );
   halo.visible = false;
   group.add(halo);
@@ -210,6 +211,10 @@ export function createPicking(
     group,
     setTargets,
     highlight,
+    setAccent: (color) => {
+      markerMaterial.color.set(color);
+      halo.material.color.set(color);
+    },
     setColor: (color) => {
       ghostMaterial.color.set(new Color(color));
     },

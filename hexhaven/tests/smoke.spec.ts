@@ -93,7 +93,7 @@ async function persistedActionCount(page: Page): Promise<number> {
   );
 }
 
-test('real keyboard setup, resource production, and exact refresh resume', async ({
+test('real setup, production, exact resume, and persistent website appearance', async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
@@ -102,6 +102,8 @@ test('real keyboard setup, resource production, and exact refresh resume', async
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto('./');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'violet');
   await expect(page.getByRole('heading', { name: /Hexhaven/ }).first()).toBeVisible();
   await page.getByRole('spinbutton', { name: 'Seed', exact: true }).fill('1');
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
@@ -154,6 +156,17 @@ test('real keyboard setup, resource production, and exact refresh resume', async
   expect(exported.actions).toEqual(resumed.actions);
   expect(replay(exported.options, exported.actions)).toEqual(resumed);
   await page.getByRole('button', { name: 'Close', exact: true }).click();
+  const navigation = page.getByRole('navigation', { name: 'Game navigation', exact: true });
+  await expect(navigation.getByRole('link', { name: 'Alena Martinková — portfolio' })).toHaveText(
+    '[AM]',
+  );
+  await expect(navigation.getByRole('link', { name: 'Games', exact: true })).toHaveAttribute(
+    'href',
+    '/games/?lang=en',
+  );
+  await expect(navigation.locator('[aria-current="page"]')).toHaveText('Hexhaven');
+  for (const label of ['New game', 'Switch to light mode', 'Settings'])
+    await expect(navigation.getByRole('button', { name: label, exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
@@ -179,5 +192,75 @@ test('real keyboard setup, resource production, and exact refresh resume', async
   expect(metrics.drawCalls).toBeLessThanOrEqual(120);
   expect(metrics.triangles).toBeGreaterThan(0);
   expect(metrics.triangles).toBeLessThanOrEqual(150_000);
+
+  const darkBackground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await navigation.getByRole('button', { name: 'Switch to light mode', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  expect(await readState(page)).toEqual(resumed);
+  expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).not.toBe(
+    darkBackground,
+  );
+  await page.reload();
+  await expect(page.getByTestId('player-hand')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  expect(await readState(page)).toEqual(resumed);
+
+  await navigation.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Website accent', exact: true }).selectOption('cyan');
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'cyan');
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  expect(await readState(page)).toEqual(resumed);
+  await page.reload();
+  await expect(page.getByTestId('player-hand')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'cyan');
+  expect(await readState(page)).toEqual(resumed);
+  await navigation.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Website accent', exact: true })).toHaveValue(
+    'cyan',
+  );
+  await page.getByRole('combobox', { name: 'Website accent', exact: true }).selectOption('violet');
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'violet');
+  expect(await page.evaluate(() => localStorage.getItem('accent'))).toBe('violet');
+  expect(await readState(page)).toEqual(resumed);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  const lightScreenshot = screenshot.replace(/\.png$/, '-light.png');
+  await page.screenshot({ path: lightScreenshot, fullPage: true, animations: 'disabled' });
+  await testInfo.attach(`${testInfo.project.name} light board`, {
+    path: lightScreenshot,
+    contentType: 'image/png',
+  });
+  await navigation.getByRole('button', { name: 'Slovenčina', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
+  expect(await readState(page)).toEqual(resumed);
+  const playerRows = page.locator('.hx-player');
+  await expect(playerRows).toHaveCount(4);
+  for (const playerRow of await playerRows.all()) {
+    const rowBounds = await playerRow.boundingBox();
+    const countBounds = await playerRow.locator('.hx-player-cards').boundingBox();
+    expect(rowBounds).not.toBeNull();
+    expect(countBounds).not.toBeNull();
+    if (rowBounds === null || countBounds === null)
+      throw new Error('Player card counts must remain visible.');
+    expect(countBounds.x).toBeGreaterThanOrEqual(rowBounds.x);
+    expect(countBounds.x + countBounds.width).toBeLessThanOrEqual(rowBounds.x + rowBounds.width);
+    expect(countBounds.y).toBeGreaterThanOrEqual(rowBounds.y);
+    expect(countBounds.y + countBounds.height).toBeLessThanOrEqual(rowBounds.y + rowBounds.height);
+  }
+  const slovakScreenshot = screenshot.replace(/\.png$/, '-sk-four-players.png');
+  await page.screenshot({ path: slovakScreenshot, fullPage: true, animations: 'disabled' });
+  await testInfo.attach(`${testInfo.project.name} Slovak four-player board`, {
+    path: slovakScreenshot,
+    contentType: 'image/png',
+  });
   expect(errors).toEqual([]);
 });

@@ -46,5 +46,11 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 30_000,
     },
+    {
+      command: 'pnpm --dir .. exec vite preview --host 127.0.0.1 --port 4176 --strictPort',
+      url: 'http://127.0.0.1:4176/lego/',
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
   ],
 });

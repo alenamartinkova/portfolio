@@ -14,8 +14,6 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.2.8",
-    "@fontsource-variable/public-sans": "^5.2.8",
     "three": "^0.164.1"
   },
   "devDependencies": {

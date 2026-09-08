@@ -17,6 +17,7 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Board } from '../core/board';
 import type { GameState } from '../core/state';
+import { localize } from '../i18n';
 import {
   ACCESSIBLE_COLORS,
   PLAYER_COLORS,
@@ -31,7 +32,10 @@ export type PieceKind = 'village' | 'town' | 'road' | 'bandit';
 function merged(parts: BufferGeometry[]): BufferGeometry {
   const normalized = parts.map((part) => (part.index ? part.toNonIndexed() : part));
   const result = mergeGeometries(normalized, false);
-  if (!result) throw new Error('Unable to combine building geometry.');
+  if (!result)
+    throw new Error(
+      localize('Unable to combine building geometry.', 'Nepodarilo sa vytvoriť modely stavieb.'),
+    );
   for (const part of parts) part.dispose();
   for (const part of normalized) part.dispose();
   return result;

@@ -75,7 +75,7 @@ The OG image is a square crop offset from the top so the head is not clipped
 
 A quiet **Games** link in the portfolio footer opens `/games/`. The standalone
 page lists LEGO and Hexhaven and shares the portfolio's language and appearance
-controls. `?lang=sk` / `?lang=en` preserve the language through the list and LEGO.
+controls. `?lang=sk` / `?lang=en` preserve the language through the list and both games.
 
 To add a game, add its entry in `src/games/catalog.js` and its copy under
 `games.<id>` in both `src/i18n/en.js` and `src/i18n/sk.js`. The list lays out the
@@ -98,6 +98,13 @@ pnpm e2e                         # requires build and Playwright Chromium/Chrome
 
 The full static output remains `build/`; no backend or runtime asset service is
 needed. Hexhaven's README includes controls, screenshots and verification data.
+
+Both game headers use `src/styles/game-nav.css` for the portfolio mark, navigation
+trail and controls. Hexhaven also consumes the site's colour tokens and local
+fonts, and shares its persisted theme/accent and EN/SK preferences. Switch language
+in its header, welcome dialog or settings; `/hexhaven/?lang=sk` opens in Slovak.
+Appearance and language changes update the 3D scene and historic log without
+changing the saved game.
 
 ## Brick break
 

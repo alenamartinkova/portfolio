@@ -178,3 +178,58 @@ Verified the built Games catalogue opens both entries, including Hexhaven from
 its Slovak card. The complete `build/` directory is ready for static deployment.
 No remote deployment, backend, development database or production service was
 needed. Each milestone has its own conventional commit.
+
+## Portfolio visual alignment — follow-up plan
+
+- Reuse the portfolio's actual colour tokens and local Space Grotesk/JetBrains
+  Mono fonts in Hexhaven, with the same persistent theme and accent choices.
+- Give both games a shared navigation frame: bracketed AM mark, Games trail,
+  current game and consistent controls. Preserve game actions and locale links.
+- Replace the walnut surround with a quiet theme-aware grid and graphite frame;
+  retain the resource colours and miniature geometry for board readability.
+- Verify desktop/mobile, light/dark themes, theme persistence, setup, refresh,
+  both LEGO screens, and existing rule/render/build checks. Capture the result.
+
+### Follow-up result
+
+- [x] Hexhaven reuses the portfolio tokens, local fonts, theme and accent.
+- [x] Both games use the shared navigation on desktop and at 380px, preserving
+  their controls, collection links and locale behaviour.
+- [x] The procedural board surround, harbour labels and effects follow the
+  selected appearance. Reviewed dark/light screenshots for both games.
+- [x] Typecheck, lint, all 124 unit tests, production build and all five
+  Playwright checks passed (43.4 seconds). The dependency lock also passed an
+  isolated frozen offline validation. No core or bot rules changed.
+
+The final occupied-board measurement was 60.21 active frames/s with 49 draw
+calls and 19,093 triangles at 1440p. Full JavaScript including Three.js is
+167.38kB gzip. Updated measurements and screenshots are under
+`hexhaven/docs/screenshots/`. No deviations from this follow-up plan.
+
+## Slovak localization — follow-up plan
+
+- Add the portfolio's persistent EN/SK language control to Hexhaven, including
+  the initial dialog and shared navigation. Respect the incoming `lang` query.
+- Translate UI, accessibility instructions, statuses, historic action messages,
+  resources, development cards and board labels without changing saved games.
+- Verify switching during play, refresh persistence, desktop/mobile layout and
+  English compatibility. Run typecheck, lint, unit tests, build and browser checks.
+
+### Slovak localization result
+
+- [x] EN/SK controls are available in the shared header, welcome dialog and
+  settings. URL selection and the website's saved locale survive refresh.
+- [x] HUD, cards, resources, board labels, historic logs, actionable messages,
+  document metadata and keyboard/ARIA instructions translate live. Game state,
+  actions, replay, camera and bot scheduling remain intact.
+- [x] Typecheck, lint, all 134 workspace unit tests and static build passed.
+  All seven browser tests passed in 51.2 seconds. After the final compact mobile
+  card-count adjustment, desktop/mobile setup, production, resume, theme and
+  four-player Slovak layout checks passed again (27.3 seconds).
+- [x] Reviewed Slovak desktop/mobile screenshots, including four players at
+  380px. Count labels fit each player cell and retain full accessible text.
+
+No core or bot code changed, so the existing tournament result remains valid.
+Complete JavaScript including Three.js is 175.01kB gzip. Renderer measurements
+remain within budget: 60.29 active frames/s, 49 draw calls, 19,093 triangles.
+No deviations from this follow-up plan.
