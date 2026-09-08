@@ -156,3 +156,26 @@
     max-width: 340px;
   }
 }
+
+
+.about__fun-fact {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.about__fun-fact > svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  color: var(--accent);
+}
+
+.about__fun-fact .link-arrow {
+  white-space: nowrap;
+}

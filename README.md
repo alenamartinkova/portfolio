@@ -28,7 +28,7 @@ src/App.css                layout + shared components (panels, chips, buttons)
 src/styles/tokens.css      colors, radii, type scale, spacing
 src/styles/base.css        reset, grid background, focus & scrollbar styles
 src/styles/fonts.css       self-hosted variable fonts (files in public/fonts)
-src/i18n/                  locale context + en/sk dictionaries (all copy)
+src/i18n/                  locale context + en/sk portfolio dictionaries
 src/hooks.js               scroll progress, active section, copy-to-clipboard
 src/glow.js                background bloom that trails the pointer
 src/cursors.js             accent-coloured cursor bitmaps
@@ -69,3 +69,47 @@ The OG image is a square crop offset from the top so the head is not clipped
   in `Skills.jsx`, diagram geometry in `StackDiagram.jsx`.
 - The architecture diagram in `StackDiagram.jsx` is hand-authored SVG; node
   positions are a simple coordinate grid at the top of the file.
+
+
+## Brick break
+
+A small LEGO fun fact in About links to the standalone `/lego/` page. It uses
+React 19 and the same CSS tokens, fonts, Lucide icons and Vite build as the
+portfolio. `lego/index.html` is just a document shell mounting the React app.
+The game has its own copy-link button and return link to the portfolio.
+
+- `src/game/GameApp.jsx`: page composition, lazy workspace and error boundary.
+- `src/game/components/`: collection, SVG previews, palette, toolbar and native dialogs.
+- `src/game/state.js`: pure reducer, palette rules, undo/redo and completion scoring.
+- `src/game/models.js`: the supplied game's 12 procedural models and placement checks.
+- `src/game/persistence.js`: validated browser saves and backwards-compatible build codes.
+- `src/game/hooks/`: persistence, timer, optional sound, keyboard input and the scene lifecycle.
+- `src/game/scene/createStudio.js`: Three.js geometry, raycasting and camera controls.
+- `src/game/i18n/`: keyed EN/SK dictionaries and a React locale provider.
+- `src/game/Game.css`: game layout using the portfolio's shared design tokens.
+
+Three.js loads only after a model or free building is selected. The collection
+uses React SVG previews. The scene hook disposes renderers, geometries, materials,
+controls, event handlers and animation frames when the workspace unmounts,
+including React StrictMode remounts. WebGL failures show a retry control.
+
+`?lang=sk` and `?lang=en` select the shared link's language. Switching language
+updates React content in place and preserves the current build. Appearance falls
+back to the visitor's portfolio preferences. Game translations stay out of the
+portfolio bundle.
+
+Progress, three sandbox slots and one recent build still use
+`bricksmith.studio.v1` in local storage. Existing saves and `BS1.` export codes
+remain compatible. Storage failures are visible and export stays available.
+Sound is off by default.
+
+```bash
+npm test
+npm run build
+```
+
+Tests import the reducer and persistence modules directly, render real React
+components in EN/SK through Vite, and exercise Three.js geometry, raycasting,
+touch gestures and cleanup with the GPU boundary substituted. They also cover
+all models at every difficulty and migration of existing saves. They do not
+replace visual browser or real WebGL rendering tests.

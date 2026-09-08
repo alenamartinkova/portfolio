@@ -1,6 +1,6 @@
 import './AboutMe.css'
-import { Handshake, Rocket, Wrench } from 'lucide-react'
-import { useT } from '../i18n'
+import { ArrowUpRight, Blocks, Handshake, Rocket, Wrench } from 'lucide-react'
+import { useLocale, useT } from '../i18n'
 import Reveal from './Reveal'
 
 // Above 860px the photo column is ~430px wide; below it the frame is capped
@@ -14,6 +14,7 @@ const NOTE_ICONS = [Wrench, Handshake]
 
 export default function AboutMe() {
   const t = useT()
+  const [locale] = useLocale()
 
   return (
     <section className="section shell" id="about">
@@ -71,6 +72,15 @@ export default function AboutMe() {
               </p>
             )
           })}
+          <p className="about__fun-fact">
+            <Blocks aria-hidden="true" />
+            <span>
+              {t.about.funFact}{' '}
+              <a className="link-arrow" href={locale === 'sk' ? '/lego/?lang=sk' : '/lego/'}>
+                {t.about.playLabel}<ArrowUpRight aria-hidden="true" />
+              </a>
+            </span>
+          </p>
         </Reveal>
       </div>
 

@@ -48,5 +48,8 @@ ${url(`${origin}/sk/`)}
 export default defineConfig({
   plugins: [react(), sitemap(SITE_ORIGIN)],
   server: { port: 3000, open: true },
-  build: { outDir: 'build', emptyOutDir: true },
+  build: {
+    outDir: 'build', emptyOutDir: true,
+    rollupOptions: { input: { main: 'index.html', studio: 'lego/index.html' } },
+  },
 })
