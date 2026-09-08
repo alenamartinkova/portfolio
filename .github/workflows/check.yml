@@ -15,12 +15,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck && pnpm lint && pnpm test && pnpm build
       - run: pnpm sim --games=300 --seed=1
-      - run: pnpm --dir hexhaven exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: browser-verification
           path: |
-            hexhaven/playwright-report/
-            hexhaven/docs/screenshots/
+            games/*/playwright-report/
+            games/*/docs/screenshots/

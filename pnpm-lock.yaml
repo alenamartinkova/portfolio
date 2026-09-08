@@ -20,26 +20,35 @@ importers:
       react-icons:
         specifier: ^5.7.0
         version: 5.7.0(react@19.2.8)
-      three:
-        specifier: ^0.164.1
-        version: 0.164.1
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.39.0
+        version: 9.39.5
+      '@playwright/test':
+        specifier: ^1.56.0
+        version: 1.63.0
       '@vitejs/plugin-react':
         specifier: ^6.0.5
         version: 6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13))
+      eslint:
+        specifier: ^9.39.0
+        version: 9.39.5
+      globals:
+        specifier: ^14.0.0
+        version: 14.0.0
+      typescript-eslint:
+        specifier: ^8.46.0
+        version: 8.70.0(eslint@9.39.5)(typescript@5.9.3)
       vite:
         specifier: ^8.2.1
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13)
 
-  hexhaven:
+  games/hexhaven:
     dependencies:
       three:
         specifier: ^0.164.1
         version: 0.164.1
     devDependencies:
-      '@eslint/js':
-        specifier: ^9.39.0
-        version: 9.39.5
       '@playwright/test':
         specifier: ^1.56.0
         version: 1.63.0
@@ -49,9 +58,6 @@ importers:
       '@types/three':
         specifier: ^0.164.0
         version: 0.164.1
-      eslint:
-        specifier: ^9.39.0
-        version: 9.39.5
       prettier:
         specifier: ^3.6.2
         version: 3.9.6
@@ -61,15 +67,37 @@ importers:
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
-      typescript-eslint:
-        specifier: ^8.46.0
-        version: 8.70.0(eslint@9.39.5)(typescript@5.9.3)
       vite:
         specifier: ^8.2.1
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13)
       vitest:
         specifier: ^4.0.0
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13))
+
+  games/lego:
+    dependencies:
+      lucide-react:
+        specifier: ^1.31.0
+        version: 1.43.0(react@19.2.8)
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+      three:
+        specifier: ^0.164.1
+        version: 0.164.1
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.56.0
+        version: 1.63.0
+      '@vitejs/plugin-react':
+        specifier: ^6.0.5
+        version: 6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13))
+      vite:
+        specifier: ^8.2.1
+        version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13)
 
 packages:
 

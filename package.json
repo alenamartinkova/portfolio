@@ -7,29 +7,35 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
-    "build": "pnpm build:portfolio && pnpm --dir hexhaven build",
-    "preview": "vite preview",
-    "test": "pnpm test:portfolio && pnpm --dir hexhaven test",
+    "dev": "pnpm --recursive --parallel --include-workspace-root run dev:server",
+    "dev:server": "vite",
+    "start": "pnpm dev",
+    "build": "pnpm build:portfolio && pnpm --filter \"./games/*\" --recursive run build",
     "build:portfolio": "vite build && vite build --ssr src/entry-server.jsx --outDir build-ssr && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "test": "pnpm test:portfolio && pnpm --filter \"./games/*\" --recursive run test",
     "test:portfolio": "node --test tests/*.test.mjs",
-    "typecheck": "pnpm --dir hexhaven typecheck",
-    "lint": "pnpm --dir hexhaven lint",
-    "sim": "pnpm --dir hexhaven sim",
-    "dev:hexhaven": "pnpm --dir hexhaven dev",
-    "e2e": "pnpm --dir hexhaven e2e"
+    "typecheck": "pnpm --filter \"./games/*\" --recursive run typecheck",
+    "lint": "eslint .",
+    "sim": "pnpm --filter hexhaven sim",
+    "dev:lego": "pnpm --filter lego dev",
+    "dev:hexhaven": "pnpm --filter hexhaven dev",
+    "e2e": "pnpm --filter \"./games/*\" --recursive run e2e"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-icons": "^5.7.0",
-    "three": "^0.164.1"
+    "react-icons": "^5.7.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.0",
     "@vitejs/plugin-react": "^6.0.5",
-    "vite": "^8.2.1"
+    "eslint": "^9.39.0",
+    "globals": "^14.0.0",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^8.2.1",
+    "@playwright/test": "^1.56.0"
   },
   "packageManager": "pnpm@9.9.0"
 }

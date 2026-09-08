@@ -1,7 +1,10 @@
 import { Blocks, Hexagon } from 'lucide-react'
+import { GAMES as catalog } from '../../games/catalog.js'
 
-// Add each new game here and its copy under games.<id> in both dictionaries.
-export const GAMES = [
-  { id: 'lego', title: 'LEGO · Brick break', href: '/lego/', icon: Blocks },
-  { id: 'hexhaven', title: 'Hexhaven', href: '/hexhaven/', icon: Hexagon },
-]
+const icons = { blocks: Blocks, hexagon: Hexagon }
+
+export const GAMES = catalog.map(game => ({
+  ...game,
+  href: `/${game.id}/`,
+  icon: icons[game.icon],
+}))

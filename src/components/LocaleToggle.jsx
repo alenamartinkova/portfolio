@@ -1,4 +1,4 @@
-import './LocaleToggle.css'
+import '../../shared/styles/locale-toggle.css'
 import { LOCALES, useLocale, useT } from '../i18n'
 
 export default function LocaleToggle() {

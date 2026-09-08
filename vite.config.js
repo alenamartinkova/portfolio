@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { GAMES } from './games/catalog.js'
 
 const SITE_ORIGIN = 'https://martinkova.dev'
 
@@ -47,11 +48,24 @@ ${url(`${origin}/sk/`)}
 // publish directory keeps working.
 export default defineConfig({
   plugins: [react(), sitemap(SITE_ORIGIN)],
-  server: { port: 3000, open: true },
+  server: {
+    port: 3000,
+    open: true,
+    proxy: Object.fromEntries(GAMES.map(({ id, port }) => [
+      `/${id}/`,
+      { target: `http://127.0.0.1:${port}`, ws: true },
+    ])),
+  },
   build: {
     outDir: 'build', emptyOutDir: true,
     rollupOptions: {
-      input: { main: 'index.html', games: 'games/index.html', studio: 'lego/index.html' },
+      input: { main: 'index.html', games: 'games/index.html' },
+      output: {
+        // Match the font preloads in both prerendered portfolio pages.
+        assetFileNames: asset => asset.names.some(name => name.endsWith('.woff2'))
+          ? 'fonts/[name][extname]'
+          : 'assets/[name]-[hash][extname]',
+      },
     },
   },
 })

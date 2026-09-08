@@ -1,5 +1,5 @@
-@import './styles/fonts.css';
-@import './styles/tokens.css';
+@import '../shared/styles/fonts.css';
+@import '../shared/styles/tokens.css';
 @import './styles/base.css';
 
 /* ---------------------------------------------------------------

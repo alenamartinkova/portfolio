@@ -1,40 +1,100 @@
 # Portfolio
 
-Personal site — [martinkova.dev](https://martinkova.dev)
+Personal site — [martinkova.dev](https://martinkova.dev), built with React 19,
+Vite and plain CSS. Games are independent pnpm workspaces.
 
-Built with React 19 + Vite. No CSS framework, no UI kit: plain CSS with design
-tokens in `src/styles/tokens.css`.
+## Development
 
-## Scripts
+Use Node 24 and pnpm 9.9.0.
 
-```bash
-pnpm install     # install workspace dependencies
-pnpm dev         # portfolio dev server on http://localhost:3000
-pnpm build       # production portfolio and games into build/
-pnpm preview     # serve the production build locally
+```sh
+pnpm install --frozen-lockfile
+pnpm dev          # portfolio, game list and all games at http://localhost:3000
+pnpm build        # prerender portfolio, then build all games into build/
+pnpm preview      # serve the complete production output
+pnpm lint         # JavaScript, JSX and TypeScript across the repository
+pnpm typecheck    # games that provide a TypeScript check
+pnpm test         # portfolio rendering and all game unit/component tests
+pnpm e2e          # all game browser suites; run pnpm build first
 ```
 
-`pnpm start` is kept as an alias for `pnpm dev`.
+`pnpm start` aliases `pnpm dev`. For an individual game, use
+`pnpm --filter <id> dev` (also available as `pnpm dev:lego` and
+`pnpm dev:hexhaven`). The root development server proxies each game's URL to its
+own Vite server. `dev:server` is the internal script used to start the workspaces
+in parallel; the development ports come from `games/catalog.js`.
 
 ## Structure
 
+```text
+src/                       portfolio components, translations and entry points
+  games/                   React page listing the games at /games/
+  styles/base.css          portfolio reset and background
+shared/styles/             fonts, colour tokens and shared navigation styles
+public/                    site assets, fonts and derived photos
+index.html                 portfolio document shell and SEO metadata
+games/
+  index.html               game list document shell
+  catalog.js               game ids, titles, icons and development ports
+  lego/                    LEGO source, HTML entry, tests and documentation
+  hexhaven/                Hexhaven source, HTML entry, tests and documentation
+config/
+  game.js                  common game URLs, development ports and build output
+  playwright.js            shared desktop/mobile browser test configuration
+scripts/prerender.mjs       portfolio SSR markup and Slovak page generation
+tests/                     portfolio and game list rendering tests
+eslint.config.js           shared lint rules, including unused code checks
+build/                     complete static site (generated, ignored by Git)
 ```
-index.html                 page shell, meta + OG + JSON-LD, font preloads
-scripts/prerender.mjs      injects SSR markup and derives /sk/ at build time
-src/main.jsx               entry point
-src/entry-server.jsx       SSR entry used only by the prerender
-src/App.jsx                page composition
-src/App.css                layout + shared components (panels, chips, buttons)
-src/styles/tokens.css      colors, radii, type scale, spacing
-src/styles/base.css        reset, grid background, focus & scrollbar styles
-src/styles/fonts.css       self-hosted variable fonts (files in public/fonts)
-src/i18n/                  locale context + en/sk portfolio dictionaries
-src/hooks.js               scroll progress, active section, copy-to-clipboard
-src/glow.js                background bloom that trails the pointer
-src/cursors.js             accent-coloured cursor bitmaps
-src/components/            one .jsx + .css per section
-public/                    static assets served from /
+
+Each game owns its dependencies, source code, translations and tests. Games may
+use `shared/` and `config/`, but do not import portfolio components or another
+game's implementation. Three.js belongs to the game packages. The game list only
+imports lightweight catalog metadata and icons.
+
+## Adding a game
+
+1. Create `games/<id>/` with `package.json`, `index.html`, `src/` and `tests/`.
+   Set the package name to the game id and declare its own runtime dependencies.
+2. Add its id, title, icon and a unique port to `games/catalog.js`. Map a new icon
+   in `src/games/catalog.js` if needed, and add `games.<id>` copy to both
+   `src/i18n/en.js` and `src/i18n/sk.js`.
+3. Use the common Vite configuration, with any framework plugins the game needs:
+
+   ```js
+   import { defineConfig } from 'vite'
+   import { gameConfig } from '../../config/game.js'
+
+   export default defineConfig(gameConfig('<id>'))
+   ```
+
+4. Provide `dev`, `dev:server`, `build` and `test` scripts. Add `typecheck` or
+   `e2e` when applicable; browser suites can reuse `config/playwright.js`.
+5. Run `pnpm install` and the checks above. Workspace discovery, the root dev
+   proxy and aggregate build/test commands already include `games/*`.
+
+The game is served at `/<id>/` and builds into `build/<id>/`. Preserve `lang=en`
+and `lang=sk` in links back to the game list and portfolio.
+
+## Games
+
+- [LEGO · Brick break](games/lego/README.md): twelve procedural models and free
+  building at `/lego/`, with local saves, build sharing and optional sound.
+- [Hexhaven](games/hexhaven/README.md): procedural 3D trading and settlement at
+  `/hexhaven/`, with local hotseat, bots, IndexedDB saves and deterministic replays.
+
+```sh
+pnpm sim --games=300 --seed=1     # Hexhaven headless tournament and invariants
+pnpm exec playwright install chromium
 ```
+
+## Portfolio rendering
+
+The build prerenders `/` in English and `/sk/` in Slovak, with localized metadata
+and hreflang links. `src/entry-server.jsx` supplies the markup to
+`scripts/prerender.mjs`; language switching preserves the appropriate URL.
+Portfolio translations live in `src/i18n/`; each game's translations stay in its
+own source tree. The final static output remains `build/` for Netlify.
 
 ## Images
 
@@ -55,96 +115,3 @@ done
 
 The OG image is a square crop offset from the top so the head is not clipped
 (`sips -c 3840 3840 --cropOffset 96 0`), then resized to 1200×1200.
-
-## Notes
-
-- The build output goes to `build/` (not Vite's default `dist/`) so the existing
-  deployment setup keeps working.
-- The portfolio emits two pages: `/` (English) and `/sk/` (Slovak), each fully
-  prerendered with its own metadata and cross-linked via hreflang. The language
-  toggle syncs the URL with `history.replaceState`.
-- All translatable copy lives in `src/i18n/en.js` and `src/i18n/sk.js`.
-  Locale-invariant data stays in the components — project names, URLs and
-  stacks in `References.jsx`, timeline tags in `Career.jsx`, panel file names
-  in `Skills.jsx`, diagram geometry in `StackDiagram.jsx`.
-- The architecture diagram in `StackDiagram.jsx` is hand-authored SVG; node
-  positions are a simple coordinate grid at the top of the file.
-
-
-## Games
-
-A quiet **Games** link in the portfolio footer opens `/games/`. The standalone
-page lists LEGO and Hexhaven and shares the portfolio's language and appearance
-controls. `?lang=sk` / `?lang=en` preserve the language through the list and both games.
-
-To add a game, add its entry in `src/games/catalog.js` and its copy under
-`games.<id>` in both `src/i18n/en.js` and `src/i18n/sk.js`. The list lays out the
-cards automatically. Give each game its own HTML entry or workspace build.
-
-## Hexhaven
-
-[Hexhaven — Traders of the Long Bay](hexhaven/README.md) is an original procedural
-3D trading and settlement game at `/hexhaven/`. It supports local hotseat and
-three bot difficulties, saves to IndexedDB, and exports deterministic replays.
-Its strict TypeScript rules engine has no rendering or browser dependencies.
-
-```sh
-pnpm dev:hexhaven                 # http://127.0.0.1:4174/hexhaven/
-pnpm typecheck && pnpm lint
-pnpm test && pnpm build           # validates both games and the portfolio
-pnpm sim --games=300 --seed=1      # headless tournament with invariants
-pnpm e2e                         # requires build and Playwright Chromium/Chrome
-```
-
-The full static output remains `build/`; no backend or runtime asset service is
-needed. Hexhaven's README includes controls, screenshots and verification data.
-
-Both game headers use `src/styles/game-nav.css` for the portfolio mark, navigation
-trail and controls. Hexhaven also consumes the site's colour tokens and local
-fonts, and shares its persisted theme/accent and EN/SK preferences. Switch language
-in its header, welcome dialog or settings; `/hexhaven/?lang=sk` opens in Slovak.
-Appearance and language changes update the 3D scene and historic log without
-changing the saved game.
-
-## Brick break
-
-A small LEGO fun fact in About links to the standalone `/lego/` page. It uses
-React 19 and the same CSS tokens, fonts, Lucide icons and Vite build as the
-portfolio. `lego/index.html` is just a document shell mounting the React app.
-The game has its own copy-link button and return links to Games and the portfolio.
-
-- `src/game/GameApp.jsx`: page composition, lazy workspace and error boundary.
-- `src/game/components/`: collection, SVG previews, palette, toolbar and native dialogs.
-- `src/game/state.js`: pure reducer, palette rules, undo/redo and completion scoring.
-- `src/game/models.js`: the supplied game's 12 procedural models and placement checks.
-- `src/game/persistence.js`: validated browser saves and backwards-compatible build codes.
-- `src/game/hooks/`: persistence, timer, optional sound, keyboard input and the scene lifecycle.
-- `src/game/scene/createStudio.js`: Three.js geometry, raycasting and camera controls.
-- `src/game/i18n/`: keyed EN/SK dictionaries and a React locale provider.
-- `src/game/Game.css`: game layout using the portfolio's shared design tokens.
-
-Three.js loads only after a model or free building is selected. The collection
-uses React SVG previews. The scene hook disposes renderers, geometries, materials,
-controls, event handlers and animation frames when the workspace unmounts,
-including React StrictMode remounts. WebGL failures show a retry control.
-
-`?lang=sk` and `?lang=en` select the shared link's language. Switching language
-updates React content in place and preserves the current build. Appearance falls
-back to the visitor's portfolio preferences. Game translations stay out of the
-portfolio bundle.
-
-Progress, three sandbox slots and one recent build still use
-`bricksmith.studio.v1` in local storage. Existing saves and `BS1.` export codes
-remain compatible. Storage failures are visible and export stays available.
-Sound is off by default.
-
-```bash
-pnpm test
-pnpm build
-```
-
-Tests import the reducer and persistence modules directly, render real React
-components in EN/SK through Vite, and exercise Three.js geometry, raycasting,
-touch gestures and cleanup with the GPU boundary substituted. They also cover
-all models at every difficulty and migration of existing saves. They do not
-replace visual browser or real WebGL rendering tests.

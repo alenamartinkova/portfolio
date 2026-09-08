@@ -18,7 +18,7 @@ const SHAPES = {
     <rect x="4.6" y="9" width="22.8" height="16.2" rx="2.6" fill="${body}"/>
     <path d="M9 15.5h14" stroke="${edge}" stroke-opacity="0.28" stroke-width="1.3"
           stroke-linecap="round" fill="none"/>`,
-  plate: (body, stud, edge) => `
+  plate: (body, stud) => `
     <rect x="8.6" y="7.4" width="6.2" height="4.6" rx="1.5" fill="${stud}"/>
     <rect x="17.2" y="7.4" width="6.2" height="4.6" rx="1.5" fill="${stud}"/>
     <rect x="4.6" y="11.2" width="22.8" height="9.4" rx="2.2" fill="${body}"/>`,

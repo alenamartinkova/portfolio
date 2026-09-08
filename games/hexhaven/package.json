@@ -1,0 +1,30 @@
+{
+  "name": "hexhaven",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "vite build",
+    "lint": "eslint src tests",
+    "format": "prettier --write src tests *.ts *.json",
+    "sim": "node --import tsx src/sim/run.ts",
+    "e2e": "playwright test",
+    "dev:server": "vite --host 127.0.0.1"
+  },
+  "dependencies": {
+    "three": "^0.164.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.0.0",
+    "@types/three": "^0.164.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.0.0"
+  }
+}

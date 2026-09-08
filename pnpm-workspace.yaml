@@ -1,4 +1,4 @@
 packages:
-  - hexhaven
+  - games/*
 onlyBuiltDependencies:
   - esbuild
