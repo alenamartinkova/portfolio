@@ -1,5 +1,5 @@
 import type { TextKey } from "../i18n";
-import { Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Cargo } from "../world/Cargo";
 import { ForkliftController } from "../player/ForkliftController";
 import { firstMission } from "../missions/levels";

@@ -17,6 +17,7 @@ export default {
     back: 'Späť na portfólio',
     list: 'Dostupné hry',
     play: 'Hrať',
+    desktopOnly: 'Hrajte na počítači · klávesnica a myš',
     more: 'Ďalšie hry pribudnú čoskoro.',
     'office-escape': {
       category: '3D fyzika · parkour po nábytku',

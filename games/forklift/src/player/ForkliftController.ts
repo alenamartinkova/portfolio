@@ -1,10 +1,7 @@
-import {
-  Mesh,
-  PhysicsBody,
-  Quaternion,
-  TransformNode,
-  Vector3,
-} from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Factory } from "../world/Factory";
 import { compoundBody } from "../systems/Physics";
 import { Input } from "../systems/Input";

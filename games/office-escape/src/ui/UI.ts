@@ -1,3 +1,4 @@
+import { setText } from '../../../../shared/dom.js';
 import { areaHints, areaNames, furnitureName, getLocale, onLocaleChange, setLocale, t, type TextKey } from '../i18n';
 import { RunManager, formatTime } from '../systems/RunManager';
 import { isLightTheme, siteLinks, toggleSiteTheme } from './SiteAppearance';
@@ -81,12 +82,17 @@ export class UI {
   update(run: RunManager, area: number, interaction: Interaction | undefined, dt: number) {
     this.lastFrame = [run, area, interaction, 0];
     const parts = formatTime(run.seconds).split('.');
-    this.clock.innerHTML = `${parts[0]}<span>.${parts[1]}</span>`;
-    this.best.textContent = formatTime(run.best);
-    this.root.querySelector('#falls')!.textContent = String(run.falls).padStart(2, '0');
-    this.root.querySelector('#progress')!.textContent = `0${area + 1} / 04`;
-    this.root.querySelectorAll<HTMLElement>('[data-area]').forEach((el, i) => { el.className = i === area ? 'active' : i < area ? 'done' : ''; el.querySelector('b')!.textContent = i === area ? t('you') : i < area ? '✓' : ''; });
-    this.hint.textContent = interaction ? t(interaction.grabbed ? 'dragging' : 'nearby').replace('{object}', furnitureName(interaction.name)) : t(areaHints[area]);
+    setText(this.clock.firstChild!, parts[0]);
+    setText(this.clock.lastChild!, `.${parts[1]}`);
+    setText(this.best, formatTime(run.best));
+    setText(this.root.querySelector('#falls')!, String(run.falls).padStart(2, '0'));
+    setText(this.root.querySelector('#progress')!, `0${area + 1} / 04`);
+    this.root.querySelectorAll<HTMLElement>('[data-area]').forEach((el, i) => {
+      const nextClass = i === area ? 'active' : i < area ? 'done' : '';
+      if (el.className !== nextClass) el.className = nextClass;
+      setText(el.querySelector('b')!, i === area ? t('you') : i < area ? '✓' : '');
+    });
+    setText(this.hint, interaction ? t(interaction.grabbed ? 'dragging' : 'nearby').replace('{object}', furnitureName(interaction.name)) : t(areaHints[area]));
     this.toastTimer -= dt;
     if (this.toastTimer <= 0) this.root.querySelector('#toast')!.classList.remove('show');
   }

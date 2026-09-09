@@ -32,6 +32,7 @@ export class Game {
     private playtest?: Playtest;
     constructor(private canvas: HTMLCanvasElement) {
         this.engine = new Engine(canvas, true, { stencil: true });
+        this.engine.renderEvenInBackground = false;
         this.engine.setHardwareScalingLevel(Math.max(1, devicePixelRatio / 1.5));
         this.scene = new Scene(this.engine);
         let storage: Storage | undefined;

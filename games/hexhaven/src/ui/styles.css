@@ -1065,6 +1065,9 @@ details[open] > summary::before {
     width: calc(100% - 130px);
     max-width: 350px;
     padding: 11px 13px;
+    max-height: calc(63dvh - var(--nav-h) - 130px);
+    overflow: auto;
+    overscroll-behavior: contain;
   }
   .hx-turn-title {
     margin: 4px 0 6px;
@@ -1108,8 +1111,8 @@ details[open] > summary::before {
     position: fixed;
     right: 8px;
     left: 8px;
-    top: 226px;
-    bottom: 212px;
+    top: calc(var(--nav-h) + 86px);
+    bottom: 31px;
     max-height: none;
     margin: 0;
     z-index: 8;
@@ -1343,6 +1346,39 @@ details[open] > summary::before {
   }
   .hx-status {
     bottom: 5px;
+  }
+}
+/* Short landscape screens keep placement beside the hand, so the dock cannot
+   cover its buttons. Both areas scroll independently when more actions appear. */
+@media (max-height: 600px) and (min-width: 761px) {
+  .hx-turn-panel {
+    max-height: calc(100dvh - 184px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .hx-dock {
+    left: 244px;
+    right: 14px;
+    width: auto;
+    transform: none;
+    max-height: calc(100dvh - 234px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .hx-hand { display: block; }
+  .hx-hand > p { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .hx-hand > ul { gap: 5px; }
+  .hx-hand li { min-width: 0; flex: 1; }
+  .hx-hand li > span:not(.hx-resource-icon) { font-size: 9px; }
+  .hx-side-content {
+    position: fixed;
+    top: calc(var(--nav-h) + 8px);
+    right: 14px;
+    bottom: 31px;
+    width: min(430px, calc(100% - 28px));
+    max-height: none;
+    margin: 0;
+    z-index: 8;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,6 @@
-import { Mesh, Scene, Vector3 } from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Scene } from "@babylonjs/core/scene";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Factory } from "../world/Factory";
 export class Effects {
   private sparks: { mesh: Mesh; v: Vector3; life: number }[] = [];

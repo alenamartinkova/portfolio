@@ -1,0 +1,42 @@
+@import './fonts.css';
+@import './tokens.css';
+
+.desktop-game {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  align-items: safe center;
+  justify-items: center;
+  overflow: auto;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.7 var(--font-sans);
+}
+.desktop-game, .desktop-game * { box-sizing: border-box; }
+.desktop-game__card {
+  width: min(100%, 520px);
+  min-width: 0;
+  padding: clamp(20px, 5vw, 40px);
+  background: var(--surface);
+  border: 1px solid var(--line-mid);
+  border-radius: var(--r-lg);
+}
+.desktop-game__card h1 {
+  font: 600 clamp(28px, 6vw, 40px)/1.15 var(--font-display);
+  margin: 16px 0;
+}
+.desktop-game__card p { margin: 0 0 24px; color: var(--text-muted); }
+.desktop-game__card .desktop-game__eyebrow { font: 13px var(--font-mono); color: var(--accent-bright); }
+.desktop-game__card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.desktop-game__card a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+canvas[hidden] { display: none !important; }

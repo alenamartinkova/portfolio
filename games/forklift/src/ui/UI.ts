@@ -1,3 +1,4 @@
+import { setText } from '../../../../shared/dom.js';
 import { levels, type MissionDefinition } from "../missions/levels";
 import {
   t,
@@ -145,17 +146,17 @@ export class UI {
     cargo: { x: number; z: number },
   ) {
     this.lastFrame = [s, hint, stage, speed, lift, tilt, truck, cargo];
-    this.timer.textContent = formatTime(s.seconds);
-    this.integrity.innerHTML = `${Math.round(s.integrity)}<span>%</span>`;
+    setText(this.timer, formatTime(s.seconds));
+    setText(this.integrity.firstChild!, String(Math.round(s.integrity)));
     this.bar.style.width = s.integrity + "%";
     this.bar.style.background =
       s.integrity < 40 ? "var(--damage)" : "var(--ok)";
-    this.property.textContent = "$" + number(s.propertyDamage);
-    this.hint.textContent = t(hint);
-    this.speed.textContent = Math.round(Math.abs(speed) * 3.6).toString();
-    this.gear.textContent = speed > 0.15 ? "D" : speed < -0.15 ? "R" : "N";
-    this.forks.textContent = number(lift, 2) + " m";
-    this.tilt.textContent = Math.round((-tilt * 180) / Math.PI) + "°";
+    setText(this.property, "$" + number(s.propertyDamage));
+    setText(this.hint, t(hint));
+    setText(this.speed, Math.round(Math.abs(speed) * 3.6).toString());
+    setText(this.gear, speed > 0.15 ? "D" : speed < -0.15 ? "R" : "N");
+    setText(this.forks, number(lift, 2) + " m");
+    setText(this.tilt, Math.round((-tilt * 180) / Math.PI) + "°");
     this.steps.forEach((e, i) => e.classList.toggle("active", i === stage));
     this.drawMap(truck, cargo);
   }

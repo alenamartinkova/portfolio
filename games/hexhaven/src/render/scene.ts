@@ -53,6 +53,10 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   renderer.toneMappingExposure = 1.3;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
+  // The light and board are static. Refresh shadows when pieces change or
+  // dice animate, rather than for every sea shimmer and camera movement.
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
   renderer.domElement.className = 'hexhaven-canvas';
   function updateCanvasLabel(): void {
     renderer.domElement.setAttribute(
@@ -184,6 +188,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       controls.target.y = 0;
     }
     const effectActive = fx.tick(delta, time);
+    if (effectActive) renderer.shadowMap.needsUpdate = true;
     boardMeshes.seaTime.value = reducedMotion ? 0 : time;
     picking.pulse(time, reducedMotion);
     const shake = fx.cameraShake(time);
@@ -221,6 +226,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       camera.setViewOffset(width, height, 0, 0.075 * height * availableScale - 2, width, height);
     }
     camera.updateProjectionMatrix();
+    renderer.shadowMap.needsUpdate = true;
     // A tall viewport keeps the entire island inside the narrow horizontal view.
     if (width < 600 && camera.position.length() < 16) camera.position.setLength(16);
     invalidate();
@@ -254,6 +260,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   function update(next: GameState): void {
     if (next === state) return;
     pieces.update(next);
+    renderer.shadowMap.needsUpdate = true;
     fx.update(state, next, reducedMotion, speed);
     const last = next.actions[next.actions.length - 1];
     if (state && last && next.actions.length !== state.actions.length) {

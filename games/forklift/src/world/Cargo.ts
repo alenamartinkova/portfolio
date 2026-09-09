@@ -1,6 +1,8 @@
 import { firstMission, type MissionDefinition } from "../missions/levels";
 import { t } from "../i18n";
-import { PhysicsBody, TransformNode, Vector3 } from "@babylonjs/core";
+import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Factory } from "./Factory";
 import { compoundBody } from "../systems/Physics";
 export class Cargo {

@@ -1,5 +1,5 @@
 import type { Game } from "../Game";
-import { Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 // Development-only input driver: uses exactly the same command stream as the keyboard.
 // It never teleports bodies or overrides mission state.
 export function mountPlaytest(game: Game) {

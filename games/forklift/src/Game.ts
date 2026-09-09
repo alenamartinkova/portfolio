@@ -3,8 +3,10 @@ import {
   resolveLevel,
   type MissionDefinition,
 } from "./missions/levels";
-import { AbstractEngine, Engine, Scene, WebGPUEngine } from "@babylonjs/core";
-import "@babylonjs/loaders/glTF";
+import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { Scene } from "@babylonjs/core/scene";
+import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import glslangJs from "@babylonjs/core/assets/glslang/glslang.js?url";
 import glslangWasm from "@babylonjs/core/assets/glslang/glslang.wasm?url";
 import twgslJs from "@babylonjs/core/assets/twgsl/twgsl.js?url";
@@ -84,6 +86,7 @@ export class Game {
         { preserveDrawingBuffer: false, stencil: true },
         true,
       );
+      this.engine.renderEvenInBackground = false;
       this.engine.setHardwareScalingLevel(
         Math.max(1, window.devicePixelRatio / 1.5),
       );

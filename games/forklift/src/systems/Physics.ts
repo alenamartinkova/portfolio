@@ -1,19 +1,15 @@
+import "@babylonjs/core/Physics/physicsEngineComponent";
 import HavokPhysics from "@babylonjs/havok";
 import wasmUrl from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
-import {
-  HavokPlugin,
-  Mesh,
-  PhysicsAggregate,
-  PhysicsBody,
-  PhysicsMotionType,
-  PhysicsShapeBox,
-  PhysicsShapeContainer,
-  PhysicsShapeType,
-  Quaternion,
-  Scene,
-  TransformNode,
-  Vector3,
-} from "@babylonjs/core";
+import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { PhysicsAggregate } from "@babylonjs/core/Physics/v2/physicsAggregate";
+import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
+import { PhysicsMotionType, PhysicsShapeType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { PhysicsShapeBox, PhysicsShapeContainer } from "@babylonjs/core/Physics/v2/physicsShape";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Scene } from "@babylonjs/core/scene";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 let havok: ReturnType<typeof HavokPhysics> | undefined;
 export async function enablePhysics(scene: Scene) {
   havok ??= HavokPhysics({ locateFile: () => wasmUrl });

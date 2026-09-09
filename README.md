@@ -16,6 +16,7 @@ pnpm lint         # JavaScript, JSX and TypeScript across the repository
 pnpm typecheck    # games that provide a TypeScript check
 pnpm test         # portfolio rendering and all game unit/component tests
 pnpm e2e          # game browser suites sequentially; run pnpm build first
+pnpm e2e:responsive # page and games on desktop, phones, landscape and tablet; build first
 ```
 
 `pnpm start` aliases `pnpm dev`. For an individual game, use

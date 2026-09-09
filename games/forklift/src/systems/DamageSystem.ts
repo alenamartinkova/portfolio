@@ -1,9 +1,7 @@
-import {
-  HavokPlugin,
-  PhysicsBody,
-  PhysicsMotionType,
-  Vector3,
-} from "@babylonjs/core";
+import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
+import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Cargo } from "../world/Cargo";
 import { PropertyObject } from "../world/Warehouse";
 export class DamageSystem {

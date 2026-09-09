@@ -48,7 +48,7 @@ function GamesPage() {
                   className="games-card"
                   href={`${game.href}?lang=${locale}`}
                   aria-labelledby={`${game.id}-title ${game.id}-play`}
-                  aria-describedby={`${game.id}-description`}
+                  aria-describedby={`${game.id}-description${game.desktopOnly ? ` ${game.id}-device` : ''}`}
                 >
                   <div className="games-card__art" aria-hidden="true">
                     <span className="games-card__orbit" />
@@ -59,6 +59,7 @@ function GamesPage() {
                     <span className="games-card__category">{copy.category}</span>
                     <h2 id={`${game.id}-title`}>{game.title}</h2>
                     <p id={`${game.id}-description`}>{copy.description}</p>
+                    {game.desktopOnly && <span className="games-card__device" id={`${game.id}-device`}>{t.games.desktopOnly}</span>}
                     <span className="games-card__play" id={`${game.id}-play`}>
                       {t.games.play}<ArrowUpRight aria-hidden="true" />
                     </span>

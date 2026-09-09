@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const THEME_KEY = 'theme'
 
@@ -41,9 +41,9 @@ export function useTheme() {
   return [theme, toggle]
 }
 
-/** Fraction of the page scrolled, 0 → 1. Drives the nav progress rail. */
+/** Update the progress rail directly so scrolling does not rerender navigation. */
 export function useScrollProgress() {
-  const [progress, setProgress] = useState(0)
+  const rail = useRef(null)
 
   useEffect(() => {
     let frame = 0
@@ -51,7 +51,8 @@ export function useScrollProgress() {
     const update = () => {
       frame = 0
       const max = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0)
+      const progress = max > 0 ? Math.max(0, Math.min(window.scrollY / max, 1)) : 0
+      if (rail.current) rail.current.style.transform = `scaleX(${progress})`
     }
 
     const onScroll = () => {
@@ -68,7 +69,7 @@ export function useScrollProgress() {
     }
   }, [])
 
-  return progress
+  return rail
 }
 
 /** Id of the section currently closest to the top of the viewport. */

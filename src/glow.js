@@ -20,8 +20,8 @@ export function initGlow() {
 
   const paint = () => {
     frame = null
-    // Trail with a light ease; reduced motion snaps straight to the pointer.
-    const ease = reduced.matches ? 1 : 0.1
+    if (reduced.matches) return
+    const ease = 0.1
     x += (targetX - x) * ease
     y += (targetY - y) * ease
     root.style.setProperty('--glow-x', `${x.toFixed(1)}px`)
@@ -36,6 +36,7 @@ export function initGlow() {
   window.addEventListener(
     'pointermove',
     event => {
+      if (reduced.matches || event.pointerType === 'touch') return
       targetX = event.clientX
       targetY = event.clientY
       schedule()

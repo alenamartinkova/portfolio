@@ -1,15 +1,13 @@
 import { onLocaleChange } from "../i18n";
-import {
-  Color3,
-  DynamicTexture,
-  Mesh,
-  MeshBuilder,
-  Quaternion,
-  Scene,
-  StandardMaterial,
-  TransformNode,
-  Vector3,
-} from "@babylonjs/core";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
+import "@babylonjs/core/Engines/WebGPU/Extensions/engine.dynamicTexture";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Scene } from "@babylonjs/core/scene";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export class Factory {
   private mats = new Map<string, StandardMaterial>();
   constructor(public scene: Scene) {}

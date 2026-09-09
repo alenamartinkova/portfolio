@@ -23,6 +23,7 @@ export default {
     back: 'Back to portfolio',
     list: 'Available games',
     play: 'Play',
+    desktopOnly: 'Play on desktop · keyboard & mouse',
     more: 'More games coming soon.',
     'office-escape': {
       category: '3D physics · furniture parkour',

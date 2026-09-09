@@ -198,6 +198,16 @@
   color: var(--accent-bright);
 }
 
+.games-card__device {
+  margin-bottom: 1rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-sm);
+  font: 0.7rem/1.5 var(--font-mono);
+  color: var(--accent-bright);
+  background: var(--accent-soft);
+}
+
 .games-card__play svg {
   width: 16px;
   height: 16px;

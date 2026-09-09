@@ -20,7 +20,8 @@
     "sim": "pnpm --filter hexhaven sim",
     "dev:lego": "pnpm --filter lego dev",
     "dev:hexhaven": "pnpm --filter hexhaven dev",
-    "e2e": "pnpm --filter \"./games/*\" --workspace-concurrency=1 --recursive run e2e"
+    "e2e": "pnpm --filter \"./games/*\" --workspace-concurrency=1 --recursive run e2e",
+    "e2e:responsive": "playwright test"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

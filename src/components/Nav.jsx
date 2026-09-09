@@ -144,7 +144,9 @@ export default function Nav() {
 
       <div
         className="nav__progress"
-        style={{ transform: `scaleX(${progress})` }}
+        ref={progress}
+        style={{ transform: 'scaleX(0)' }}
+        aria-hidden="true"
       />
     </nav>
   )

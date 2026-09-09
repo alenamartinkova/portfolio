@@ -1,4 +1,8 @@
-import { FreeCamera, Mesh, Ray, Scene, Vector3 } from "@babylonjs/core";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { Ray } from "@babylonjs/core/Culling/ray";
+import { Scene } from "@babylonjs/core/scene";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Input } from "../systems/Input";
 import { ForkliftController } from "./ForkliftController";
 export class FollowCamera {
