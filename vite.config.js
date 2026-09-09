@@ -56,6 +56,8 @@ export default defineConfig({
       { target: `http://127.0.0.1:${port}`, ws: true },
     ])),
   },
+  // Vite otherwise inherits server.proxy, but preview must serve build/ directly.
+  preview: { proxy: {} },
   build: {
     outDir: 'build', emptyOutDir: true,
     rollupOptions: {

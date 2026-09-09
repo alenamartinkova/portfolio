@@ -60,6 +60,9 @@ test('shared LEGO navigation remains usable across screens, themes, and locales'
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto('http://127.0.0.1:4176/lego/');
+  // A running development server must not hide a misconfigured build preview.
+  await expect(page.locator('script[src$="/@vite/client"]')).toHaveCount(0);
+  await expect(page.locator('script[type="module"][src^="/lego/assets/"]')).toHaveCount(1);
   await expect(
     page.getByRole('heading', { name: 'What will you build today?', exact: true }),
   ).toBeVisible();
