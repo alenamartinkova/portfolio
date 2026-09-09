@@ -728,7 +728,7 @@ kbd {
     display: none;
   }
 }
-@media (max-width: 560px) {
+@media (max-width: 680px) {
   .game-nav__inner {
     flex-wrap: wrap;
     justify-content: center;
@@ -747,4 +747,80 @@ kbd {
   .overlay {
     top: var(--nav-h);
   }
+}
+
+.level-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline: 8px;
+  color: var(--text-dim);
+  font: 11px var(--font-mono);
+}
+.level-picker select {
+  max-width: 155px;
+  height: 36px;
+  padding: 0 8px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-mid);
+  border-radius: var(--r-md);
+  font: inherit;
+  cursor: pointer;
+}
+.level-picker select:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 3px;
+}
+.mission .mission-brief {
+  margin-top: 9px;
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.mission-steps {
+  margin-top: 14px;
+}
+@media (max-width: 1100px) {
+  .level-picker > span {
+    display: none;
+  }
+  .level-picker {
+    margin-inline: 0;
+  }
+}
+@media (max-width: 760px) {
+  .level-picker select {
+    max-width: 115px;
+  }
+}
+@media (max-width: 700px) {
+  .stats {
+    top: 205px;
+  }
+}
+
+.results {
+  padding: 28px 32px;
+}
+.results h2 {
+  font-size: 32px;
+  margin-top: 14px;
+}
+.results .score-list {
+  padding-block: 8px;
+  margin-bottom: 14px;
+}
+.results .score-list > div {
+  margin-block: 10px;
+}
+.results p {
+  margin-bottom: 16px;
+}
+.results .result-note {
+  margin: 8px 0 16px;
+}
+.results .secondary {
+  padding: 10px;
+  margin-top: 4px;
 }

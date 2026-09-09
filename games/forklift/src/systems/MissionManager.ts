@@ -2,16 +2,8 @@ import type { TextKey } from "../i18n";
 import { Vector3 } from "@babylonjs/core";
 import { Cargo } from "../world/Cargo";
 import { ForkliftController } from "../player/ForkliftController";
-export interface MissionDefinition {
-  id: string;
-  title: string;
-  target: { x: number; z: number; width: number; depth: number };
-}
-export const firstMission: MissionDefinition = {
-  id: "piano-b",
-  title: "Deliver the piano to Loading Bay B.",
-  target: { x: 8, z: 15, width: 6, depth: 5 },
-};
+import { firstMission } from "../missions/levels";
+export { firstMission, type MissionDefinition } from "../missions/levels";
 export function deliveryEligible(
   position: { x: number; y: number; z: number },
   speed: number,
@@ -50,8 +42,10 @@ export class MissionManager {
     const distance = Vector3.Distance(p, this.truck.root.position);
     if (p.y > 0.28 && distance < 4.8) this.pickedUp = true;
     const inBay =
-      Math.abs(p.x - this.definition.target.x) < 3 &&
-      Math.abs(p.z - this.definition.target.z) < 2.5;
+      Math.abs(p.x - this.definition.target.x) <
+        this.definition.target.width / 2 &&
+      Math.abs(p.z - this.definition.target.z) <
+        this.definition.target.depth / 2;
     const forkTip = this.truck.forkRoot.position.add(
       this.truck.forward.scale(1.1),
     );
@@ -65,6 +59,7 @@ export class MissionManager {
       this.cargo.speed,
       this.cargo.root.getDirection(Vector3.Up()).y,
       clear,
+      this.definition.target,
     )
       ? this.hold + dt
       : 0;
@@ -76,10 +71,19 @@ export class MissionManager {
     } else if (inBay) {
       this.stage = 2;
       this.hint =
-        p.y > 0.16 ? "hintLower" : clear ? "hintSettle" : "hintWithdraw";
+        Math.abs(p.x - this.definition.target.x) >=
+          this.definition.target.width / 2 - 1.65 ||
+        Math.abs(p.z - this.definition.target.z) >=
+          this.definition.target.depth / 2 - 1.65
+          ? "hintCenter"
+          : p.y > 0.16
+            ? "hintLower"
+            : clear
+              ? "hintSettle"
+              : "hintWithdraw";
     } else if (this.pickedUp && p.y > 0.2 && distance < 4.8) {
       this.stage = 1;
-      this.hint = this.truck.lift > 1.3 ? "hintLow" : "hintAisle";
+      this.hint = this.truck.lift > 1.3 ? "hintLow" : this.definition.routeHint;
     } else if (distance < 4.6) {
       this.stage = 0;
       this.hint = this.truck.lift > 0.5 ? "hintFit" : "hintLift";

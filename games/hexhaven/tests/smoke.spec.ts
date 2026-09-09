@@ -8,6 +8,9 @@ import { legalActions } from '../src/core/legal';
 import { replay } from '../src/core/log';
 import { handSize, type GameState } from '../src/core/state';
 
+// Exercise the accessible, static UI; perf.spec.ts covers animated rendering.
+test.use({ reducedMotion: 'reduce' });
+
 type DebugWindow = Window & {
   readonly __hexhaven?: { readonly state: GameState | null };
   readonly __hexhavenMetrics?: () => {

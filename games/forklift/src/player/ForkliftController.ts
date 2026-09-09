@@ -19,9 +19,9 @@ export class ForkliftController {
   speed = 0;
   hydraulic = 0;
   steer = 0;
-  constructor(f: Factory) {
+  constructor(f: Factory, spawn: readonly [number, number] = [0, -11]) {
     this.root = new TransformNode("forklift chassis", f.scene);
-    this.root.position.set(0, 0.68, -11);
+    this.root.position.set(spawn[0], 0.68, spawn[1]);
     this.root.rotationQuaternion = Quaternion.Identity();
     const box = (n: string, s: number[], p: number[], c: string) =>
       f.box(n, s, p, c, this.root);
@@ -145,7 +145,7 @@ export class ForkliftController {
     this.body.shape!.filterMembershipMask = 2;
     this.body.shape!.filterCollideMask = ~4;
     this.forkRoot = new TransformNode("fork carriage", f.scene);
-    this.forkRoot.position.set(0, this.lift, -9.62);
+    this.forkRoot.position.set(spawn[0], this.lift, spawn[1] + 1.38);
     this.forkRoot.rotationQuaternion = Quaternion.Identity();
     for (const x of [-0.62, 0.62])
       f.box(

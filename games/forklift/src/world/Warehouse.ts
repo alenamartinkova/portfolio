@@ -1,3 +1,4 @@
+import { firstMission, type MissionDefinition } from "../missions/levels";
 import { t } from "../i18n";
 import {
   Color3,
@@ -25,6 +26,7 @@ export class Warehouse {
   constructor(
     public scene: Scene,
     public f: Factory,
+    public definition: MissionDefinition = firstMission,
   ) {
     scene.clearColor = Color4.FromHexString("#95b9caff");
     scene.ambientColor = new Color3(0.2, 0.24, 0.28);
@@ -87,13 +89,25 @@ export class Warehouse {
       for (const bx of [x - 3.8, x + 3.8]) this.bollard(bx, 19.4);
     }
     f.label("NORTHLINE  /  LOGISTICS", 12, 1.1, [-7, 6.7, 20.4]);
-    f.label("B", 2, 2, [8, 3.8, 20.35], "#94efd2", "#264d4d");
-    this.zone(0, -5, 5, 4, "#579ac6", () => t("pickupSign"));
-    this.zone(8, 15, 6, 5, "#77d9bc", () => t("deliverySign"));
+    f.label(
+      definition.bay,
+      2,
+      2,
+      [definition.target.x, 3.8, 20.35],
+      "#94efd2",
+      "#264d4d",
+    );
+    this.zone(...definition.pickup, 5, 4, "#579ac6", () => t("pickupSign"));
+    this.zone(
+      definition.target.x,
+      definition.target.z,
+      definition.target.width,
+      definition.target.depth,
+      definition.tint,
+      () => `${definition.bay} / ${t("deliveryZone")}`,
+    );
     // A broad center aisle with an offset gate makes the load worth steering carefully.
-    for (const x of [-13, 13]) for (const z of [-10, 0, 10]) this.rack(x, z);
-    this.rack(-3, 4);
-    this.rack(3, 4);
+    for (const [x, z] of definition.racks) this.rack(x, z);
     for (let z = -15; z < 18; z += 3)
       for (const x of [-8, 8])
         f.box(
@@ -103,27 +117,18 @@ export class Warehouse {
           "#e9d9a2",
         );
     f.label("02", 2.5, 1.5, [-8, 0.018, -13], "#d5dfd9", "#8e9b9c", true);
-    f.label("B  ↑", 2.2, 1.5, [8, 0.018, 9], "#d1fff0", "#6c9e97", true);
-    for (const [x, z] of [
-      [-5, -9],
-      [5, -1],
-      [-8, 13],
-      [14, 17],
-    ])
-      this.barrier(x, z);
-    for (const [x, z] of [
-      [-10, -16],
-      [-9, -16],
-      [11, -5],
-      [11, 3],
-      [-7, 9],
-    ])
-      this.crate(x, 0.5, z, 1);
-    for (const [x, z] of [
-      [4, 9],
-      [-7, -1],
-      [11, -13],
-    ]) {
+    f.label(
+      `${definition.bay}  ↑`,
+      2.2,
+      1.5,
+      [definition.target.x, 0.018, 9],
+      "#d1fff0",
+      "#6c9e97",
+      true,
+    );
+    for (const [x, z] of definition.barriers) this.barrier(x, z);
+    for (const [x, z] of definition.crates) this.crate(x, 0.5, z, 1);
+    for (const [x, z] of definition.pallets) {
       const p = f.box(
         "loose pallet",
         [2.2, 0.23, 1.6],
@@ -141,11 +146,7 @@ export class Warehouse {
           p,
         );
     }
-    for (const [x, z] of [
-      [6, -9],
-      [-6, -1],
-      [10, 13],
-    ]) {
+    for (const [x, z] of definition.cones) {
       const base = f.box(
         "cone base",
         [0.55, 0.08, 0.55],

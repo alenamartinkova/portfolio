@@ -1,3 +1,8 @@
+import {
+  levels,
+  firstMission,
+  type MissionDefinition,
+} from "../src/missions/levels";
 import { beforeAll, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import HavokPhysics from "@babylonjs/havok";
@@ -40,17 +45,22 @@ class HeadlessFactory extends Factory {
     );
   }
 }
-function rig(warehouseLevel = false) {
+function rig(
+  warehouseLevel = false,
+  definition: MissionDefinition = firstMission,
+) {
   const engine = new NullEngine();
   const scene = new Scene(engine);
   const plugin = new HavokPlugin(true, havok);
   scene.enablePhysics(new Vector3(0, -9.81, 0), plugin);
   const f = new HeadlessFactory(scene);
-  const warehouse = warehouseLevel ? new Warehouse(scene, f) : undefined;
+  const warehouse = warehouseLevel
+    ? new Warehouse(scene, f, definition)
+    : undefined;
   if (!warehouse) rigid(f.box("floor", [40, 1, 60], [0, -0.5, 0], "#808080"));
-  const truck = new ForkliftController(f),
-    cargo = new Cargo(f);
-  const mission = new MissionManager(cargo, truck);
+  const truck = new ForkliftController(f, definition.spawn),
+    cargo = new Cargo(f, definition);
+  const mission = new MissionManager(cargo, truck, definition);
   const damage = new DamageSystem(
     plugin,
     cargo,
@@ -221,3 +231,50 @@ it("keeps the follow camera above the truck when backed against a wall", () => {
     r.dispose();
   }
 });
+
+for (const level of levels.slice(1)) {
+  it(`delivers ${level.cargo} through its warehouse layout`, () => {
+    const r = rig(true, level);
+    try {
+      r.step(2);
+      const left = level.bay === "A";
+      const route: [number, string[]][] = [
+        [1.4, ["KeyW"]],
+        [1, ["Space"]],
+        [0.65, ["KeyE"]],
+        [0.6, ["KeyT"]],
+        [0.5, []],
+        [2, ["KeyW", left ? "KeyA" : "KeyD"]],
+        [1, ["Space"]],
+        [level.cargo === "generator" ? 3.7 : 0.8, ["KeyW"]],
+        [1, ["Space"]],
+        [2, ["KeyW", left ? "KeyD" : "KeyA"]],
+        [1, ["Space"]],
+        [level.cargo === "generator" ? 4.2 : 4.55, ["KeyW"]],
+        [1, ["Space"]],
+        [0.6, ["KeyG"]],
+        [0.9, ["KeyQ"]],
+        [0.5, []],
+        [2.2, ["KeyS"]],
+        [1, ["Space"]],
+        [1.5, []],
+      ];
+      route.forEach(([time, keys]) => r.step(time, keys));
+      expect(
+        r.mission.delivered,
+        JSON.stringify({
+          cargo: r.cargo.root.position,
+          truck: r.truck.root.position,
+          integrity: r.damage.integrity,
+          property: r.damage.propertyDamage,
+          hint: r.mission.hint,
+        }),
+      ).toBe(true);
+      expect(r.cargo.root.parent).toBeNull();
+      expect(r.damage.integrity).toBeGreaterThan(95);
+      expect(r.damage.propertyDamage).toBe(0);
+    } finally {
+      r.dispose();
+    }
+  });
+}

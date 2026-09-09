@@ -5,6 +5,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { legalActions } from '../src/core/legal';
 import type { GameState } from '../src/core/state';
 
+// Exercise the accessible, static UI; perf.spec.ts covers animated rendering.
+test.use({ reducedMotion: 'reduce' });
+
 type DebugWindow = Window & {
   readonly __hexhaven?: { readonly state: GameState | null };
 };

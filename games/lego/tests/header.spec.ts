@@ -3,6 +3,9 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
+// Navigation checks do not need continuously pulsing hints behind the toolbar.
+test.use({ reducedMotion: 'reduce' });
+
 async function expectHeader(page: Page, building: boolean): Promise<void> {
   const header = page.getByRole('navigation', { name: 'Game navigation', exact: true });
   await expect(header.getByRole('link', { name: 'Back to portfolio' })).toHaveText('[AM]');

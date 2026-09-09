@@ -1,3 +1,8 @@
+import {
+  levels,
+  resolveLevel,
+  type MissionDefinition,
+} from "./missions/levels";
 import { AbstractEngine, Engine, Scene, WebGPUEngine } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF";
 import glslangJs from "@babylonjs/core/assets/glslang/glslang.js?url";
@@ -24,6 +29,9 @@ export class Game {
   mission!: MissionManager;
   damage!: DamageSystem;
   camera!: FollowCamera;
+  private level = resolveLevel(
+    new URLSearchParams(location.search).get("level"),
+  );
   private input: Input;
   private ui: UI;
   private audio = new GameAudio();
@@ -35,6 +43,12 @@ export class Game {
   constructor(private canvas: HTMLCanvasElement) {
     this.ui = new UI(document.querySelector("#ui")!, {
       retry: () => void this.restart(),
+      level: () => this.level,
+      selectLevel: (id) => void this.restart(resolveLevel(id)),
+      nextLevel: () =>
+        void this.restart(
+          levels[(levels.indexOf(this.level) + 1) % levels.length],
+        ),
       pause: () => this.togglePause(),
       mute: () => this.audio.toggle(),
     });
@@ -88,9 +102,9 @@ export class Game {
     this.scene = new Scene(this.engine);
     const plugin = await enablePhysics(this.scene);
     const f = new Factory(this.scene);
-    const warehouse = new Warehouse(this.scene, f);
-    this.truck = new ForkliftController(f);
-    this.cargo = new Cargo(f);
+    const warehouse = new Warehouse(this.scene, f, this.level);
+    this.truck = new ForkliftController(f, this.level.spawn);
+    this.cargo = new Cargo(f, this.level);
     this.camera = new FollowCamera(
       this.scene,
       this.truck,
@@ -108,7 +122,7 @@ export class Game {
         this.camera.shake = Math.min(0.3, strength * 0.035);
       },
     );
-    this.mission = new MissionManager(this.cargo, this.truck);
+    this.mission = new MissionManager(this.cargo, this.truck, this.level);
     warehouse.finishShadows();
     // Render-independent commands can later be recorded for replay/ghost inputs.
     this.scene.onBeforePhysicsObservable.add(() => {
@@ -196,9 +210,14 @@ export class Game {
       this.canvas.focus();
     }
   }
-  async restart() {
+  async restart(level: MissionDefinition = this.level) {
     if (!this.scene || this.restarting) return;
     this.restarting = true;
+    this.level = level;
+    const url = new URL(location.href);
+    url.searchParams.set("level", level.id);
+    history.replaceState(null, "", url);
+    this.ui.resetLevel();
     this.input.keys.clear();
     this.scene.dispose();
     try {

@@ -1,3 +1,4 @@
+import { levels, resolveLevel } from "../src/missions/levels";
 import { describe, expect, it } from "vitest";
 import { scoreRun, formatTime } from "../src/systems/ScoringSystem";
 import { deliveryEligible } from "../src/systems/MissionManager";
@@ -50,5 +51,22 @@ describe("delivery rules", () => {
   it("rejects cargo thrown through the bay or lying on its side", () => {
     expect(deliveryEligible(pos, 2, 1, true)).toBe(false);
     expect(deliveryEligible(pos, 0, 0.3, true)).toBe(false);
+  });
+});
+
+describe("mission destinations", () => {
+  it("uses Bay A for ceramics and rejects unloading at the piano destination", () => {
+    const target = levels[1].target;
+    expect(deliveryEligible({ x: -8, y: 0, z: 15 }, 0, 1, true, target)).toBe(
+      true,
+    );
+    expect(deliveryEligible({ x: 8, y: 0, z: 15 }, 0, 1, true, target)).toBe(
+      false,
+    );
+  });
+  it("restores linked levels and falls back for unknown IDs", () => {
+    expect(resolveLevel("generator-b")).toBe(levels[2]);
+    expect(resolveLevel("missing")).toBe(levels[0]);
+    expect(resolveLevel(null)).toBe(levels[0]);
   });
 });

@@ -20,7 +20,7 @@ export default {
     forklift: {
       category: '3D fyzika · jazda v sklade',
       caption: 'opatrne s nákladom',
-      description: 'Jeden vysokozdvižný vozík a jedno drahé piano. Doručte ho do nakladacej zóny B a nechajte sklad v čo najlepšom stave.',
+      description: 'Tri skladové misie: klavír, krehká keramika a ťažký generátor. Doručte náklad a nechajte sklad v čo najlepšom stave.',
     },
     lego: {
       category: '3D stavanie',

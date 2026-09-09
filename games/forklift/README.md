@@ -1,6 +1,6 @@
 # Forklift Certified
 
-A desktop browser physics game: deliver an upright piano to Loading Bay B, unload it, and beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
+A desktop browser physics game: deliver a piano, fragile ceramics, and a heavy generator across three warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
 
 ## Install and run
 
@@ -25,6 +25,18 @@ pnpm preview                   # preview complete production output
 
 Serve built output over HTTP(S); opening index.html as a file will not load ES modules or WASM. WebGPU is selected when supported; WebGL is the fallback. Append `?webgl` to force WebGL for compatibility diagnostics. Havok and the WebGPU shader compilers are bundled with the game.
 
+## Levels
+
+Choose any level from the header. Completing a delivery offers **Next level**; **R** and **Another shift** retry the current level. All levels are available immediately. The selected level is shareable through `?level=ceramics-a&lang=sk`; unknown IDs fall back to the piano mission.
+
+| Level | Cargo | Route and challenge |
+| --- | --- | --- |
+| 1 · Piano (`piano-b`) | 240 kg upright piano | Wide load, right aisle, Bay B. |
+| 2 · Ceramics (`ceramics-a`) | 180 kg shipping frame with porcelain | Mirrored layout, left aisle, tighter Bay A, 1.8× impact sensitivity. |
+| 3 · Generator (`generator-b`) | 540 kg industrial generator | Pickup on the west side, cross below the center racks, heavier handling, tighter Bay B. |
+
+Every level has physical cargo, warehouse damage, its own target/obstacles and minimap, and English/Slovak objectives and guidance. Changing levels starts a fresh run; changing language preserves it.
+
 ## Controls
 
 | Input | Action |
@@ -41,14 +53,15 @@ Serve built output over HTTP(S); opening index.html as a file will not load ES m
 | Speaker button | Mute / unmute sound |
 | Sun / moon button | Switch light / dark appearance |
 
-Drive the low forks into the pallet openings. Raise the load just off the floor, tilt back a little, and take the right aisle. Place the entire piano pallet inside the mint zone, level the forks, lower, and reverse clear. The piano must rest upright and nearly motionless for a moment. Audio starts on the first keyboard or mouse interaction. Losing focus pauses the shift.
+Drive the low forks into the pallet openings. Raise the load just off the floor, tilt back a little, and follow the mission’s route hint. Place the entire piano pallet inside the mint zone, level the forks, lower, and reverse clear. The load must rest upright and nearly motionless for a moment. Audio starts on the first keyboard or mouse interaction. Losing focus pauses the shift.
 
 ## Architecture
 
 - `Game.ts`: engine selection, scene lifecycle, fixed physics updates, pause/retry, orchestration.
 - `world/Factory.ts`: shared geometry/material and signage helpers; visual geometry is separate from collision geometry.
 - `world/Warehouse.ts`: warehouse layout, lights, shadows, environmental props and camera obstacles.
-- `world/Cargo.ts`: piano visuals and compound pallet/cabinet rigid body.
+- `world/Cargo.ts`: piano, ceramic shipping frame, and generator visuals with compound rigid bodies sharing usable pallet openings.
+- `missions/levels.ts`: typed mission catalogue with spawn/pickup positions, destination, cargo mass/fragility, and layout props.
 - `player/ForkliftController.ts`: dynamic chassis, responsive impulse driving, independently animated physical forks, lift/tilt, wheel visuals.
 - `player/FollowCamera.ts`: damped follow/orbit, wall avoidance and collision shake.
 - `systems/Physics.ts`: cached Havok initialization, compound rigid bodies and collision filters.
@@ -66,13 +79,14 @@ The `MissionDefinition` is the seam for more missions/layouts. Cargo is independ
 
 ## Physics and scoring
 
-Havok steps at 120 Hz. The 1,800 kg chassis uses ground friction, acceleration impulses, yaw steering, and locked roll/pitch for predictable arcade driving. This is not a suspension/tire simulator. Animated fork colliders transfer forces to the 240 kg piano without parenting, attaching, or snapping cargo. Separate collision groups stop the carriage hitting its own chassis. The wooden pallet has real gaps for both tines.
+Havok steps at 120 Hz. The 1,800 kg chassis uses ground friction, acceleration impulses, yaw steering, and locked roll/pitch for predictable arcade driving. This is not a suspension/tire simulator. Animated fork colliders transfer forces to loads of 180–540 kg without parenting, attaching, or snapping cargo. Separate collision groups stop the carriage hitting its own chassis. The wooden pallet has real gaps for both tines.
 
-Cargo damage uses impact impulse and relative speed. Warehouse penalties are charged once per displaced prop. A hard hit activates an entire rack as a group of rigid bodies; its decks, beams, posts, and boxes can fall. Completion awards `max(1000, 10000 − seconds × 40)`, subtracts 65 points per lost integrity percentage and the property penalty, and adds 1,500 for a near-pristine collision-free run. Incomplete deliveries score zero; total scores never go negative.
+Cargo damage uses impact impulse normalized by cargo mass, relative speed, and cargo-specific fragility. Warehouse penalties are charged once per displaced prop. A hard hit activates an entire rack as a group of rigid bodies; its decks, beams, posts, and boxes can fall. Completion awards `max(1000, 10000 − seconds × 40)`, subtracts 65 points per lost integrity percentage and the property penalty, and adds 1,500 for a near-pristine collision-free run. Incomplete deliveries score zero; total scores never go negative.
 
 ## Known limitations
 
-- One warehouse, one cargo type, and one delivery mission; desktop keyboard required.
+- Three missions share the same warehouse shell and industrial assets, with different obstacle layouts and cargo. Desktop keyboard required.
+- Ceramic pieces and the generator form a single rigid load; individual components do not shatter. Score records and campaign progress are not saved.
 - Arcade chassis stabilization intentionally prevents rollovers. Forks are animated rigid bodies rather than a fully constrained hydraulic assembly; extreme trapping can exert large forces.
 - No backend, leaderboard, daily challenge, ghost, networking, saved runs, or skin selector.
 - Restart rebuilds the small scene while reusing Havok WASM. It should take well under a second after assets are loaded, depending on hardware.
@@ -82,6 +96,8 @@ Cargo damage uses impact impulse and relative speed. Warehouse penalties are cha
 
 ## Verification
 
-The 14 automated tests cover scoring, valid/invalid delivery states, actual Havok startup stability, reverse, physical pickup and release, a complete route through the warehouse, damage from a loaded collision, and camera clearance at a wall. Run them with `pnpm --filter forklift test`. Rendering-independent physics tests use the same vehicle, cargo, warehouse, and damage systems as the browser.
+The 18 automated tests cover scoring, valid/invalid delivery states, actual Havok startup stability, reverse, physical pickup and release, complete routes for all three missions through real warehouse obstacles, damage from a loaded collision, and camera clearance at a wall. Run them with `pnpm --filter forklift test`. Rendering-independent physics tests use the same vehicle, cargo, warehouse, and damage systems as the browser.
 
 Browser playtesting covered successful full deliveries on WebGL and WebGPU, the results/Retry button, keyboard restart, and deliberate rack crashes. The prototype was tuned after those runs to fix self-collisions, reverse traction, braking, cargo stability, and aisle clearance.
+
+Level expansion verification covers full, clean Havok deliveries for all three cargo types, destination A versus B, and unchanged piano handling.

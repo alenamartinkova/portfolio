@@ -52,7 +52,7 @@ export class DamageSystem {
         e.collider === cargo.body || e.collidedAgainst === cargo.body;
       const isTruck = e.collider === truck || e.collidedAgainst === truck;
       // Impulse / mass approximates abrupt velocity change; resting support is below the threshold.
-      const effectiveMass = isCargo ? 240 : isTruck ? 900 : 12;
+      const effectiveMass = isCargo ? cargo.mass : isTruck ? 900 : 12;
       const a = this.velocities.get(e.collider) ?? Vector3.Zero();
       const b = this.velocities.get(e.collidedAgainst) ?? Vector3.Zero();
       const relative = a.subtract(b);
@@ -68,7 +68,7 @@ export class DamageSystem {
       if (isCargo)
         this.integrity = Math.max(
           0,
-          this.integrity - Math.min(35, (strength - 0.8) * 6),
+          this.integrity - Math.min(35, (strength - 0.8) * 6 * cargo.fragility),
         );
       if (isTruck && strength > 1.65) this.collisions++;
       if (isCargo || isTruck)

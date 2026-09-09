@@ -33,7 +33,7 @@ export function mountPlaytest(game: Game) {
           fps: Math.round(game.engine.getFps()),
           truck: game.truck.root.position.asArray().map(f),
           yaw: f(Math.atan2(game.truck.forward.x, game.truck.forward.z)),
-          piano: game.cargo.root.position.asArray().map(f),
+          cargo: game.cargo.root.position.asArray().map(f),
           upright: f(game.cargo.root.getDirection(Vector3.Up()).y),
           fork: game.truck.forkRoot.position.asArray().map(f),
           camera: game.camera.camera.position.asArray().map(f),
