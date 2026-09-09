@@ -7,9 +7,10 @@ export default {
   },
 
   games: {
+    heading: 'Hry',
     meta: {
-      title: 'Games · Alena Martinková',
-      description: 'Malá zbierka hier na chvíľu oddychu. Začnite s LEGO a poskladajte si niečo vlastné.',
+      title: 'Hry · Alena Martinková',
+      description: 'Hry na chvíľu oddychu: Office Escape, Forklift Certified, LEGO a Hexhaven. Vyberte si dobrodružstvo v prehliadači.',
     },
     eyebrow: 'trochu mimo hlavnej cesty',
     intro: 'Našli ste môj malý kútik na hranie. Vyberte si hru a dajte si pauzu.',
@@ -17,6 +18,11 @@ export default {
     list: 'Dostupné hry',
     play: 'Hrať',
     more: 'Ďalšie hry pribudnú čoskoro.',
+    'office-escape': {
+      category: '3D fyzika · parkour po nábytku',
+      caption: 'konečne mimo kancelárie',
+      description: 'Pracovný deň sa skončil. Utečte po stoloch, stoličkách a nábytku. Jediné pravidlo: nedotknite sa podlahy.',
+    },
     forklift: {
       category: '3D fyzika · jazda v sklade',
       caption: 'opatrne s nákladom',

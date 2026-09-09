@@ -34,7 +34,7 @@ function GamesPage() {
             <Gamepad2 aria-hidden="true" />
             {t.games.eyebrow}
           </p>
-          <h1>Games<span>.</span></h1>
+          <h1>{t.games.heading}<span>.</span></h1>
           <p className="games-intro__copy">{t.games.intro}</p>
         </div>
 

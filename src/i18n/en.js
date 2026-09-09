@@ -13,9 +13,10 @@ export default {
   },
 
   games: {
+    heading: 'Games',
     meta: {
       title: 'Games · Alena Martinková',
-      description: 'A small collection of games for a little break. Start with LEGO and build something of your own.',
+      description: 'Browser games for a little break: Office Escape, Forklift Certified, LEGO and Hexhaven. Pick your next adventure.',
     },
     eyebrow: 'a little off the beaten path',
     intro: 'You found my little corner for play. Pick a game and take a break.',
@@ -23,6 +24,11 @@ export default {
     list: 'Available games',
     play: 'Play',
     more: 'More games coming soon.',
+    'office-escape': {
+      category: '3D physics · furniture parkour',
+      caption: 'out of office. literally.',
+      description: 'Your shift is over. Escape across desks, rolling chairs and meeting tables. Just one rule: don’t touch the floor.',
+    },
     forklift: {
       category: '3D physics · warehouse driving',
       caption: 'a delicate operation',

@@ -92,6 +92,7 @@ and `lang=sk` in links back to the game list and portfolio.
 
 - [LEGO · Brick break](games/lego/README.md): twelve procedural models and free
   building at `/lego/`, with local saves, build sharing and optional sound.
+- [Office Escape](games/office-escape/README.md): a third-person Babylon.js + Havok furniture escape at `/office-escape/`. Run `pnpm --filter office-escape dev`.
 - [Hexhaven](games/hexhaven/README.md): procedural 3D trading and settlement at
   `/hexhaven/`, with local hotseat, bots, IndexedDB saves and deterministic replays.
 
