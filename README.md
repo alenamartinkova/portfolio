@@ -38,6 +38,7 @@ games/
   catalog.js               game ids, titles, icons and development ports
   lego/                    LEGO source, HTML entry, tests and documentation
   hexhaven/                Hexhaven source, HTML entry, tests and documentation
+  forklift/                Forklift Certified: Babylon.js + Havok warehouse game
 config/
   game.js                  common game URLs, development ports and build output
   playwright.js            shared desktop/mobile browser test configuration

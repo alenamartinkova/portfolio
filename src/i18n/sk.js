@@ -17,6 +17,11 @@ export default {
     list: 'Dostupné hry',
     play: 'Hrať',
     more: 'Ďalšie hry pribudnú čoskoro.',
+    forklift: {
+      category: '3D fyzika · jazda v sklade',
+      caption: 'opatrne s nákladom',
+      description: 'Jeden vysokozdvižný vozík a jedno drahé piano. Doručte ho do nakladacej zóny B a nechajte sklad v čo najlepšom stave.',
+    },
     lego: {
       category: '3D stavanie',
       caption: 'kocku po kocke',
