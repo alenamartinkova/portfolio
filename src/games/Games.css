@@ -96,9 +96,8 @@
 
 .games-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
-  max-width: 960px;
 }
 
 .games-card {
@@ -242,6 +241,12 @@
 .games-footer svg {
   width: 13px;
   height: 13px;
+}
+
+@media (max-width: 980px) {
+  .games-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 620px) {

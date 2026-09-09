@@ -23,4 +23,5 @@ jobs:
           name: browser-verification
           path: |
             games/*/playwright-report/
+            games/*/test-results/
             games/*/docs/screenshots/

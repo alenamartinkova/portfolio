@@ -17,6 +17,11 @@ export default {
     list: 'Dostupné hry',
     play: 'Hrať',
     more: 'Ďalšie hry pribudnú čoskoro.',
+    forklift: {
+      category: '3D fyzika · jazda v sklade',
+      caption: 'opatrne s nákladom',
+      description: 'Tri skladové misie: klavír, krehká keramika a ťažký generátor. Doručte náklad a nechajte sklad v čo najlepšom stave.',
+    },
     lego: {
       category: '3D stavanie',
       caption: 'kocku po kocke',

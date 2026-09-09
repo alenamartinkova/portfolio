@@ -23,6 +23,11 @@ export default {
     list: 'Available games',
     play: 'Play',
     more: 'More games coming soon.',
+    forklift: {
+      category: '3D physics · warehouse driving',
+      caption: 'a delicate operation',
+      description: 'Three warehouse missions: a piano, fragile ceramics, and a heavy generator. Deliver the cargo without turning the warehouse into a demolition site.',
+    },
     lego: {
       category: '3D building',
       caption: 'brick by brick',

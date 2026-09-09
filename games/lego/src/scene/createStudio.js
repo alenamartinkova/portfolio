@@ -36,6 +36,13 @@ export function createStudio(
     celebrationStart = 0,
     spinOffset = 0
   let animationID = 0
+  const motionQuery = matchMedia('(prefers-reduced-motion: reduce)')
+  // Both canvases are static between interactions. Wake on scene/camera edits
+  // and keep drawing only while damping or an animation is still active.
+  function invalidate() {
+    if (!disposed && active && !animationID)
+      animationID = requestAnimationFrame(tick)
+  }
   const scene = new THREE.Scene()
   const referenceScene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 300)
@@ -174,6 +181,7 @@ export function createStudio(
     return object.matrix
   }
   function clearGroup(group) {
+    invalidate()
     while (group.children.length) {
       const child = group.children[0]
       group.remove(child)
@@ -312,6 +320,7 @@ export function createStudio(
       : null
   }
   function updateHover() {
+    invalidate()
     if (
       !pointer ||
       !options.isBuilding?.() ||
@@ -434,6 +443,7 @@ export function createStudio(
   }
   const onLeave = () => {
     if (!pointerDown) {
+      invalidate()
       pointer = null
       hoverBrick = null
       lastCandidate = null
@@ -513,6 +523,7 @@ export function createStudio(
     }
   }
   function referenceFrame() {
+    invalidate()
     const bounds = modelBounds(target),
       halfFov = Math.atan(
         Math.tan(THREE.MathUtils.degToRad(referenceCamera.fov / 2)) *
@@ -546,7 +557,8 @@ export function createStudio(
     }
   }
   function animateCamera(position, center) {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    invalidate()
+    if (motionQuery.matches) {
       camera.position.copy(position)
       controls.target.copy(center)
       cameraTween = null
@@ -561,6 +573,7 @@ export function createStudio(
     }
   }
   function frame(immediate = false) {
+    invalidate()
     const f = desiredFrame()
     if (immediate) {
       camera.position.copy(f.position)
@@ -624,6 +637,7 @@ export function createStudio(
     const rw = Math.round(rect.width),
       rh = Math.round(rect.height)
     if (rw > 0 && rh > 0 && (rw !== mainWidth || rh !== mainHeight)) {
+      invalidate()
       renderer.setSize(rw, rh, false)
       resizeCamera(camera, controls, rw / rh, mainWidth > 0, 1.2)
       cameraTween = null
@@ -634,6 +648,7 @@ export function createStudio(
     const ww = Math.round(rr.width),
       hh = Math.round(rr.height)
     if (ww > 0 && hh > 0 && (ww !== refWidth || hh !== refHeight)) {
+      invalidate()
       referenceRenderer.setSize(ww, hh, false)
       resizeCamera(referenceCamera, referenceControls, ww / hh, refWidth > 0)
       refWidth = ww
@@ -651,7 +666,8 @@ export function createStudio(
   celebrationGroup.add(confetti)
   let particleData = []
   function celebrate() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (motionQuery.matches) return
+    invalidate()
     celebrationStart = performance.now()
     spinOffset = 0
     confetti.visible = true
@@ -670,6 +686,7 @@ export function createStudio(
     if (confetti.instanceColor) confetti.instanceColor.needsUpdate = true
   }
   function tick(now) {
+    animationID = 0
     if (disposed || !active) return
     if (cameraTween) {
       const t = clamp((now - cameraTween.start) / 500, 0, 1),
@@ -685,7 +702,7 @@ export function createStudio(
     controls.update()
     referenceControls.update()
     if (hints.length) {
-      const opacity = 0.38 + Math.sin(now * 0.006) * 0.2
+      const opacity = motionQuery.matches ? 0.5 : 0.38 + Math.sin(now * 0.006) * 0.2
       for (const m of hintGroup.children) m.material.opacity = opacity
     }
     if (celebrationStart) {
@@ -722,23 +739,26 @@ export function createStudio(
     renderer.render(scene, camera)
     if (refWidth > 0 && refHeight > 0 && referenceEl.getClientRects().length)
       referenceRenderer.render(referenceScene, referenceCamera)
-    animationID = requestAnimationFrame(tick)
+    if (cameraTween || celebrationStart || (hints.length && !motionQuery.matches))
+      invalidate()
   }
   function onVisibility() {
     cancelAnimationFrame(animationID)
+    animationID = 0
     active = !document.hidden
-    if (active) {
-      animationID = requestAnimationFrame(tick)
-    } else cancelAnimationFrame(animationID)
+    invalidate()
   }
   document.addEventListener('visibilitychange', onVisibility)
   controls.addEventListener('change', () => {
+    invalidate()
     if (pointer && !pointerDown) updateHover()
   })
+  referenceControls.addEventListener('change', invalidate)
+  motionQuery.addEventListener?.('change', invalidate)
   resize()
   frame(true)
   referenceFrame()
-  if (active) animationID = requestAnimationFrame(tick)
+  invalidate()
   return {
     setBuild(bricks) {
       build = bricks.slice()
@@ -822,6 +842,7 @@ export function createStudio(
       makeBatches(hintGroup, hints, 'hint')
     },
     setGhost(brick, valid) {
+      invalidate()
       if (!brick) {
         lastGhostKey = ''
         clearGroup(ghostGroup)
@@ -905,6 +926,7 @@ export function createStudio(
       cancelAnimationFrame(animationID)
       resizeObserver.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
+      motionQuery.removeEventListener?.('change', invalidate)
       window.removeEventListener('pointerup', onMainUp)
       window.removeEventListener('pointercancel', onCancel)
       controls.dispose()

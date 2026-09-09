@@ -34,7 +34,8 @@ pnpm --filter lego e2e      # desktop/mobile browser checks against that build
 Three.js loads when a model or free building is selected. The collection uses
 SVG previews. Scene cleanup releases renderer resources, controls, event handlers
 and animation frames, including React StrictMode remounts. WebGL failures show a
-retry control.
+retry control. Both canvases render on demand, sleeping between edits once
+camera damping and animations finish. Reduced-motion hints stay static.
 
 ## Compatibility
 

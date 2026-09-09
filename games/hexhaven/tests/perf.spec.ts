@@ -67,6 +67,19 @@ async function sampleFrames(page: Page, duration: number) {
   }, duration);
 }
 
+async function dragBoard(page: Page, center: { x: number; y: number }, duration: number) {
+  // Bound the interaction by elapsed time, not frame count: software WebGL on
+  // CI can take seconds per frame. The sampler separately measures throughput.
+  const start = performance.now();
+  while (performance.now() - start < duration) {
+    const seconds = (performance.now() - start) / 1000;
+    await page.mouse.move(
+      center.x + Math.sin(seconds * 4) * 120,
+      center.y + Math.cos(seconds * 3.5) * 35,
+    );
+  }
+}
+
 test('1440p occupied-board measurements and production debug isolation', async ({
   page,
 }, testInfo) => {
@@ -106,18 +119,8 @@ test('1440p occupied-board measurements and production debug isolation', async (
   const center = { x: bounds.x + bounds.width * 0.55, y: bounds.y + bounds.height * 0.5 };
   await page.mouse.move(center.x, center.y);
   await page.mouse.down();
-  const activeMeasurement = sampleFrames(page, 2000);
-  for (let step = 0; step < 100; step += 1) {
-    await page.mouse.move(
-      center.x + Math.sin(step / 15) * 120,
-      center.y + Math.cos(step / 17) * 35,
-    );
-    await page.evaluate(
-      () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
-    );
-  }
+  const [active] = await Promise.all([sampleFrames(page, 2000), dragBoard(page, center, 2000)]);
   await page.mouse.up();
-  const active = await activeMeasurement;
   await sampleFrames(page, 1600);
   const idle = await sampleFrames(page, 1800);
   const browser = await page.evaluate(() => {
@@ -157,7 +160,12 @@ test('1440p occupied-board measurements and production debug isolation', async (
   await mkdir(output, { recursive: true });
   await page.screenshot({ path: `${output}performance-1440p.png`, animations: 'disabled' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await sampleFrames(page, 700);
+  // Orbit damping converges per frame, so a fixed delay is too short on
+  // software renderers. Require actual idle before measuring the idle budget.
+  await expect.poll(async () => (await sampleFrames(page, 500)).rendererFrames, {
+    message: 'Reduced-motion rendering settles after camera damping',
+    timeout: 20_000,
+  }).toBe(0);
   const reducedMotion = await sampleFrames(page, 900);
   expect(reducedMotion.browserRafFrames).toBeGreaterThan(0);
   expect(reducedMotion.rendererFrames).toBe(0);

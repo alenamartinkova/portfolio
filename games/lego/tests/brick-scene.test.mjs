@@ -84,8 +84,10 @@ class Renderer {
   }
 }
 class Controls extends Events {
+  static instances = []
   constructor(camera) {
     super()
+    Controls.instances.push(this)
     this.camera = camera
   }
   target = new THREE.Vector3()
@@ -104,12 +106,14 @@ function environment(t) {
     document = new Events()
   window.devicePixelRatio = 1
   document.hidden = false
+  const motion = new Events()
+  motion.matches = true
   const frames = new Map()
   let id = 0
   for (const [key, value] of Object.entries({
     window,
     document,
-    matchMedia: () => ({ matches: true }),
+    matchMedia: () => motion,
     requestAnimationFrame: fn => {
       frames.set(++id, fn)
       return id
@@ -132,14 +136,16 @@ function environment(t) {
     })
   }
   Renderer.instances = []
+  Controls.instances = []
   return {
     window,
     document,
+    motion,
     frames,
-    frame() {
+    frame(now = performance.now()) {
       const callbacks = [...frames.values()]
       frames.clear()
-      callbacks.forEach(fn => fn(performance.now()))
+      callbacks.forEach(fn => fn(now))
     },
   }
 }
@@ -180,6 +186,84 @@ test('Three.js scene builds all models and disposes resources/listeners on unmou
     assert.equal(renderer.domElement.removed, true)
     assert.equal(renderer.domElement.listenerCount, 0)
   }
+})
+
+test('idle studios sleep and wake for edits, both cameras, resize and visibility', t => {
+  const env = environment(t)
+  const mainEl = new Surface()
+  const studio = createStudio(
+    { mainEl, referenceEl: new Surface(), labels: {} },
+    { Renderer, Controls }
+  )
+  const [main, reference] = Renderer.instances
+  env.frame()
+  assert.equal(env.frames.size, 0)
+  env.frame()
+  assert.equal(main.info.render.calls, 1)
+  assert.equal(reference.info.render.calls, 1)
+
+  studio.setBuild(LEVELS[0].bricks)
+  studio.setTarget(LEVELS[0].bricks)
+  assert.equal(env.frames.size, 1, 'batch scene edits into one frame')
+  env.frame()
+  assert.equal(main.info.render.calls, 2)
+  assert.equal(reference.info.render.calls, 2)
+  assert.equal(env.frames.size, 0)
+
+  for (const controls of Controls.instances) {
+    controls.camera.position.x += 1
+    controls.emit('change')
+    assert.equal(env.frames.size, 1, 'either orbit camera wakes rendering')
+    env.frame()
+    assert.equal(env.frames.size, 0)
+  }
+  mainEl.width = 400
+  studio.resize()
+  assert.equal(env.frames.size, 1)
+  env.frame()
+  assert.equal(main.domElement.width, 400)
+
+  env.document.hidden = true
+  env.document.emit('visibilitychange')
+  studio.setBuild([])
+  assert.equal(env.frames.size, 0, 'hidden scenes do not render')
+  env.document.hidden = false
+  env.document.emit('visibilitychange')
+  assert.equal(env.frames.size, 1)
+  env.frame()
+  assert.equal(env.frames.size, 0)
+  studio.dispose()
+  assert.equal(env.motion.listenerCount, 0)
+})
+
+test('hints and camera animations render until settled and respect reduced motion', t => {
+  const env = environment(t)
+  const studio = createStudio(
+    { mainEl: new Surface(), referenceEl: new Surface(), labels: {} },
+    { Renderer, Controls }
+  )
+  studio.setHint([LEVELS[0].bricks[0]])
+  env.frame()
+  assert.equal(env.frames.size, 0, 'reduced-motion hints stay static')
+  env.motion.matches = false
+  env.motion.emit('change')
+  env.frame()
+  assert.equal(env.frames.size, 1, 'animated hints keep drawing')
+  studio.setHint([])
+  env.frame()
+  assert.equal(env.frames.size, 0)
+
+  studio.view('top')
+  env.frame()
+  assert.equal(env.frames.size, 1)
+  env.frame(performance.now() + 600)
+  assert.equal(env.frames.size, 0, 'completed camera tween sleeps')
+  studio.celebrate()
+  env.frame()
+  assert.equal(env.frames.size, 1)
+  env.frame(performance.now() + 5100)
+  assert.equal(env.frames.size, 0, 'completed celebration sleeps')
+  studio.dispose()
 })
 
 test('raycasting places bricks, while multi-touch and pointer cancellation never place one', t => {

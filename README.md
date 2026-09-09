@@ -15,7 +15,7 @@ pnpm preview      # serve the complete production output
 pnpm lint         # JavaScript, JSX and TypeScript across the repository
 pnpm typecheck    # games that provide a TypeScript check
 pnpm test         # portfolio rendering and all game unit/component tests
-pnpm e2e          # all game browser suites; run pnpm build first
+pnpm e2e          # game browser suites sequentially; run pnpm build first
 ```
 
 `pnpm start` aliases `pnpm dev`. For an individual game, use
@@ -23,6 +23,17 @@ pnpm e2e          # all game browser suites; run pnpm build first
 `pnpm dev:hexhaven`). The root development server proxies each game's URL to its
 own Vite server. `dev:server` is the internal script used to start the workspaces
 in parallel; the development ports come from `games/catalog.js`.
+
+Browser suites run one game at a time so their WebGL renderers do not compete
+for CPU on CI; each game also uses one Playwright worker. To reproduce software
+rendering locally, install Chromium with `pnpm exec playwright install chromium`
+and run `PLAYWRIGHT_SOFTWARE_GL=1 pnpm e2e`. This opts into SwiftShader using
+Playwright's Chromium instead of local Chrome. Normal runs keep browser defaults.
+CI uploads reports, screenshots and failure traces as `browser-verification`.
+UI/state checks use reduced motion to avoid rendering the animated sea and
+pulsing LEGO hints throughout DOM assertions. Hexhaven's separate 1440p
+performance test keeps motion enabled and verifies that reduced-motion rendering
+becomes idle after damping; LEGO's scene tests cover its animation lifecycle.
 
 ## Structure
 
@@ -38,6 +49,7 @@ games/
   catalog.js               game ids, titles, icons and development ports
   lego/                    LEGO source, HTML entry, tests and documentation
   hexhaven/                Hexhaven source, HTML entry, tests and documentation
+  forklift/                Forklift Certified: Babylon.js + Havok warehouse game
 config/
   game.js                  common game URLs, development ports and build output
   playwright.js            shared desktop/mobile browser test configuration

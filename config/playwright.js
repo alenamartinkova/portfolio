@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 
 const localChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+const softwareGL = process.env.PLAYWRIGHT_SOFTWARE_GL === '1'
 
 // Paths are resolved relative to each game's Playwright config.
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
@@ -18,7 +19,9 @@ export const browserDefaults = {
     headless: true,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    ...(process.env.CI || !existsSync(localChrome) ? {} : { channel: 'chrome' }),
+    ...(softwareGL
+      ? { launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } }
+      : process.env.CI || !existsSync(localChrome) ? {} : { channel: 'chrome' }),
   },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 } },
