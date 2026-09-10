@@ -212,14 +212,17 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       height = Math.max(1, container.clientHeight);
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    if (width <= 760) {
-      const availableScale = Math.min(1, Math.max(0.6, (height - 502) / (0.74 * width)));
+    const compact = window.matchMedia(
+      '(max-width: 760px), (max-width: 1000px) and (max-height: 600px)',
+    ).matches;
+    fx.setCompactLayout(compact);
+    if (compact) {
+      // The mobile canvas occupies a dedicated row, with no HUD over the island.
       camera.fov = Math.max(
         38,
-        (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / (camera.aspect * availableScale)) * 180) /
-          Math.PI,
+        (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / camera.aspect) * 180) / Math.PI,
       );
-      camera.setViewOffset(width, height, 0, 0.137 * width * availableScale - 17, width, height);
+      camera.clearViewOffset();
     } else {
       const availableScale = Math.min(1, Math.max(0.45, (height - 348) / (0.6 * height)));
       camera.fov = (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / availableScale) * 180) / Math.PI;
@@ -354,9 +357,10 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       projected.copy(p);
       projected.y = 0.35;
       projected.project(camera);
+      const bounds = container.getBoundingClientRect();
       return {
-        x: (projected.x * 0.5 + 0.5) * container.clientWidth,
-        y: (-0.5 * projected.y + 0.5) * container.clientHeight,
+        x: bounds.left + (projected.x * 0.5 + 0.5) * bounds.width,
+        y: bounds.top + (-0.5 * projected.y + 0.5) * bounds.height,
       };
     },
     metrics: () => ({

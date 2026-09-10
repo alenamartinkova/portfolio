@@ -32,6 +32,7 @@ interface Particle {
 interface SceneFx {
   readonly group: Group;
   setAppearance(appearance: BoardAppearance): void;
+  setCompactLayout(compact: boolean): void;
   update(before: GameState | null, state: GameState, reduced: boolean, speed: number): void;
   tick(delta: number, time: number): boolean;
   cameraShake(time: number): number;
@@ -273,8 +274,6 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
     }
   }
   function tick(delta: number, time: number): boolean {
-    // The dice rest on the table beyond the frame, clear of all nine harbours.
-    diceTray.position.set(camera.aspect < 0.8 ? 0 : 5.15, -0.25, camera.aspect < 0.8 ? 6.55 : 4.4);
     lastTime = time;
     let active = false;
     if (diceElapsed < diceDuration) {
@@ -330,6 +329,10 @@ export function createFx(positions: BoardPositions, camera: PerspectiveCamera): 
     group,
     update,
     tick,
+    setCompactLayout: (compact) => {
+      // Keep dice below the island on phones, clear of all nine harbours.
+      diceTray.position.set(compact ? 0 : 5.15, -0.25, compact ? 6.55 : 4.4);
+    },
     cameraShake: (time) => (time < shakeUntil ? Math.sin(time * 97) * 1.8 : 0),
     setAppearance: (appearance) => {
       tray.material.color.set(appearance.theme === 'dark' ? '#353543' : '#b8bac8');
