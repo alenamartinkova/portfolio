@@ -45,7 +45,20 @@ function optionsFrom(input: unknown): GameOptions {
     const base: PlayerConfig = { name: player.name, kind: player.kind };
     return player.difficulty === undefined ? base : { ...base, difficulty: player.difficulty };
   });
-  return { seed: input.seed, layout: input.layout, players };
+  if (
+    input.setupOrder !== undefined &&
+    input.setupOrder !== 'forward' &&
+    input.setupOrder !== 'snake'
+  ) {
+    throw new Error('The replay setup order must be forward or snake.');
+  }
+  return {
+    seed: input.seed,
+    layout: input.layout,
+    players,
+    // Saves created before setup order was explicit used reverse order in round two.
+    setupOrder: input.setupOrder ?? 'snake',
+  };
 }
 
 /** Validate the envelope and action shapes; replay() separately enforces game rules. */

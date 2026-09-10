@@ -91,34 +91,39 @@ function ownedVillage(state: GameState): GameState {
 }
 
 describe('setup and action validation', () => {
-  it('places village/road pairs in snake order and grants only second-placement resources', () => {
-    let state = initial();
-    const order: number[] = [];
-    for (let step = 0; step < 8; step++) {
-      order.push(state.activePlayer);
-      const action = findAction(state, 'placeVillage');
-      const expected =
-        state.board.vertices
-          .find((v) => v.id === action.vertex)
-          ?.hexes.flatMap((id) => {
-            const tile = state.board.tiles.find((t) => t.id === id);
-            return tile && TERRAIN_RESOURCE[tile.terrain] ? [TERRAIN_RESOURCE[tile.terrain]] : [];
-          }).length ?? 0;
-      const before = handSize(getPlayer(state, state.activePlayer).hand);
-      state = reduce(state, action);
-      expect(handSize(getPlayer(state, state.activePlayer).hand) - before).toBe(
-        step >= 4 ? expected : 0,
-      );
-      expect(state.phase.type).toBe('setupRoad');
-      state = doAction(state, 'placeRoad');
-      conservation(state);
-    }
-    expect(order).toEqual([0, 1, 2, 3, 3, 2, 1, 0]);
-    expect(state.phase).toEqual({ type: 'roll' });
-    expect(state.turn).toBe(1);
-    expect(Object.keys(state.buildings)).toHaveLength(8);
-    expect(Object.keys(state.roads)).toHaveLength(8);
-  });
+  it.each([2, 3, 4])(
+    'places village/road pairs in forward order for %i players and grants only second-placement resources',
+    (count) => {
+      let state = createGame({ ...options, players: options.players.slice(0, count) });
+      const order: number[] = [];
+      for (let step = 0; step < count * 2; step++) {
+        order.push(state.activePlayer);
+        const action = findAction(state, 'placeVillage');
+        const expected =
+          state.board.vertices
+            .find((v) => v.id === action.vertex)
+            ?.hexes.flatMap((id) => {
+              const tile = state.board.tiles.find((t) => t.id === id);
+              return tile && TERRAIN_RESOURCE[tile.terrain] ? [TERRAIN_RESOURCE[tile.terrain]] : [];
+            }).length ?? 0;
+        const before = handSize(getPlayer(state, state.activePlayer).hand);
+        state = reduce(state, action);
+        expect(handSize(getPlayer(state, state.activePlayer).hand) - before).toBe(
+          step >= count ? expected : 0,
+        );
+        expect(state.phase.type).toBe('setupRoad');
+        state = doAction(state, 'placeRoad');
+        conservation(state);
+      }
+      const round = Array.from({ length: count }, (_, index) => index);
+      expect(order).toEqual([...round, ...round]);
+      expect(state.phase).toEqual({ type: 'roll' });
+      expect(state.activePlayer).toBe(0);
+      expect(state.turn).toBe(1);
+      expect(Object.keys(state.buildings)).toHaveLength(count * 2);
+      expect(Object.keys(state.roads)).toHaveLength(count * 2);
+    },
+  );
   it('applies the distance rule from the very first village', () => {
     const start = initial();
     const vertex = start.board.vertices[0];

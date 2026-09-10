@@ -48,9 +48,11 @@ database, account or backend is required. Existing Netlify configuration runs
 ## At the table
 
 Choose a fixed beginner island or a reproducible random island and seed. Place
-a village and an adjoining road, then repeat in reverse player order. Your
+a village and an adjoining road, then repeat in the same player order. Your
 second village supplies its neighbouring resources. Every later turn begins
 with a dice roll; a mature Guard card can also be played before rolling.
+
+Older saved games retain their original setup order when resumed.
 
 Matching, unblocked tiles supply one resource per village or two per town.
 A seven makes each trader with more than seven cards return half, rounded down,

@@ -141,7 +141,10 @@ function apply(state: GameState, action: Action): GameState {
         return {
           ...next,
           phase: { type: 'setupVillage', step },
-          activePlayer: step < count ? step : count * 2 - 1 - step,
+          activePlayer:
+            state.options.setupOrder === 'snake' && step >= count
+              ? count * 2 - 1 - step
+              : step % count,
         };
       }
       if (state.phase.type === 'freeRoads') {

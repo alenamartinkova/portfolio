@@ -30,9 +30,38 @@ describe('replay persistence guards', () => {
 
   it('supports already parsed envelopes without relying on JSON object key order', () => {
     const parsed = parseReplay({ actions: [], options, version: 1 });
-    expect(parsed).toEqual({ version: 1, options, actions: [] });
+    expect(parsed).toEqual({
+      version: 1,
+      options: { ...options, setupOrder: 'snake' },
+      actions: [],
+    });
     expect(parsed.options).not.toBe(options);
   });
+
+  it.each(['forward', 'snake'] as const)(
+    'restores %s setup during and after the second round',
+    (setupOrder) => {
+      let state = createGame({ ...options, setupOrder });
+      const order: number[] = [];
+      for (let step = 0; step < 8; step++) {
+        if (state.phase.type === 'setupVillage') order.push(state.activePlayer);
+        const action = legalActions(state, state.activePlayer)[0];
+        if (!action) throw new Error('Expected a setup action.');
+        state = reduce(state, action);
+        const data =
+          setupOrder === 'snake'
+            ? { version: 1, options, actions: state.actions }
+            : exportReplay(state);
+        const parsed = parseReplay(data);
+        expect(replay(parsed.options, parsed.actions)).toEqual(state);
+        // Re-exporting a legacy save must keep its original rules explicit.
+        expect(parseReplay(exportReplay(state)).options.setupOrder).toBe(setupOrder);
+      }
+      expect(order).toEqual(setupOrder === 'forward' ? [0, 1, 0, 1] : [0, 1, 1, 0]);
+      expect(state.phase.type).toBe('roll');
+      expect(state.activePlayer).toBe(0);
+    },
+  );
 
   it('rejects invalid JSON, versions, and missing action lists', () => {
     expect(() => parseReplay('{')).toThrow('valid JSON');
@@ -50,6 +79,7 @@ describe('replay persistence guards', () => {
       { ...options, seed: NaN },
       { ...options, seed: 3.5 },
       { ...options, layout: 'ocean' },
+      { ...options, setupOrder: 'random' },
       { ...options, players: [] },
       { ...options, players: [{ name: 'One', kind: 'human' }] },
       {

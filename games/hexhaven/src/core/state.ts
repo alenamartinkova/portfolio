@@ -33,6 +33,8 @@ export interface GameOptions {
   readonly seed: number;
   readonly layout: 'beginner' | 'random';
   readonly players: readonly PlayerConfig[];
+  /** Old saves retain their original setup rules. New games default to forward order. */
+  readonly setupOrder?: 'forward' | 'snake';
 }
 export interface Player {
   readonly id: number;
@@ -130,7 +132,7 @@ export function createGame(options: GameOptions): GameState {
   }));
   return {
     version: 1,
-    options,
+    options: { ...options, setupOrder: options.setupOrder ?? 'forward' },
     board,
     rng: shuffled.rng,
     players,

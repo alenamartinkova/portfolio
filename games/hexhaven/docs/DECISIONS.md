@@ -40,7 +40,8 @@
   longest route, nobody holds the Charter, following the requested interruption
   rule. The exact shortened-holder transition has a regression test.
 - Local play supports two to four traders, using the same 19-tile island and
-  snake setup. Four traders remains the default. There is no online multiplayer,
+  forward setup order in both rounds. Older saves retain snake setup via their
+  replay options. Four traders remains the default. There is no online multiplayer,
   account system, matchmaking or external storage.
 - Saves contain validated options and the complete action history. IndexedDB
   operations commit in order; loading replays the rules rather than trusting a

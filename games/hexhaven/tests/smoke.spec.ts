@@ -119,7 +119,15 @@ test('real setup, production, exact resume, and persistent website appearance', 
 
   for (const phase of ['setupVillage', 'setupRoad', 'setupVillage', 'setupRoad'] as const)
     await placeThroughKeyboard(page, phase);
+  await page.waitForFunction(
+    () => (window as DebugWindow).__hexhaven?.state?.phase.type === 'roll',
+  );
   const beforeRoll = await readState(page);
+  expect(
+    beforeRoll.actions
+      .filter((action) => action.type === 'placeVillage')
+      .map((action) => action.player),
+  ).toEqual([0, 1, 2, 3, 0, 1, 2, 3]);
   expect(beforeRoll.phase.type).toBe('roll');
   expect(
     Object.values(beforeRoll.buildings).filter((building) => building.owner === 0),
@@ -135,7 +143,8 @@ test('real setup, production, exact resume, and persistent website appearance', 
   const produced = await readState(page);
   expect(produced.dice).toEqual([5, 4]);
   expect(handSize(produced.players[0]?.hand ?? human.hand)).toBeGreaterThan(beforeCards);
-  expect(produced.players[0]?.hand.brick).toBe(human.hand.brick + 2);
+  // With forward setup, only the first village borders the seed's 9-hills tile.
+  expect(produced.players[0]?.hand.brick).toBe(human.hand.brick + 1);
   await expect(page.getByTestId('player-hand')).toBeVisible();
   await expect.poll(() => persistedActionCount(page)).toBe(produced.actions.length);
 
