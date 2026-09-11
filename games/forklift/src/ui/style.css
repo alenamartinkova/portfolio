@@ -1,7 +1,6 @@
 @import "../../../../shared/styles/fonts.css";
 @import "../../../../shared/styles/tokens.css";
 @import "../../../../shared/styles/game-nav.css";
-@import "../../../../shared/styles/locale-toggle.css";
 
 :root {
   font-family: var(--font-sans);
@@ -713,11 +712,7 @@ kbd {
   }
 }
 
-.locale__option {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
+
 :root[lang="sk"] .controls {
   gap: 14px;
 }
@@ -834,3 +829,8 @@ kbd {
   padding: 10px;
   margin-top: 4px;
 }
+
+.campaign-stars { color: var(--accent-bright); }
+#inspection-progress { color: var(--accent-bright); }
+
+.mission .location-label { top: calc(100% + 12px); left: 0; white-space: nowrap; }

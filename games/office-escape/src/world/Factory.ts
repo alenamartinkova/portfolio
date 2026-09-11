@@ -1,7 +1,9 @@
 import { onLocaleChange } from '../i18n';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Scene } from '@babylonjs/core/scene';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -21,7 +23,7 @@ export class Factory {
         return this.materials.get(key)!;
     }
     box(name: string, size: number[], pos: number[], color: string, parent?: TransformNode) {
-        const mesh = MeshBuilder.CreateBox(name, { width: size[0], height: size[1], depth: size[2] }, this.scene);
+        const mesh = CreateBox(name, { width: size[0], height: size[1], depth: size[2] }, this.scene);
         mesh.position.set(pos[0], pos[1], pos[2]);
         mesh.material = this.mat(color);
         mesh.parent = parent ?? null;
@@ -30,7 +32,7 @@ export class Factory {
         return mesh;
     }
     cylinder(name: string, diameter: number, height: number, pos: number[], color: string, parent?: TransformNode) {
-        const mesh = MeshBuilder.CreateCylinder(name, { diameter, height, tessellation: 12 }, this.scene);
+        const mesh = CreateCylinder(name, { diameter, height, tessellation: 12 }, this.scene);
         mesh.position.set(pos[0], pos[1], pos[2]);
         mesh.material = this.mat(color);
         mesh.parent = parent ?? null;
@@ -60,7 +62,7 @@ export class Factory {
         mat.diffuseTexture = tex;
         mat.emissiveColor = new Color3(.35, .35, .35);
         mat.backFaceCulling = false;
-        const mesh = MeshBuilder.CreatePlane(name, { width, height }, this.scene);
+        const mesh = CreatePlane(name, { width, height }, this.scene);
         mesh.material = mat;
         mesh.position.set(...pos as [
             number,

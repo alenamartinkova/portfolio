@@ -1,4 +1,21 @@
 export const en = {
+  nameTraining: "First shift",
+  nameCeramics: "Fragile delivery",
+  nameHeavy: "Heavy metal",
+  nameInspection: "Quality control",
+  nameSlalom: "Ceramic slalom",
+  nameDetour: "Heavy detour",
+  nameConcert: "Concert tour",
+  namePrecision: "Precision unloading",
+  nameAudit: "Warehouse audit",
+  nameMaster: "Master certification",
+  inspection: "INSPECTION",
+  inspectionHint: "Carry the load through numbered inspections in order. Stop inside each zone for 2 seconds with the load low (0.2–1.2 m).",
+  routeReady: "Inspections complete. Deliver to the marked bay.",
+  campaignGoal: "Stars: deliver · cargo ≥ 90%, no property damage · also beat {time}.",
+  bestLevel: "Level best",
+  destination: "Deliver to Loading Bay",
+
   navigation: "Game navigation",
   portfolio: "portfolio",
   games: "Games",
@@ -81,7 +98,7 @@ export const en = {
   deliverySign: "B  /  DELIVERY",
   fragile: "↑  FRAGILE  ↑",
   description:
-    "Three warehouse missions. Piano, ceramics, and heavy machinery. A physics-based forklift game.",
+    "Ten warehouse missions with inspection stops. Piano, ceramics, and heavy machinery. A physics-based forklift game.",
   canvasLabel:
     "Forklift Certified warehouse. WASD drive, E raise forks, Q lower, T and G tilt, Escape pause.",
   levels: "Level",
@@ -106,11 +123,28 @@ export const en = {
   levelGenerator: "Generator",
   mapDescription: "Warehouse map: blue cargo, green destination",
   runFinished: "Cargo delivered. Your next shift is waiting.",
-  finalFinished: "All three routes explored? Try a faster, cleaner run.",
+  finalFinished: "Final shift complete. Earn three stars on every route.",
 } as const;
 export type TextKey = keyof typeof en;
 export type Locale = "en" | "sk";
 export const sk: Record<TextKey, string> = {
+  nameTraining: "Prvá smena",
+  nameCeramics: "Krehká zásielka",
+  nameHeavy: "Ťažká váha",
+  nameInspection: "Kontrola kvality",
+  nameSlalom: "Keramický slalom",
+  nameDetour: "Ťažká obchádzka",
+  nameConcert: "Koncertné turné",
+  namePrecision: "Presná vykládka",
+  nameAudit: "Skladový audit",
+  nameMaster: "Majstrovská skúška",
+  inspection: "KONTROLA",
+  inspectionHint: "Prevez náklad očíslovanými kontrolami v poradí. V každej zastav na 2 sekundy s nákladom nízko (0,2–1,2 m).",
+  routeReady: "Kontroly dokončené. Vylož náklad v označenej zóne.",
+  campaignGoal: "Hviezdy: doruč · náklad ≥ 90 %, bez škôd v sklade · navyše čas pod {time}.",
+  bestLevel: "Rekord levelu",
+  destination: "Doruč do nakladacej zóny",
+
   navigation: "Navigácia hry",
   portfolio: "portfólio",
   games: "Hry",
@@ -194,7 +228,7 @@ export const sk: Record<TextKey, string> = {
   deliverySign: "B  /  VYKLÁDKA",
   fragile: "↑  KREHKÉ  ↑",
   description:
-    "Tri skladové misie. Klavír, keramika a ťažký generátor. Fyzikálna hra s vysokozdvižným vozíkom.",
+    "Desať skladových misií s kontrolnými zastávkami. Klavír, keramika a ťažký generátor. Fyzikálna hra s vysokozdvižným vozíkom.",
   canvasLabel:
     "Sklad Forklift Certified. WASD jazda, E zdvihnúť vidlice, Q spustiť, T a G náklon, Escape pauza.",
   levels: "Level",
@@ -218,7 +252,7 @@ export const sk: Record<TextKey, string> = {
   levelGenerator: "Generátor",
   mapDescription: "Mapa skladu: modrý náklad, zelený cieľ",
   runFinished: "Náklad doručený. Čaká ťa ďalšia smena.",
-  finalFinished: "Poznáš všetky tri trasy? Skús to rýchlejšie a bez škôd.",
+  finalFinished: "Posledná smena hotová. Získaj tri hviezdy na každej trase.",
 };
 
 let locale: Locale = "en";

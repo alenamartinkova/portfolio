@@ -12,7 +12,7 @@ export function desktopGame({ title, locale, load }) {
   notice.innerHTML = `<section class="desktop-game__card" aria-labelledby="desktop-game-title">
     <p class="desktop-game__eyebrow"></p>
     <h1 id="desktop-game-title">${sk ? 'Zahrajte si na počítači' : 'Play on desktop'}</h1>
-    <p>${sk ? 'Táto hra potrebuje klávesnicu, myš a väčšiu obrazovku. Otvorte tento odkaz na počítači. Na mobile si zatiaľ môžete zahrať LEGO alebo Hexhaven.' : 'This game needs a keyboard, mouse and a larger screen. Open this link on your computer. You can play LEGO or Hexhaven on mobile in the meantime.'}</p>
+    <p>${sk ? 'Táto hra potrebuje klávesnicu, myš a väčšiu obrazovku. Otvorte tento odkaz na počítači. Na mobile si zatiaľ môžete zahrať Brick Break alebo Hexhaven.' : 'This game needs a keyboard, mouse and a larger screen. Open this link on your computer. You can play Brick Break or Hexhaven on mobile in the meantime.'}</p>
     <a href="/games/?lang=${sk ? 'sk' : 'en'}">${sk ? 'Späť na hry' : 'Back to games'} <span aria-hidden="true">↗</span></a>
   </section>`
   notice.querySelector('.desktop-game__eyebrow').textContent = title

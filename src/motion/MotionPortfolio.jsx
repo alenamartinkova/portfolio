@@ -4,12 +4,13 @@ import { LocaleProvider, useLocale, useT } from '../i18n'
 import { useCopy } from '../hooks'
 import { PROJECTS } from './projects'
 import useMotion from './useMotion'
+import { setAppearancePreference } from '../../shared/appearance.js'
 import ColorPicker, { readAccent } from './ColorPicker'
 import ClientWork from './ClientWork'
 import AboutSection from './AboutSection'
 import LanguageLink from '../components/LanguageLink'
 import ThemeToggle from '../components/ThemeToggle'
-import '../components/AppearanceControls.css'
+import '../../shared/styles/appearance-controls.css'
 import './motion.css'
 import './choreography.css'
 
@@ -39,11 +40,7 @@ function PortfolioPage() {
   useMotion(root, motion, locale)
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accent.id
-    try {
-      localStorage.setItem('accent', accent.id)
-      localStorage.removeItem('motion-accent')
-    } catch { /* The in-memory choice still works. */ }
+    setAppearancePreference('accent', accent.id)
   }, [accent])
 
   useEffect(() => {

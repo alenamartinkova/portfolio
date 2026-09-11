@@ -1,6 +1,6 @@
 # Forklift Certified
 
-A desktop browser physics game: deliver a piano, fragile ceramics, and a heavy generator across three warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
+A desktop browser physics game: deliver a piano, fragile ceramics, and a heavy generator across ten warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
 
 ## Install and run
 
@@ -34,6 +34,18 @@ Choose any level from the header. Completing a delivery offers **Next level**; *
 | 1 · Piano (`piano-b`) | 240 kg upright piano | Wide load, right aisle, Bay B. |
 | 2 · Ceramics (`ceramics-a`) | 180 kg shipping frame with porcelain | Mirrored layout, left aisle, tighter Bay A, 1.8× impact sensitivity. |
 | 3 · Generator (`generator-b`) | 540 kg industrial generator | Pickup on the west side, cross below the center racks, heavier handling, tighter Bay B. |
+
+| 4 · Quality control (`quality-control`) | Piano | First two-second inspection stop, Bay B. |
+| 5 · Ceramic slalom (`ceramic-slalom`) | Ceramics | Two ordered inspections, staggered safety rails, Bay A. |
+| 6 · Heavy detour (`heavy-detour`) | Generator | Two inspections around central storage, Bay A. |
+| 7 · Concert tour (`concert-tour`) | Piano | Cross the warehouse between inspections, tighter Bay B. |
+| 8 · Precision unloading (`precision-glass`) | Ceramics | Two inspections and a 4.6 m unloading zone. |
+| 9 · Warehouse audit (`double-audit`) | Generator | Three inspections and a narrow Bay B. |
+| 10 · Master certification (`master-certification`) | Ceramics | Three inspections and the tightest Bay A. |
+
+Inspections scan the cargo in numerical order. Stop with the cargo center inside the amber zone, held 0.2–1.2 m above the floor, upright and nearly motionless for two uninterrupted seconds. The minimap highlights the next inspection; unloading cannot finish until every inspection is complete.
+
+A completed delivery earns one star; at least 90% cargo integrity and no property damage earns two; meeting those conditions within the level’s target time earns three. `shared/CampaignProgress.ts` saves best stars and fastest completion independently for each level. Blocked storage retains session progress. Development `?qa` runs never save campaign records.
 
 Every level has physical cargo, warehouse damage, its own target/obstacles and minimap, and English/Slovak objectives and guidance. Changing levels starts a fresh run; changing language preserves it.
 
@@ -100,4 +112,4 @@ The 18 automated tests cover scoring, valid/invalid delivery states, actual Havo
 
 Browser playtesting covered successful full deliveries on WebGL and WebGPU, the results/Retry button, keyboard restart, and deliberate rack crashes. The prototype was tuned after those runs to fix self-collisions, reverse traction, braking, cargo stability, and aisle clearance.
 
-Level expansion verification covers full, clean Havok deliveries for all three cargo types, destination A versus B, and unchanged piano handling.
+Campaign tests cover all ten pickup layouts, full clean Havok deliveries for the original three missions and the new quality-control mission, ordered inspection holds, invalid scan conditions, bilingual content and isolated persistent records.

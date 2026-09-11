@@ -33,9 +33,9 @@ and run `PLAYWRIGHT_SOFTWARE_GL=1 pnpm e2e`. This opts into SwiftShader using
 Playwright's Chromium instead of local Chrome. Normal runs keep browser defaults.
 CI uploads reports, screenshots and failure traces as `browser-verification`.
 UI/state checks use reduced motion to avoid rendering the animated sea and
-pulsing LEGO hints throughout DOM assertions. Hexhaven's separate 1440p
+pulsing Brick Break hints throughout DOM assertions. Hexhaven's separate 1440p
 performance test keeps motion enabled and verifies that reduced-motion rendering
-becomes idle after damping; LEGO's scene tests cover its animation lifecycle.
+becomes idle after damping; Brick Break's scene tests cover its animation lifecycle.
 
 The main portfolio uses the new design at `/` (English) and `/sk/` (Slovak).
 `/motion/` remains a local compatibility entry. Netlify permanently redirects
@@ -55,15 +55,19 @@ game-specific resource/player colours and compact HUD layouts independent.
 src/                       portfolio components, translations and entry points
   games/                   React page listing the games at /games/
   motion/                  main portfolio design, scroll effects and shared color picker
+shared/appearance.js       palette, URL/storage preferences and portfolio/game links
+shared/game-appearance.js  framework-independent game appearance controls
+shared/CampaignProgress.ts campaign records and shared star scoring
 shared/styles/             fonts, colour tokens and shared navigation styles
 public/                    site assets, fonts and derived photos
 index.html                 portfolio document shell and SEO metadata
 games/
   index.html               game list document shell
   catalog.js               game ids, titles, icons and development ports
-  lego/                    LEGO source, HTML entry, tests and documentation
+  lego/                    Brick Break source, HTML entry, tests and documentation
   hexhaven/                Hexhaven source, HTML entry, tests and documentation
   forklift/                Forklift Certified: Babylon.js + Havok warehouse game
+  office-escape/           Babylon.js + Havok office escape game
 config/
   game.js                  common game URLs, development ports and build output
   playwright.js            shared desktop/mobile browser test configuration
@@ -104,7 +108,7 @@ and `lang=sk` in links back to the game list and portfolio.
 
 ## Games
 
-- [LEGO · Brick break](games/lego/README.md): twelve procedural models and free
+- [Brick Break](games/lego/README.md): twelve procedural models and free
   building at `/lego/`, with local saves, build sharing and optional sound.
 - [Office Escape](games/office-escape/README.md): a third-person Babylon.js + Havok furniture escape at `/office-escape/`. Run `pnpm --filter office-escape dev`.
 - [Hexhaven](games/hexhaven/README.md): procedural 3D trading and settlement at

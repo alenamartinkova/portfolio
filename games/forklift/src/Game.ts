@@ -1,28 +1,20 @@
-import {
-  levels,
-  resolveLevel,
-  type MissionDefinition,
-} from "./missions/levels";
-import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import { Engine } from "@babylonjs/core/Engines/engine";
-import { Scene } from "@babylonjs/core/scene";
-import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
-import glslangJs from "@babylonjs/core/assets/glslang/glslang.js?url";
-import glslangWasm from "@babylonjs/core/assets/glslang/glslang.wasm?url";
-import twgslJs from "@babylonjs/core/assets/twgsl/twgsl.js?url";
-import twgslWasm from "@babylonjs/core/assets/twgsl/twgsl.wasm?url";
-import { enablePhysics } from "./systems/Physics";
-import { Factory } from "./world/Factory";
-import { Warehouse } from "./world/Warehouse";
-import { Cargo } from "./world/Cargo";
-import { ForkliftController } from "./player/ForkliftController";
-import { FollowCamera } from "./player/FollowCamera";
-import { Input } from "./systems/Input";
-import { DamageSystem } from "./systems/DamageSystem";
-import { MissionManager } from "./systems/MissionManager";
-import { GameAudio } from "./systems/Audio";
-import { Effects } from "./systems/Effects";
-import { UI } from "./ui/UI";
+import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
+import { levels, resolveLevel, type MissionDefinition } from './missions/levels';
+import type { AbstractEngine } from '@babylonjs/core/Engines/abstractEngine';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { Scene } from '@babylonjs/core/scene';
+import { enablePhysics } from './systems/Physics';
+import { Factory } from './world/Factory';
+import { Warehouse } from './world/Warehouse';
+import { Cargo } from './world/Cargo';
+import { ForkliftController } from './player/ForkliftController';
+import { FollowCamera } from './player/FollowCamera';
+import { Input } from './systems/Input';
+import { DamageSystem } from './systems/DamageSystem';
+import { MissionManager } from './systems/MissionManager';
+import { GameAudio } from './systems/Audio';
+import { Effects } from './systems/Effects';
+import { UI } from './ui/UI';
 export class Game {
   engine!: AbstractEngine;
   scene!: Scene;
@@ -31,8 +23,10 @@ export class Game {
   mission!: MissionManager;
   damage!: DamageSystem;
   camera!: FollowCamera;
-  private level = resolveLevel(
-    new URLSearchParams(location.search).get("level"),
+  private level = resolveLevel(new URLSearchParams(location.search).get('level'));
+  private progress = new CampaignProgress(
+    'forklift',
+    new URLSearchParams(location.search).has('qa') ? undefined : browserStorage(),
   );
   private input: Input;
   private ui: UI;
@@ -42,15 +36,17 @@ export class Game {
   private restarting = false;
   private resultShown = false;
   private disposed = false;
+  private renderDirty = true;
+  private appearanceObserver = new MutationObserver(() => {
+    this.renderDirty = true;
+  });
   constructor(private canvas: HTMLCanvasElement) {
-    this.ui = new UI(document.querySelector("#ui")!, {
+    this.ui = new UI(document.querySelector('#ui')!, {
+      record: (id) => this.progress.get(id),
       retry: () => void this.restart(),
       level: () => this.level,
       selectLevel: (id) => void this.restart(resolveLevel(id)),
-      nextLevel: () =>
-        void this.restart(
-          levels[(levels.indexOf(this.level) + 1) % levels.length],
-        ),
+      nextLevel: () => void this.restart(levels[(levels.indexOf(this.level) + 1) % levels.length]),
       pause: () => this.togglePause(),
       mute: () => this.audio.toggle(),
     });
@@ -64,20 +60,13 @@ export class Game {
   async start() {
     try {
       // WebGPU may be disabled by device policy; a failed adapter initialization falls back to WebGL.
-      if (
-        !new URLSearchParams(location.search).has("webgl") &&
-        (await WebGPUEngine.IsSupportedAsync)
-      ) {
-        let gpu: WebGPUEngine | undefined;
+      if (!new URLSearchParams(location.search).has('webgl') && 'gpu' in navigator) {
         try {
-          gpu = new WebGPUEngine(this.canvas, { antialias: true });
-          await gpu.initAsync(
-            { jsPath: glslangJs, wasmPath: glslangWasm },
-            { jsPath: twgslJs, wasmPath: twgslWasm },
-          );
-          this.engine = gpu;
+          const { createWebGPUEngine } = await import('./systems/WebGPU');
+          const gpu = await createWebGPUEngine(this.canvas);
+          if (gpu) this.engine = gpu;
         } catch {
-          gpu?.dispose();
+          /* Loading an optional backend must not prevent WebGL fallback. */
         }
       }
       this.engine ??= new Engine(
@@ -87,20 +76,25 @@ export class Game {
         true,
       );
       this.engine.renderEvenInBackground = false;
-      this.engine.setHardwareScalingLevel(
-        Math.max(1, window.devicePixelRatio / 1.5),
-      );
+      this.engine.setHardwareScalingLevel(Math.max(1, window.devicePixelRatio / 1.5));
       await this.createScene();
-      window.addEventListener("resize", this.resize);
+      window.addEventListener('resize', this.resize);
+      this.appearanceObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['lang', 'data-theme', 'data-accent'],
+      });
       this.engine.runRenderLoop(() => this.frame());
       this.ui.ready();
       this.canvas.focus();
     } catch (error) {
       console.error(error);
-      this.ui.error("loadError");
+      this.ui.error('loadError');
     }
   }
-  private resize = () => this.engine.resize();
+  private resize = () => {
+    this.engine.resize();
+    this.renderDirty = true;
+  };
   private async createScene() {
     this.scene = new Scene(this.engine);
     const plugin = await enablePhysics(this.scene);
@@ -108,11 +102,7 @@ export class Game {
     const warehouse = new Warehouse(this.scene, f, this.level);
     this.truck = new ForkliftController(f, this.level.spawn);
     this.cargo = new Cargo(f, this.level);
-    this.camera = new FollowCamera(
-      this.scene,
-      this.truck,
-      warehouse.cameraObstacles,
-    );
+    this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
     this.effects = new Effects(f, this.scene);
     this.damage = new DamageSystem(
       plugin,
@@ -131,11 +121,7 @@ export class Game {
     this.scene.onBeforePhysicsObservable.add(() => {
       if (!this.paused && !this.resultShown) {
         this.truck.update(1 / 120, this.input);
-        this.damage.beforeStep([
-          this.truck.body,
-          this.truck.forkBody,
-          this.cargo.body,
-        ]);
+        this.damage.beforeStep([this.truck.body, this.truck.forkBody, this.cargo.body]);
       }
     });
     this.camera.update(1 / 60, this.input);
@@ -149,20 +135,22 @@ export class Game {
       this.damage.update(dt);
       this.mission.update(
         dt,
-        ["KeyW", "KeyS", "KeyA", "KeyD", "KeyE", "KeyQ"].some((k) =>
-          this.input.keys.has(k),
-        ),
+        ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyE', 'KeyQ'].some((k) => this.input.keys.has(k)),
       );
       this.camera.update(dt, this.input);
       this.effects.update(
         dt,
         this.truck.root.position,
         Math.atan2(this.truck.forward.x, this.truck.forward.z),
-        this.input.keys.has("Space") && Math.abs(this.truck.speed) > 2.5,
+        this.input.keys.has('Space') && Math.abs(this.truck.speed) > 2.5,
       );
     }
     this.audio.update(dt, this.truck.speed, this.truck.hydraulic, halted);
-    this.scene.render();
+    // The paused/result scene is static; leave its last frame on the canvas.
+    if (!halted || this.renderDirty) {
+      this.scene.render();
+      this.renderDirty = false;
+    }
     this.ui.update(
       this.stats,
       this.mission.hint,
@@ -176,10 +164,13 @@ export class Game {
         yaw: Math.atan2(this.truck.forward.x, this.truck.forward.z),
       },
       this.cargo.root.position,
+      this.mission.inspections.current,
+      this.mission.inspections.hold,
     );
     if (this.mission.delivered && !this.resultShown) {
       this.resultShown = true;
       this.input.keys.clear();
+      this.progress.complete(this.level.id, this.mission.seconds, this.stats.stars);
       this.ui.results(this.stats);
       this.audio.success();
     }
@@ -188,13 +179,19 @@ export class Game {
     if (!import.meta.env.DEV) return;
     this.input.keys.clear();
     for (const key of keys)
-      if (key !== "Wait")
-        this.input.keys.add(key.length === 1 ? "Key" + key : key);
+      if (key !== 'Wait') this.input.keys.add(key.length === 1 ? 'Key' + key : key);
     await new Promise<void>((resolve) => setTimeout(resolve, seconds * 1000));
     this.input.keys.clear();
   }
   get stats() {
     return {
+      stars: this.mission.delivered
+        ? campaignStars(
+            this.mission.seconds,
+            this.level.par,
+            this.damage.integrity >= 90 && this.damage.propertyDamage === 0,
+          )
+        : 0,
       seconds: this.mission.seconds,
       integrity: this.damage.integrity,
       propertyDamage: this.damage.propertyDamage,
@@ -218,8 +215,8 @@ export class Game {
     this.restarting = true;
     this.level = level;
     const url = new URL(location.href);
-    url.searchParams.set("level", level.id);
-    history.replaceState(null, "", url);
+    url.searchParams.set('level', level.id);
+    history.replaceState(null, '', url);
     this.ui.resetLevel();
     this.input.keys.clear();
     this.scene.dispose();
@@ -231,17 +228,18 @@ export class Game {
       this.canvas.focus();
     } catch (error) {
       console.error(error);
-      this.ui.error("restartError");
+      this.ui.error('restartError');
     } finally {
       this.restarting = false;
     }
   }
   dispose() {
     this.disposed = true;
+    this.appearanceObserver.disconnect();
     this.input.dispose();
     this.ui.dispose();
     this.audio.dispose();
-    window.removeEventListener("resize", this.resize);
+    window.removeEventListener('resize', this.resize);
     this.scene?.dispose();
     this.engine?.dispose();
   }

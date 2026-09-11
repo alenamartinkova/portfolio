@@ -1,3 +1,7 @@
+@import './theme-toggle.css';
+@import './color-picker.css';
+@import './appearance-controls.css';
+
 /* Game entries use the portfolio navigation's mark, rhythm and token palette. */
 .game-nav {
   position: relative;
@@ -57,8 +61,8 @@
 .game-nav__dot { color: var(--accent); }
 .game-nav__separator { color: var(--line-strong); font: 14px var(--font-mono); }
 .game-nav .game-nav__current {
-  color: var(--accent-bright);
-  background: var(--accent-soft);
+  color: var(--text);
+  background: transparent;
   border: 0;
   border-radius: var(--r-pill);
   padding: 0 10px;
@@ -67,7 +71,7 @@
 .game-nav .game-nav__button,
 .game-nav .game-nav__icon {
   appearance: none;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-mid);
   border-radius: var(--r-md);
   background: transparent;
   color: var(--text-muted);
@@ -97,4 +101,15 @@
   .game-nav .game-nav__current { padding-inline: 7px; }
   .game-nav .game-nav__button { padding-inline: 9px; }
   .game-nav__button-label { display: none; }
+}
+
+/* Appearance controls keep the same order, dimensions and palette as the portfolio. */
+.game-nav [data-game-appearance] { margin-left: 8px; padding-left: 16px; border-left: 1px solid var(--line-mid); }
+.game-nav .m-color-panel[hidden] { display: none; }
+.game-nav .m-color-panel { z-index: 50; }
+.game-nav .m-color-panel > p { font: 14px/1.5 var(--font-sans); margin: 0 0 16px; }
+.game-nav .m-color-panel button { margin: 0; padding: 0; cursor: pointer; }
+.game-nav__sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 760px) {
+  .game-nav [data-game-appearance] { margin-left: 3px; padding-left: 8px; gap: 4px; }
 }

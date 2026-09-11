@@ -36,12 +36,17 @@ export function createStudio(
     celebrationStart = 0,
     spinOffset = 0
   let animationID = 0
+  let referenceDirty = true
   const motionQuery = matchMedia('(prefers-reduced-motion: reduce)')
   // Both canvases are static between interactions. Wake on scene/camera edits
   // and keep drawing only while damping or an animation is still active.
   function invalidate() {
     if (!disposed && active && !animationID)
       animationID = requestAnimationFrame(tick)
+  }
+  function invalidateReference() {
+    referenceDirty = true
+    invalidate()
   }
   const scene = new THREE.Scene()
   const referenceScene = new THREE.Scene()
@@ -523,7 +528,7 @@ export function createStudio(
     }
   }
   function referenceFrame() {
-    invalidate()
+    invalidateReference()
     const bounds = modelBounds(target),
       halfFov = Math.atan(
         Math.tan(THREE.MathUtils.degToRad(referenceCamera.fov / 2)) *
@@ -648,7 +653,7 @@ export function createStudio(
     const ww = Math.round(rr.width),
       hh = Math.round(rr.height)
     if (ww > 0 && hh > 0 && (ww !== refWidth || hh !== refHeight)) {
-      invalidate()
+      invalidateReference()
       referenceRenderer.setSize(ww, hh, false)
       resizeCamera(referenceCamera, referenceControls, ww / hh, refWidth > 0)
       refWidth = ww
@@ -737,8 +742,10 @@ export function createStudio(
       }
     }
     renderer.render(scene, camera)
-    if (refWidth > 0 && refHeight > 0 && referenceEl.getClientRects().length)
+    if (referenceDirty && refWidth > 0 && refHeight > 0 && referenceEl.getClientRects().length) {
       referenceRenderer.render(referenceScene, referenceCamera)
+      referenceDirty = false
+    }
     if (cameraTween || celebrationStart || (hints.length && !motionQuery.matches))
       invalidate()
   }
@@ -746,14 +753,14 @@ export function createStudio(
     cancelAnimationFrame(animationID)
     animationID = 0
     active = !document.hidden
-    invalidate()
+    invalidateReference()
   }
   document.addEventListener('visibilitychange', onVisibility)
   controls.addEventListener('change', () => {
     invalidate()
     if (pointer && !pointerDown) updateHover()
   })
-  referenceControls.addEventListener('change', invalidate)
+  referenceControls.addEventListener('change', invalidateReference)
   motionQuery.addEventListener?.('change', invalidate)
   resize()
   frame(true)
@@ -880,6 +887,7 @@ export function createStudio(
         makeBatches(buildGroup, build, comparison ? 'compare' : 'solid')
     },
     setPeel(value) {
+      invalidateReference()
       peel = clamp(value, 0, 60)
       makeBatches(
         targetGroup,

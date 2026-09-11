@@ -1,4 +1,4 @@
-# LEGO · Brick break
+# Brick Break
 
 A standalone React and Three.js game at `/lego/`, with twelve procedural models
 and free building. It shares the site's fonts, colours and navigation styles.

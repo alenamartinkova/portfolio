@@ -1,9 +1,10 @@
 import { onLocaleChange } from "../i18n";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
-import "@babylonjs/core/Engines/WebGPU/Extensions/engine.dynamicTexture";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Scene } from "@babylonjs/core/scene";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
@@ -30,7 +31,7 @@ export class Factory {
     color: string,
     parent?: TransformNode,
   ) {
-    const m = MeshBuilder.CreateBox(
+    const m = CreateBox(
       name,
       { width: size[0], height: size[1], depth: size[2] },
       this.scene,
@@ -49,7 +50,7 @@ export class Factory {
     color: string,
     parent?: TransformNode,
   ) {
-    const m = MeshBuilder.CreateCylinder(
+    const m = CreateCylinder(
       name,
       { diameter, height, tessellation: 12 },
       this.scene,
@@ -103,7 +104,7 @@ export class Factory {
     mat.emissiveColor = new Color3(0.25, 0.25, 0.25);
     mat.specularColor = Color3.Black();
     mat.backFaceCulling = false;
-    const m = MeshBuilder.CreatePlane(name, { width, height }, this.scene);
+    const m = CreatePlane(name, { width, height }, this.scene);
     m.material = mat;
     m.position.set(pos[0], pos[1], pos[2]);
     if (floor) m.rotation.x = Math.PI / 2;

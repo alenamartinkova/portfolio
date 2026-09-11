@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowUpRight, Gamepad2 } from 'lucide-react'
 import { LocaleProvider, useLocale, useT } from '../i18n'
 import LanguageLink from '../components/LanguageLink'
 import ThemeToggle from '../components/ThemeToggle'
-import '../components/AppearanceControls.css'
+import '../../shared/styles/appearance-controls.css'
+import { setAppearancePreference } from '../../shared/appearance.js'
 import ColorPicker, { readAccent } from '../motion/ColorPicker'
+import useMotion from '../motion/useMotion'
 import { GAMES } from './catalog'
 import './Games.css'
 
@@ -13,16 +15,23 @@ function GamesPage() {
   const [locale, setLocale] = useLocale()
   const home = locale === 'sk' ? '/sk/' : '/'
   const [accent, setAccent] = useState(readAccent)
+  const root = useRef(null)
+  const [motion, setMotion] = useState(() => typeof window === 'undefined' || !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useMotion(root, motion, locale)
+
   useEffect(() => {
-    document.documentElement.dataset.accent = accent.id
-    try {
-      localStorage.setItem('accent', accent.id)
-      localStorage.removeItem('motion-accent')
-    } catch { /* Non-persistent choices still work. */ }
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const change = () => setMotion(!media.matches)
+    media.addEventListener('change', change)
+    return () => media.removeEventListener('change', change)
+  }, [])
+
+  useEffect(() => {
+    setAppearancePreference('accent', accent.id)
   }, [accent])
 
   return (
-    <div className="games-page">
+    <div className="games-page" data-motion={motion ? 'on' : 'off'} ref={root}>
       <a className="skip-link" href="#main">{t.nav.skip}</a>
       <header className="games-nav shell">
         <a className="games-nav__home" href={home} aria-label={t.games.back}>
@@ -46,12 +55,12 @@ function GamesPage() {
           <p className="games-intro__copy">{t.games.intro}</p>
         </div>
 
-        <ul className="games-list" aria-label={t.games.list}>
+        <ul className="games-list" data-stack-end aria-label={t.games.list}>
           {GAMES.map((game, index) => {
             const copy = t.games[game.id]
             const Icon = game.icon
             return (
-              <li key={game.id}>
+              <li key={game.id} data-project data-motion-item>
                 <a
                   className="games-card"
                   href={`${game.href}?lang=${locale}`}

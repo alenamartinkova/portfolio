@@ -247,7 +247,15 @@ test('hints and camera animations render until settled and respect reduced motio
   assert.equal(env.frames.size, 0, 'reduced-motion hints stay static')
   env.motion.matches = false
   env.motion.emit('change')
+  const [main, reference] = Renderer.instances
+  const mainFrames = main.info.render.calls
+  const referenceFrames = reference.info.render.calls
+  for (let i = 0; i < 60; i++) env.frame(performance.now() + i * 16)
+  assert.equal(main.info.render.calls - mainFrames, 60, 'hint animation stays smooth')
+  assert.equal(reference.info.render.calls, referenceFrames, 'a pulsing hint never redraws the unchanged blueprint')
+  studio.setPeel(2)
   env.frame()
+  assert.equal(reference.info.render.calls, referenceFrames + 1, 'peeling the blueprint redraws it')
   assert.equal(env.frames.size, 1, 'animated hints keep drawing')
   studio.setHint([])
   env.frame()

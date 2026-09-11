@@ -6,10 +6,24 @@ import { PhysicsAggregate } from '@babylonjs/core/Physics/v2/physicsAggregate';
 import { PhysicsShapeType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
+let havok: ReturnType<typeof HavokPhysics> | undefined;
 export async function enablePhysics(scene: Scene) {
-    const havok = await HavokPhysics({ locateFile: () => wasmUrl });
-    scene.enablePhysics(new Vector3(0, -18, 0), new HavokPlugin(true, havok));
+    havok ??= HavokPhysics({ locateFile: () => wasmUrl }).catch(error => { havok = undefined; throw error; });
+    scene.enablePhysics(new Vector3(0, -18, 0), new HavokPlugin(true, await havok));
     scene.getPhysicsEngine()!.setTimeStep(1 / 60);
+}
+
+/** Settle furniture without drawing the full office and shadow maps 35 times. */
+export function settlePhysics(scene: Scene, steps = 35) {
+    const constantDelta = scene.useConstantAnimationDeltaTime;
+    scene.useConstantAnimationDeltaTime = true;
+    try {
+        for (let i = 0; i < steps; i++) {
+            scene.incrementRenderId();
+            for (const mesh of scene.meshes) mesh.computeWorldMatrix();
+            scene.animate();
+        }
+    } finally { scene.useConstantAnimationDeltaTime = constantDelta; }
 }
 export interface Movable {
     mesh: Mesh;

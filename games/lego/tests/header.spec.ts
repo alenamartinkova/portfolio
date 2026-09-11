@@ -8,15 +8,14 @@ test.use({ reducedMotion: 'reduce' });
 
 async function expectHeader(page: Page, building: boolean): Promise<void> {
   const header = page.getByRole('navigation', { name: 'Game navigation', exact: true });
-  await expect(header.getByRole('link', { name: 'Back to portfolio' })).toHaveText('[AM]');
+  await expect(header.getByRole('link', { name: 'Back to portfolio' })).toHaveText('am.');
   await expect(header.getByRole('link', { name: 'Games', exact: true })).toHaveAttribute(
     'href',
     '/games/?lang=en',
   );
-  await expect(header.getByRole('button', { name: 'brick break', exact: true })).toBeInViewport();
+  await expect(header.getByRole('button', { name: 'Brick Break', exact: true })).toBeInViewport();
   for (const name of [
-    'English',
-    'Slovenčina',
+    'Accent color',
     'Copy game link',
     'Turn sound on',
     'Settings',
@@ -26,6 +25,7 @@ async function expectHeader(page: Page, building: boolean): Promise<void> {
   await expect(
     header.getByRole('button', { name: /^Switch to (light|dark) theme$/ }),
   ).toBeInViewport();
+  await expect(header.getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true })).toBeInViewport();
   if (building)
     await expect(header.getByRole('button', { name: 'All models', exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
@@ -33,7 +33,7 @@ async function expectHeader(page: Page, building: boolean): Promise<void> {
   );
   const viewport = page.viewportSize();
   if (viewport === null) throw new Error('This test requires a fixed viewport.');
-  for (const control of await header.locator('a, button').all()) {
+  for (const control of await header.locator('a:visible, button:visible').all()) {
     const box = await control.boundingBox();
     expect(box).not.toBeNull();
     if (box === null) throw new Error('A header control has no visible bounds.');
@@ -48,13 +48,13 @@ async function capture(page: Page, testInfo: TestInfo, screen: string): Promise<
   );
   await mkdir(dirname(path), { recursive: true });
   await page.screenshot({ path, fullPage: false, animations: 'disabled' });
-  await testInfo.attach(`LEGO ${testInfo.project.name} ${screen}`, {
+  await testInfo.attach(`Brick Break ${testInfo.project.name} ${screen}`, {
     path,
     contentType: 'image/png',
   });
 }
 
-test('shared LEGO navigation remains usable across screens, themes, and locales', async ({
+test('shared Brick Break navigation remains usable across screens, themes, and locales', async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
@@ -75,10 +75,10 @@ test('shared LEGO navigation remains usable across screens, themes, and locales'
 
   await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.getByRole('button', { name: 'Slovenčina', exact: true }).click();
+  await page.getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.getByRole('button', { name: 'English', exact: true }).click();
+  await page.getByRole('link', { name: 'Switch to English', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.reload();

@@ -1,4 +1,6 @@
-import { setText } from '../../../../shared/dom.js';
+import { mountGameAppearance } from '../../../../shared/game-appearance.js';
+import type { CampaignRecord } from "../../../../shared/CampaignProgress";
+import { setText, setStyle } from '../../../../shared/dom.js';
 import { levels, type MissionDefinition } from "../missions/levels";
 import {
   t,
@@ -10,7 +12,7 @@ import {
   type TextKey,
 } from "../i18n";
 import { formatTime, RunStats, scoreRun } from "../systems/ScoringSystem";
-import { isLightTheme, siteLinks, toggleSiteTheme } from "./SiteAppearance";
+import { isLightTheme, siteLinks } from "./SiteAppearance";
 const icon = (path: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 const audioIcon = (muted: boolean) =>
@@ -26,6 +28,7 @@ export class UI {
   private errorKey: TextKey = "loadError";
   private lastFrame?: Parameters<UI["update"]>;
   private unsubscribe: () => void;
+  private cleanupAppearance?: () => void;
   private timer!: HTMLElement;
   private integrity!: HTMLElement;
   private bar!: HTMLElement;
@@ -38,9 +41,12 @@ export class UI {
   private steps!: NodeListOf<HTMLElement>;
   private overlay!: HTMLElement;
   private map!: HTMLCanvasElement;
+  private mapKey = "";
+  private inspectionProgress!: HTMLElement;
   constructor(
     private root: HTMLElement,
     private actions: {
+      record: (id: string) => CampaignRecord | undefined;
       retry: () => void;
       level: () => MissionDefinition;
       selectLevel: (id: string) => void;
@@ -58,21 +64,20 @@ export class UI {
       else if (this.mode === "results" && this.resultStats)
         this.results(this.resultStats);
       else if (this.mode === "error") this.error(this.errorKey);
-      this.root
-        .querySelector<HTMLButtonElement>(`[data-locale="${getLocale()}"]`)
-        ?.focus();
+      this.root.querySelector<HTMLAnchorElement>('[data-focus="site-language"]')?.focus();
     });
   }
   private render() {
+    this.cleanupAppearance?.();
     const root = this.root;
     const actions = this.actions;
     const links = siteLinks();
     const mission = actions.level();
     const index = levels.indexOf(mission);
-    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><div class="locale" role="group" aria-label="${t("language")}">${(["en", "sk"] as const).map((locale) => `<button class="locale__option ${getLocale() === locale ? "is-active" : ""}" data-locale="${locale}" aria-pressed="${getLocale() === locale}" aria-label="${locale === "sk" ? "Slovenčina" : "English"}">${locale.toUpperCase()}</button>`).join("")}</div><label class="level-picker"><span>${t("levels")}</span><select id="level" aria-label="${t("levels")}" ${this.mode === "loading" ? "disabled" : ""}>${levels.map((level, i) => `<option value="${level.id}" ${level.id === mission.id ? "selected" : ""}>${i + 1} · ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[level.cargo])}</option>`).join("")}</select></label><button class="game-nav__icon" id="audio" aria-label="${t(this.muted ? "unmute" : "mute")}" title="${t("audio")}">${audioIcon(this.muted)}</button><button class="game-nav__icon" id="theme" aria-label="${t("theme")}"></button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button></div></nav></header>
-    <main class="hud"><section class="mission panel"><div class="eyebrow"><span class="accent-square"></span> ${t("handling")} <span class="mission-number">${String(index + 1).padStart(2, "0")} / ${String(levels.length).padStart(2, "0")}</span></div><h1>${t(mission.heading)}</h1><p>${t(mission.objective)}</p><p class="mission-brief">${t(mission.briefing)}</p><div class="mission-steps"><span class="step active"><i>1</i> ${t("pickup")}</span><b>→</b><span class="step"><i>2</i> ${t("transport")}</span><b>→</b><span class="step"><i>3</i> ${t("deliver")}</span></div></section>
+    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><label class="level-picker"><span>${t("levels")}</span><select id="level" aria-label="${t("levels")}" ${this.mode === "loading" ? "disabled" : ""}>${levels.map((level, i) => `<option value="${level.id}" ${level.id === mission.id ? "selected" : ""}>${i + 1} · ${t(level.name)} ${"★".repeat(actions.record(level.id)?.stars ?? 0)}</option>`).join("")}</select></label><button class="game-nav__icon" id="audio" aria-label="${t(this.muted ? "unmute" : "mute")}" title="${t("audio")}">${audioIcon(this.muted)}</button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button><div data-game-appearance></div></div></nav></header>
+    <main class="hud"><section class="mission panel"><div class="eyebrow"><span class="accent-square"></span> ${t("handling")} <span class="mission-number">${String(index + 1).padStart(2, "0")} / ${String(levels.length).padStart(2, "0")}</span></div><h1>${t(mission.name)}</h1><p>${t("destination")} ${mission.bay}.</p><p class="mission-brief">${mission.mass} kg · ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[mission.cargo])} · ${t("campaignGoal").replace("{time}", formatTime(mission.par))}</p><p class="mission-brief" id="inspection-progress">${t("inspection")}: 0 / ${mission.inspections.length}</p><div class="mission-steps"><span class="step active"><i>1</i> ${t("pickup")}</span><b>→</b><span class="step"><i>2</i> ${t("transport")}</span><b>→</b><span class="step"><i>3</i> ${t("deliver")}</span></div><div class="location-label"><span class="live-dot"></span> ${t("depot")} <span>·</span> ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[mission.cargo]).toUpperCase()}</div></section>
     <section class="stats panel"><div class="time-row"><span class="eyebrow">${t("shiftTime")}</span><strong id="timer">00:00</strong></div><div class="integrity-label"><span>${t("integrity")}</span><strong id="integrity">100<span>%</span></strong></div><div class="meter"><div id="integrity-bar"></div></div><div class="property-row"><span>${t("property")}</span><strong id="property">$0</strong></div></section>
-    <div class="location-label"><span class="live-dot"></span> ${t("depot")} <span>·</span> ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[mission.cargo]).toUpperCase()}</div>
+
     <section class="map-panel panel"><div class="eyebrow">${t("map")} <span>${t("north")}</span></div><canvas id="map" width="280" height="260" aria-label="${t("mapDescription")}"></canvas><div class="map-legend"><span><i class="you-dot"></i> ${t("you")}</span><span><i class="cargo-dot"></i> ${t("cargo")}</span><span><i class="bay-dot"></i> ${mission.bay}</span></div></section>
     <div class="context-hint"><span class="hint-icon">↳</span><span id="hint">${t("hintDrive")}</span></div>
     <section class="dashboard panel"><div class="speed-block"><span class="eyebrow">${t("speed")}</span><div><strong id="speed">0</strong><span>km/h</span><b id="gear">N</b></div></div><div class="fork-status"><div><span>${t("forkHeight")}</span><strong id="forks">0.16 m</strong></div><div><span>${t("mastTilt")}</span><strong id="tilt">0°</strong></div></div></section></main>
@@ -90,28 +95,9 @@ export class UI {
     this.steps = root.querySelectorAll(".step");
     this.overlay = get("overlay");
     this.map = get("map") as HTMLCanvasElement;
-    root
-      .querySelectorAll<HTMLButtonElement>("[data-locale]")
-      .forEach((button) => {
-        button.onclick = () =>
-          setLocale(button.dataset.locale === "sk" ? "sk" : "en");
-      });
-    const themeButton = get("theme");
-    const refreshTheme = () => {
-      const label = isLightTheme() ? t("darkTheme") : t("lightTheme");
-      themeButton.setAttribute("aria-label", label);
-      themeButton.title = label;
-      themeButton.innerHTML = isLightTheme()
-        ? icon('<path d="M20 14a8 8 0 0 1-10-10 8 8 0 1 0 10 10Z"/>')
-        : icon(
-            '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
-          );
-    };
-    refreshTheme();
-    themeButton.onclick = () => {
-      toggleSiteTheme();
-      refreshTheme();
-    };
+    this.mapKey = "";
+    this.inspectionProgress = get("inspection-progress");
+    this.cleanupAppearance = mountGameAppearance(root.querySelector<HTMLElement>('[data-game-appearance]')!, { locale: getLocale(), onLocaleChange: setLocale });
     (get("level") as HTMLSelectElement).onchange = () =>
       actions.selectLevel((get("level") as HTMLSelectElement).value);
     get("pause").onclick = () => actions.pause();
@@ -128,6 +114,7 @@ export class UI {
     this.render();
   }
   dispose() {
+    this.cleanupAppearance?.();
     this.unsubscribe();
   }
   ready() {
@@ -144,13 +131,14 @@ export class UI {
     tilt: number,
     truck: { x: number; z: number; yaw: number },
     cargo: { x: number; z: number },
+    inspected = 0,
+    inspectionHold = 0,
   ) {
-    this.lastFrame = [s, hint, stage, speed, lift, tilt, truck, cargo];
+    this.lastFrame = [s, hint, stage, speed, lift, tilt, truck, cargo, inspected, inspectionHold];
     setText(this.timer, formatTime(s.seconds));
     setText(this.integrity.firstChild!, String(Math.round(s.integrity)));
-    this.bar.style.width = s.integrity + "%";
-    this.bar.style.background =
-      s.integrity < 40 ? "var(--damage)" : "var(--ok)";
+    setStyle(this.bar, "width", s.integrity.toFixed(1) + "%");
+    setStyle(this.bar, "background", s.integrity < 40 ? "var(--damage)" : "var(--ok)");
     setText(this.property, "$" + number(s.propertyDamage));
     setText(this.hint, t(hint));
     setText(this.speed, Math.round(Math.abs(speed) * 3.6).toString());
@@ -158,12 +146,22 @@ export class UI {
     setText(this.forks, number(lift, 2) + " m");
     setText(this.tilt, Math.round((-tilt * 180) / Math.PI) + "°");
     this.steps.forEach((e, i) => e.classList.toggle("active", i === stage));
-    this.drawMap(truck, cargo);
+    const count = this.actions.level().inspections.length;
+    setText(this.inspectionProgress, count ? `${t("inspection")}: ${inspected} / ${count}${inspected < count ? ` · ${Math.round(inspectionHold / 2 * 100)}%` : " ✓"}` : "");
+    this.drawMap(truck, cargo, inspected);
   }
   private drawMap(
     truck: { x: number; z: number; yaw: number },
     cargo: { x: number; z: number },
+    inspected: number,
   ) {
+    // Ignore movement below a quarter of a minimap pixel, including idle
+    // physics jitter. Theme/level changes still redraw the complete map.
+    const key = [this.actions.level().id, isLightTheme(), inspected,
+      Math.round(truck.x * 26.4), Math.round(truck.z * 22.4), Math.round(truck.yaw * 100),
+      Math.round(cargo.x * 26.4), Math.round(cargo.z * 22.4)].join(':');
+    if (key === this.mapKey) return;
+    this.mapKey = key;
     const c = this.map.getContext("2d")!;
     c.clearRect(0, 0, 280, 260);
     const x = (v: number) => 140 + v * 6.6,
@@ -178,6 +176,14 @@ export class UI {
     c.fillStyle = "#8b754d";
     for (const [bx, bz] of mission.barriers)
       c.fillRect(x(bx - 1.3), z(bz), 2.6 * 6.6, 2);
+    mission.inspections.forEach(([ix, iz], i) => {
+      c.strokeStyle = i < inspected ? "#77d9bc" : i === inspected ? "#ffe49a" : "#ac956b";
+      c.lineWidth = i === inspected ? 3 : 1;
+      c.strokeRect(x(ix - 2.5), z(iz + 2.5), 5 * 6.6, 5 * 5.6);
+      c.fillStyle = c.strokeStyle;
+      c.font = "bold 14px sans-serif";
+      c.fillText(i < inspected ? "✓" : String(i + 1), x(ix) - 4, z(iz) + 5);
+    });
     const target = mission.target;
     c.fillStyle = "#367a71";
     c.fillRect(
@@ -225,7 +231,7 @@ export class UI {
     const mission = this.actions.level();
     const last = levels.indexOf(mission) === levels.length - 1;
     this.overlay.hidden = false;
-    this.overlay.innerHTML = `<div class="modal results"><div class="eyebrow"><span class="live-dot"></span> ${t("receivedPrefix")} / ${mission.bay}</div><div class="result-heading"><h2>${t("certified")}</h2><span class="grade">${s.grade}</span></div><p>${t(last ? "finalFinished" : "runFinished")}</p><div class="score-list"><div><span>${t("time")} <small>${formatTime(stats.seconds)}</small></span><strong>+${number(s.time)}</strong></div><div><span>${t("cargoDamage")} <small>${cargoCondition(stats.integrity)}</small></span><strong>−${number(s.cargo)}</strong></div><div><span>${t("propertyDamage")}</span><strong>−${number(s.property)}</strong></div><div><span>${t("bonus")}</span><strong>+${number(s.style)}</strong></div></div><div class="total"><span>${t("total")}</span><strong>${number(s.total)}</strong></div><p class="result-note">${t("collisions")}: ${number(stats.collisions)} · ${t("resultTip")}</p><button class="primary" id="next">${t(last ? "firstLevel" : "nextLevel")} <span>→</span></button><button class="secondary" id="retry">${t("another")} <span>R ↻</span></button></div>`;
+    this.overlay.innerHTML = `<div class="modal results"><div class="eyebrow"><span class="live-dot"></span> ${t("receivedPrefix")} / ${mission.bay}</div><div class="result-heading"><h2>${t("certified")}</h2><span class="grade">${s.grade}</span></div><p>${t(last ? "finalFinished" : "runFinished")}</p><p class="campaign-stars">${"★".repeat(stats.stars ?? 1)}${"☆".repeat(3 - (stats.stars ?? 1))} · ${t("bestLevel")}: ${formatTime(this.actions.record(mission.id)?.bestSeconds ?? stats.seconds)}</p><div class="score-list"><div><span>${t("time")} <small>${formatTime(stats.seconds)}</small></span><strong>+${number(s.time)}</strong></div><div><span>${t("cargoDamage")} <small>${cargoCondition(stats.integrity)}</small></span><strong>−${number(s.cargo)}</strong></div><div><span>${t("propertyDamage")}</span><strong>−${number(s.property)}</strong></div><div><span>${t("bonus")}</span><strong>+${number(s.style)}</strong></div></div><div class="total"><span>${t("total")}</span><strong>${number(s.total)}</strong></div><p class="result-note">${t("collisions")}: ${number(stats.collisions)} · ${t("resultTip")}</p><button class="primary" id="next">${t(last ? "firstLevel" : "nextLevel")} <span>→</span></button><button class="secondary" id="retry">${t("another")} <span>R ↻</span></button></div>`;
     this.overlay.querySelector<HTMLButtonElement>("#retry")!.onclick = () =>
       this.actions.retry();
     this.overlay.querySelector<HTMLButtonElement>("#next")!.onclick = () =>

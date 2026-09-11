@@ -1,4 +1,5 @@
 export interface RunStats {
+  stars?: number;
   seconds: number;
   integrity: number;
   propertyDamage: number;

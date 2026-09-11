@@ -137,7 +137,7 @@ test('Slovak follows the website, translates an existing game, and resumes witho
   await expect(log).toBeVisible();
   await expect(log).toContainText('Hráč 1: postavená dedina.');
   await expect(log).toContainText('Hráč 1: postavená cesta.');
-  await navigation.getByRole('button', { name: 'English', exact: true }).click();
+  await navigation.getByRole('link', { name: 'Switch to English', exact: true }).click();
   await expect(html).toHaveAttribute('lang', 'en');
   await expect(log).toBeVisible();
   await expect(log).toContainText('Trader 1 built a village.');
@@ -159,7 +159,7 @@ test('Slovak follows the website, translates an existing game, and resumes witho
   expect(await readState(page)).toEqual(saved);
   await expect(html).toHaveAttribute('data-theme', 'dark');
   await expect(html).toHaveAttribute('data-accent', 'cyan');
-  await navigation.getByRole('button', { name: 'Slovenčina', exact: true }).click();
+  await navigation.getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true }).click();
   await expect(log).toBeVisible();
   await expect(log).toContainText('Hráč 1: postavená dedina.');
   await expect(log).not.toContainText('Trader 1 built a village.');

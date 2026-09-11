@@ -4,54 +4,27 @@ import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import { GlowLayer } from '@babylonjs/core/Layers/glowLayer';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { CreateTorus } from '@babylonjs/core/Meshes/Builders/torusBuilder';
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { Scene } from '@babylonjs/core/scene';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Factory } from './Factory';
 import { PhysicsInteractionSystem } from '../systems/PhysicsInteractionSystem';
-export interface Stop {
-    x: number;
-    z: number;
-    y: number;
-    w: number;
-    d: number;
-    kind: 'desk' | 'cabinet' | 'chair' | 'table' | 'counter' | 'cart' | 'box' | 'sofa' | 'shelf';
-    checkpoint?: number;
-}
-export const route: Stop[] = [
-    { x: 0, z: 0, y: 1.4, w: 3.6, d: 2.5, kind: 'desk', checkpoint: 0 },
-    { x: 2, z: 3.4, y: 1.2, w: 1.5, d: 1.5, kind: 'chair' },
-    { x: 4, z: 6.5, y: 1.4, w: 3, d: 2, kind: 'desk' },
-    { x: .5, z: 9.7, y: 1.8, w: 2.6, d: 1.8, kind: 'cabinet' },
-    { x: -3, z: 12.6, y: 1.4, w: 3, d: 2.2, kind: 'desk' },
-    { x: -5, z: 16.5, y: 1.4, w: 3.4, d: 2.8, kind: 'cabinet', checkpoint: 1 },
-    { x: -1, z: 19.7, y: 1.4, w: 4.3, d: 2.2, kind: 'table' },
-    { x: 3.5, z: 23.3, y: 1.35, w: 1.8, d: 2, kind: 'cart' },
-    { x: 6, z: 27, y: 1.5, w: 3.7, d: 2.4, kind: 'table' },
-    { x: 1.8, z: 30.8, y: 1.3, w: 3.2, d: 2, kind: 'sofa' },
-    { x: -2.5, z: 34, y: 1.5, w: 3.4, d: 3, kind: 'counter', checkpoint: 2 },
-    { x: -6.5, z: 37.5, y: 1.5, w: 3.2, d: 2, kind: 'counter' },
-    { x: -3, z: 41, y: 1.35, w: 1.8, d: 2, kind: 'cart' },
-    { x: 1, z: 44, y: 1.5, w: 3.1, d: 2.3, kind: 'table' },
-    { x: 5, z: 47.5, y: 1.8, w: 1.7, d: 1.7, kind: 'box' },
-    { x: 7, z: 51.5, y: 1.8, w: 3.5, d: 3, kind: 'cabinet', checkpoint: 3 },
-    { x: 3, z: 55, y: 2.2, w: 2.5, d: 2, kind: 'shelf' },
-    { x: -1, z: 58.8, y: 2.6, w: 2.4, d: 1.8, kind: 'shelf' },
-    { x: -4.5, z: 62.4, y: 3, w: 3, d: 2, kind: 'cabinet' },
-    { x: -1, z: 66.5, y: 3, w: 2.6, d: 2.4, kind: 'table' },
-    { x: 3, z: 70, y: 3, w: 4, d: 3, kind: 'counter' },
-];
+import { officeLevels, type OfficeLevel, type Stop } from './levels';
+import { SecuritySystem } from '../systems/SecuritySystem';
+export { route, type Stop } from './levels';
 export class Level {
+    security: SecuritySystem;
     f: Factory;
     platforms: Mesh[] = [];
     checkpointMeshes: Mesh[] = [];
     exitDoor: Mesh;
     shadows: ShadowGenerator;
-    constructor(public scene: Scene, public physics: PhysicsInteractionSystem) {
+    constructor(public scene: Scene, public physics: PhysicsInteractionSystem, public definition: OfficeLevel = officeLevels[0]) {
         this.f = new Factory(scene);
         const f = this.f;
-        scene.clearColor = Color4.FromHexString('#9eb9baff');
+        scene.clearColor = Color4.FromHexString(definition.sky);
         scene.ambientColor = new Color3(.45, .5, .5);
         const hemi = new HemisphericLight('after-hours fill', new Vector3(0, 1, 0), scene);
         hemi.intensity = .85;
@@ -66,7 +39,7 @@ export class Level {
         this.shadows.setDarkness(.23);
         const glow = new GlowLayer('exit and route glow', scene);
         glow.intensity = .3;
-        const floor = f.box('forbidden office floor', [29, .4, 86], [0, -.2, 32], '#506868');
+        const floor = f.box('forbidden office floor', [29, .4, 86], [0, -.2, 32], definition.floor);
         physics.rigid(floor);
         floor.metadata = { solid: true, forbidden: true };
         for (let z = -10; z < 75; z += 2)
@@ -106,11 +79,11 @@ export class Level {
                 f.box('partition stripe', [5, .08, .15], [x, 1.6, z], '#edf3df');
             }
         });
-        for (const stop of route) {
+        for (const stop of definition.route) {
             const m = this.furniture(stop);
             this.platforms.push(m);
             if (stop.checkpoint !== undefined) {
-                const ring = MeshBuilder.CreateTorus('checkpoint ' + stop.checkpoint, { diameter: 1.5, thickness: .045, tessellation: 40 }, scene);
+                const ring = CreateTorus('checkpoint ' + stop.checkpoint, { diameter: 1.5, thickness: .045, tessellation: 40 }, scene);
                 ring.position.set(stop.x, stop.y + .035, stop.z);
                 ring.material = f.mat('#b8f4bc', true);
                 ring.isPickable = false;
@@ -124,6 +97,7 @@ export class Level {
                 dot.position.set(0, (['chair', 'cart', 'box'].includes(stop.kind) ? stop.y / 2 : stop.kind === 'sofa' ? .225 : .09) + .025, 0);
             }
         }
+        if (definition.id === "first-evening") {
         // Optional precision line: small copier and rotating chair bypass the wide desk loop.
         this.furniture({ x: -.8, z: 5.4, y: 1.6, w: 1.45, d: 1.4, kind: 'box' });
         this.furniture({ x: -4, z: 8.9, y: 1.3, w: 1.35, d: 1.4, kind: 'chair' });
@@ -134,6 +108,7 @@ export class Level {
         board.rotation.y = -.32;
         physics.rigid(board, 9, 'whiteboard bridge');
         f.box('whiteboard orange rail', [.1, .1, 6.8], [.5, .1, 0], '#e8a266', board);
+        }
         f.label(() => t('emailSign'), 3.2, .4, [-6, 3.2, 28]);
         // Deliberately dressed perimeter; these desks and counters also support alternate lines.
         for (const z of [0, 6, 21, 27, 39, 45, 59, 65])
@@ -155,6 +130,7 @@ export class Level {
         f.box('push bar', [2, .12, .16], [0, -.1, -.2], '#dce5ce', this.exitDoor);
         const landing = f.box('exit landing', [5, 3, 4], [3, 1.5, 73], '#c6bc9f');
         physics.rigid(landing);
+        this.security = new SecuritySystem(this.f, definition);
         for (const m of scene.meshes)
             if (m instanceof Mesh && m.getTotalVertices() > 0 && !m.name.includes('glass') && !m.name.includes('city'))
                 this.shadows.addShadowCaster(m);
@@ -229,7 +205,7 @@ export class Level {
         this.physics.rigid(pot, 8, 'potted plant');
         f.cylinder('stem', .07, 1.25, [0, .9, 0], '#477360', pot);
         for (let i = 0; i < 5; i++) {
-            const leaf = MeshBuilder.CreateSphere('leaf', { diameter: .7, segments: 5 }, this.scene);
+            const leaf = CreateSphere('leaf', { diameter: .7, segments: 5 }, this.scene);
             leaf.scaling.set(.65, 1.5, .4);
             leaf.parent = pot;
             leaf.position.set(Math.sin(i * 2) * .35, 1 + Math.cos(i) * .3, Math.cos(i * 2) * .3);

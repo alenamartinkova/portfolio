@@ -1,3 +1,4 @@
+import { mountGameAppearance } from '../../../../shared/game-appearance.js';
 import { actionKey } from '../core/actions';
 import type { Action } from '../core/actions';
 import type { Resource } from '../core/board';
@@ -9,14 +10,12 @@ import { devCardName, getLocale, localize as t, logText, playerName, resourceNam
 import { DEFAULT_SETTINGS, normalizeSettings } from './preferences';
 import type { Settings } from './preferences';
 import {
-  isLightTheme,
   setSiteAccent,
   setSiteLocale,
   siteAccent,
   siteGames,
   siteHome,
   SITE_ACCENTS,
-  toggleSiteTheme,
 } from './siteAppearance';
 import './styles.css';
 
@@ -268,6 +267,10 @@ export function createHUD(
   let setupInitialized = false;
   let disposed = false;
   let returnFocus: string | null = null;
+  const appearance = document.createElement('div');
+  appearance.dataset.gameAppearance = '';
+  let appearanceLocale: string | undefined;
+  let cleanupAppearance: (() => void) | undefined;
   const openDetails = new Set(['bank', 'player-trade', 'cards']);
   const importInput = document.createElement('input');
   importInput.type = 'file';
@@ -299,20 +302,14 @@ export function createHUD(
     return `<button type="button" class="hx-button" data-action="${index}" data-focus="${escape(focus)}" ${index < 0 || !canInteract() ? 'disabled' : ''} title="${escape(title)}">${label}</button>`;
   }
 
-  function localeControls(context: 'header' | 'setup' | 'settings'): string {
+  function localeControls(context: 'setup' | 'settings'): string {
     return `<div class="hx-language" role="group" aria-label="${t('Language', 'Jazyk')}">${(['en', 'sk'] as const).map((locale) => `<button type="button" data-command="locale-${locale}" data-focus="${context}-locale-${locale}" lang="${locale}" aria-label="${locale === 'en' ? 'English' : 'Slovenčina'}" aria-pressed="${getLocale() === locale}">${locale.toUpperCase()}</button>`).join('')}</div>`;
   }
 
   function siteHeader(): string {
-    const themeLabel = isLightTheme()
-      ? t('Switch to dark mode', 'Prepnúť na tmavý režim')
-      : t('Switch to light mode', 'Prepnúť na svetlý režim');
-    const sun =
-      '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/>';
-    const moon = '<path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/>';
     const icon = (paths: string): string =>
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
-    return `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t('Game navigation', 'Navigácia hry')}"><div class="game-nav__trail"><a class="game-nav__mark" href="${siteHome()}" aria-label="Alena Martinková — ${t('portfolio', 'portfólio')}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${siteGames()}">Games</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Hexhaven</span></div><div class="game-nav__actions">${localeControls('header')}${button(`${icon('<path d="M12 5v14M5 12h14"/>')}<span class="game-nav__button-label">${t('New game', 'Nová hra')}</span>`, 'new-game', `class="game-nav__button" aria-label="${t('New game', 'Nová hra')}" title="${t('New game', 'Nová hra')}"`)}${button(icon(isLightTheme() ? moon : sun), 'toggle-theme', `class="game-nav__icon" aria-label="${themeLabel}" title="${themeLabel}"`)}${button(icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="17" r="2"/>'), 'settings', `class="game-nav__icon" aria-label="${t('Settings', 'Nastavenia')}" title="${t('Settings', 'Nastavenia')}"`)}</div></nav></header>`;
+    return `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t('Game navigation', 'Navigácia hry')}"><div class="game-nav__trail"><a class="game-nav__mark" href="${siteHome()}" aria-label="Alena Martinková — ${t('portfolio', 'portfólio')}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${siteGames()}">${t('Games', 'Hry')}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Hexhaven</span></div><div class="game-nav__actions">${button(`${icon('<path d="M12 5v14M5 12h14"/>')}<span class="game-nav__button-label">${t('New game', 'Nová hra')}</span>`, 'new-game', `class="game-nav__button" aria-label="${t('New game', 'Nová hra')}" title="${t('New game', 'Nová hra')}"`)}${button(icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="17" r="2"/>'), 'settings', `class="game-nav__icon" aria-label="${t('Settings', 'Nastavenia')}" title="${t('Settings', 'Nastavenia')}"`)}<div data-game-appearance></div></div></nav></header>`;
   }
 
   function playerStrip(game: GameState): string {
@@ -666,6 +663,12 @@ export function createHUD(
     const scroll = root.querySelector<HTMLElement>('[data-scroll="side"]')?.scrollTop ?? 0;
     const oldModal = root.querySelector('[role="dialog"]') !== null;
     content.innerHTML = `${siteHeader()}${state ? playerStrip(state) + turnPanel(state) + sidePanel(state) + hand(state) : ''}${!state || menuOpen ? setupDialog() : settingsOpen ? settingsDialog() : state.phase.type === 'gameOver' && !winDismissed && view.replayIndex === null ? winDialog(state) : ''}`;
+    content.querySelector('[data-game-appearance]')!.replaceWith(appearance);
+    if (appearanceLocale !== getLocale()) {
+      cleanupAppearance?.();
+      appearanceLocale = getLocale();
+      cleanupAppearance = mountGameAppearance(appearance, { locale: getLocale(), onLocaleChange: locale => { setSiteLocale(locale); draw(); } });
+    }
     statusMessage.textContent = importFailed ? importFailureText() : view.message;
     statusSave.textContent = view.saveStatus;
     const scroller = root.querySelector<HTMLElement>('[data-scroll="side"]');
@@ -746,9 +749,6 @@ export function createHUD(
       case 'locale-en':
       case 'locale-sk':
         setSiteLocale(command === 'locale-sk' ? 'sk' : 'en');
-        break;
-      case 'toggle-theme':
-        toggleSiteTheme();
         break;
       case 'settings':
         returnFocus = 'settings';
@@ -976,6 +976,7 @@ export function createHUD(
     },
     dispose() {
       disposed = true;
+      cleanupAppearance?.();
       root.removeEventListener('click', onClick);
       root.removeEventListener('change', onChange);
       root.removeEventListener('submit', onSubmit);

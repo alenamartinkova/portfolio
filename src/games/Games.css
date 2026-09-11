@@ -118,11 +118,12 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
 
 /* The same wide, typographic panels as the portfolio's selected work. */
 .games-list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+  display: block;
   margin: 0;
 }
+
+.games-list > li { position: relative; min-width: 0; }
+.games-list > li + li { margin-top: 32px; }
 
 .games-card {
   position: relative;
@@ -266,6 +267,36 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
   height: 13px;
 }
 
+/* Reuse Work's scroll timeline. Measure the list items; animate only the links. */
+.games-page[data-motion='on'] .games-list { perspective: 1500px; }
+.games-page[data-motion='on'][data-ready='true'] .games-card {
+  transform: translateY(calc((1 - var(--enter, 1)) * 44px + var(--card-lift, 0px)))
+    scale(calc(1 - var(--covered, 0) * .045))
+    rotateX(calc(var(--covered, 0) * 3deg));
+  transform-origin: center top;
+  opacity: calc(.35 + var(--enter, 1) * .65);
+  filter: brightness(calc(1 - var(--covered, 0) * .18));
+  transition: box-shadow .35s var(--ease);
+}
+.games-page[data-motion='on'] .games-card:hover { --card-lift: -4px; }
+.games-page[data-motion='on'] .games-list > li:focus-within { z-index: 5; }
+.games-page[data-motion='on'][data-ready='true'] .games-card:focus-visible {
+  transform: none;
+  opacity: 1;
+  filter: none;
+}
+@media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+  .games-list { --stack-top: 104px; }
+  /* Keep the sticky container long enough for the final card to cover the stack. */
+  .games-page[data-motion='on'] .games-list:has(> li:last-child[data-pin='true'])::after {
+    content: '';
+    display: block;
+    height: max(0px, calc(100svh - var(--stack-top) - var(--stack-last-height, 0px)));
+  }
+  .games-page[data-motion='on'] .games-list > li + li { margin-top: 100px; }
+  .games-page[data-motion='on'] .games-list > li[data-pin='true'] { position: sticky; top: var(--stack-top); }
+}
+
 @media (max-width: 800px) {
   .games-card { padding: 32px; gap: 28px; }
 }
@@ -274,7 +305,7 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
 }
 @media (max-width: 620px) {
   .games-nav__label { display: none; }
-  .games-list { gap: 20px; }
+  .games-list > li + li { margin-top: 20px; }
   .games-card { padding: 28px 24px; gap: 24px; }
   .games-card__top { flex-direction: column; gap: 8px; }
   .games-card__category { font-size: 11px; gap: 8px; }
@@ -286,6 +317,7 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
 .games-nav__actions { position: relative; z-index: 30; }
 .games-nav__label svg { width: 16px; height: 16px; }
 @media (prefers-reduced-motion: reduce) {
+  .games-page[data-motion][data-ready] .games-card { transform: none; filter: none; opacity: 1; transition: none; }
   .games-card, .games-card__play svg { transition: none; }
   .games-card:hover, .games-card:focus-visible,
   .games-card:hover .games-card__play svg,

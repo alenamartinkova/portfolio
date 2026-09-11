@@ -1,14 +1,14 @@
 export default {
-  title: 'Brick break · Alena Martinková',
+  title: 'Brick Break · Alena Martinková',
   description:
-    'Malá LEGO prestávka. Poskladajte model alebo vymyslite vlastnú stavbu.',
+    'Malá prestávka so stavebnicou. Poskladajte model alebo vymyslite vlastnú stavbu.',
   portfolio: 'Späť na portfólio',
   games: 'Späť na zoznam hier',
   share: 'Kopírovať odkaz na hru',
   shared: 'Odkaz skopírovaný',
   copyManually: 'Skopírujte označený odkaz.',
   link: 'Odkaz na hru',
-  brand: 'Alenin LEGO kútik',
+  brand: 'Brick Break',
   collection: 'Všetky modely',
   sandbox: 'Voľné stavanie',
   help: 'Ako hrať',

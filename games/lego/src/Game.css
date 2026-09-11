@@ -155,19 +155,6 @@ body {
   width: 15px;
   height: 15px;
 }
-.game-header .locale__option {
-  padding: 0 8px;
-  height: 42px;
-  font: 500 12px var(--font-sans);
-  color: var(--text-dim);
-}
-.game-header .locale__option + .locale__option {
-  border-left: 1px solid var(--line);
-}
-.game-header .locale__option.is-active {
-  background: var(--accent-soft);
-  color: var(--accent-bright);
-}
 @media (max-width: 760px) {
   .game-header .game-nav__inner {
     padding-block: 4px;
@@ -175,11 +162,10 @@ body {
   .game-header .game-nav__actions {
     flex-basis: 100%;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 4px;
   }
-  .game-header .locale__option {
-    padding-inline: 4px;
-  }
+
 }
 .game-share-feedback {
   position: absolute;

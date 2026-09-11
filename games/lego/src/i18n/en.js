@@ -1,14 +1,14 @@
 export default {
-  title: 'Brick break · Alena Martinková',
+  title: 'Brick Break · Alena Martinková',
   description:
-    'A little LEGO break. Build a model or make something of your own.',
+    'A little brick-building break. Build a model or make something of your own.',
   portfolio: 'Back to portfolio',
   games: 'Back to games',
   share: 'Copy game link',
   shared: 'Link copied',
   copyManually: 'Copy the selected link.',
   link: 'Game link',
-  brand: 'Alena’s LEGO corner',
+  brand: 'Brick Break',
   collection: 'All models',
   sandbox: 'Free build',
   help: 'How to play',

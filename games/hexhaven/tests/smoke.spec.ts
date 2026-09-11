@@ -177,7 +177,7 @@ test('real setup, production, exact resume, and persistent website appearance', 
     '/games/?lang=en',
   );
   await expect(navigation.locator('[aria-current="page"]')).toHaveText('Hexhaven');
-  for (const label of ['New game', 'Switch to light mode', 'Settings'])
+  for (const label of ['New game', 'Switch to light theme', 'Settings'])
     await expect(navigation.getByRole('button', { name: label, exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -206,7 +206,7 @@ test('real setup, production, exact resume, and persistent website appearance', 
   expect(metrics.triangles).toBeLessThanOrEqual(150_000);
 
   const darkBackground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  await navigation.getByRole('button', { name: 'Switch to light mode', exact: true }).click();
+  await navigation.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   expect(await readState(page)).toEqual(resumed);
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).not.toBe(
@@ -251,7 +251,7 @@ test('real setup, production, exact resume, and persistent website appearance', 
     path: lightScreenshot,
     contentType: 'image/png',
   });
-  await navigation.getByRole('button', { name: 'Slovenčina', exact: true }).click();
+  await navigation.getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
   expect(await readState(page)).toEqual(resumed);
   const playerRows = page.locator('.hx-player');

@@ -232,7 +232,8 @@ it("keeps the follow camera above the truck when backed against a wall", () => {
   }
 });
 
-for (const level of levels.slice(1)) {
+// These recorded keyboard runs belong to the original two warehouse layouts.
+for (const level of levels.slice(1, 3)) {
   it(`delivers ${level.cargo} through its warehouse layout`, () => {
     const r = rig(true, level);
     try {
@@ -278,3 +279,46 @@ for (const level of levels.slice(1)) {
     }
   });
 }
+
+for (const level of levels.slice(3)) {
+  it(`picks up ${level.id} in its real layout and requires inspection before delivery`, () => {
+    const r = rig(true, level);
+    try {
+      r.step(2);
+      r.step(1.4, ['KeyW']); r.step(1, ['Space']);
+      r.step(.65, ['KeyE']); r.step(.6, ['KeyT']); r.step(.5);
+      expect(r.cargo.root.position.y).toBeGreaterThan(.3);
+      expect(r.mission.pickedUp).toBe(true);
+      expect(r.mission.inspections.complete).toBe(false);
+      expect(r.mission.delivered).toBe(false);
+      expect(r.damage.integrity).toBeGreaterThan(95);
+      expect(r.damage.propertyDamage).toBe(0);
+    } finally { r.dispose(); }
+  });
+}
+
+it('completes quality control with a real loaded stop and precision delivery', () => {
+  const r = rig(true, levels[3]);
+  try {
+    r.step(2);
+    for (const [seconds, keys] of [
+      [1.4, ['KeyW']], [1, ['Space']], [.65, ['KeyE']], [.6, ['KeyT']], [.5, []],
+      [2, ['KeyW', 'KeyD']], [1, ['Space']], [.8, ['KeyW']], [1, ['Space']],
+      [2, ['KeyW', 'KeyA']], [1, ['Space']],
+    ] as [number, string[]][]) r.step(seconds, keys);
+    const driveTo = (z: number) => {
+      for (let i = 0; i < 500 && r.cargo.root.position.z < z; i++) r.step(.05, ['KeyW']);
+      r.step(1, ['Space']);
+    };
+    driveTo(3.3);
+    r.step(2.5, ['Space']);
+    expect(r.mission.inspections.complete, JSON.stringify(r.cargo.root.position)).toBe(true);
+    expect(r.mission.delivered).toBe(false);
+    driveTo(14.2);
+    r.step(.6, ['KeyG']); r.step(.9, ['KeyQ']); r.step(.5);
+    r.step(2.2, ['KeyS']); r.step(1, ['Space']); r.step(1.5);
+    expect(r.mission.delivered, JSON.stringify(r.cargo.root.position)).toBe(true);
+    expect(r.damage.integrity).toBeGreaterThan(95);
+    expect(r.damage.propertyDamage).toBe(0);
+  } finally { r.dispose(); }
+});

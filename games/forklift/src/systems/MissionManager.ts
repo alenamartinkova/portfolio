@@ -1,3 +1,4 @@
+import { InspectionSystem } from "./InspectionSystem";
 import type { TextKey } from "../i18n";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Cargo } from "../world/Cargo";
@@ -22,6 +23,7 @@ export function deliveryEligible(
   );
 }
 export class MissionManager {
+  inspections: InspectionSystem;
   seconds = 0;
   hold = 0;
   delivered = false;
@@ -33,7 +35,7 @@ export class MissionManager {
     public cargo: Cargo,
     public truck: ForkliftController,
     public definition = firstMission,
-  ) {}
+  ) { this.inspections = new InspectionSystem(definition.inspections); }
   update(dt: number, active: boolean) {
     if (this.delivered) return;
     if (active) this.started = true;
@@ -41,6 +43,7 @@ export class MissionManager {
     const p = this.cargo.root.position;
     const distance = Vector3.Distance(p, this.truck.root.position);
     if (p.y > 0.28 && distance < 4.8) this.pickedUp = true;
+    this.inspections.update(dt, p, this.cargo.speed, this.cargo.root.getDirection(Vector3.Up()).y, this.pickedUp && distance < 4.8);
     const inBay =
       Math.abs(p.x - this.definition.target.x) <
         this.definition.target.width / 2 &&
@@ -54,7 +57,7 @@ export class MissionManager {
         new Vector3(p.x, 0, p.z),
         new Vector3(forkTip.x, 0, forkTip.z),
       ) > 2.45;
-    this.hold = deliveryEligible(
+    this.hold = this.pickedUp && this.inspections.complete && deliveryEligible(
       p,
       this.cargo.speed,
       this.cargo.root.getDirection(Vector3.Up()).y,
@@ -68,6 +71,12 @@ export class MissionManager {
       this.stage = 3;
     } else if (this.cargo.root.getDirection(Vector3.Up()).y < 0.7) {
       this.hint = "hintTipped";
+    } else if (!this.inspections.complete && this.pickedUp && p.y > .2 && distance < 4.8) {
+      this.stage = 1;
+      this.hint = "inspectionHint";
+    } else if (inBay && !this.inspections.complete) {
+      this.stage = 1;
+      this.hint = "inspectionHint";
     } else if (inBay) {
       this.stage = 2;
       this.hint =
@@ -83,7 +92,7 @@ export class MissionManager {
               : "hintWithdraw";
     } else if (this.pickedUp && p.y > 0.2 && distance < 4.8) {
       this.stage = 1;
-      this.hint = this.truck.lift > 1.3 ? "hintLow" : this.definition.routeHint;
+      this.hint = this.truck.lift > 1.3 ? "hintLow" : (this.definition.inspections.length ? "routeReady" : this.definition.routeHint);
     } else if (distance < 4.6) {
       this.stage = 0;
       this.hint = this.truck.lift > 0.5 ? "hintFit" : "hintLift";

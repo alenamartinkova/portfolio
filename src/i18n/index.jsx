@@ -3,11 +3,6 @@ import en from './en'
 import sk from './sk'
 import { localizeStructuredData, portfolioUrl } from '../seo'
 
-export const LOCALES = [
-  { id: 'en', label: 'EN' },
-  { id: 'sk', label: 'SK' },
-]
-
 const DICTIONARIES = { en, sk }
 
 const STORAGE_KEY = 'locale'

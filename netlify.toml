@@ -42,6 +42,12 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Game bundles, fonts and WASM also use fingerprinted asset filenames.
+[[headers]]
+  for = "/:game/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # Font files only ever change by getting a new name.
 [[headers]]
   for = "/fonts/*"

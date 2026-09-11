@@ -3,6 +3,9 @@ export type Point = readonly [number, number];
 export type CargoKind = "piano" | "ceramics" | "generator";
 export interface MissionDefinition {
   id: string;
+  name: TextKey;
+  par: number;
+  inspections: readonly Point[];
   title: string;
   heading: TextKey;
   objective: TextKey;
@@ -53,9 +56,9 @@ const cones: Point[] = [
 ];
 const mirror = (points: readonly Point[]): Point[] =>
   points.map(([x, z]) => [-x, z]);
-export const levels: readonly MissionDefinition[] = [
+const introductoryLevels: readonly MissionDefinition[] = [
   {
-    id: "piano-b",
+    id: "piano-b", name: "nameTraining", par: 150, inspections: [],
     title: "Deliver the piano to Loading Bay B.",
     heading: "heading",
     objective: "missionPiano",
@@ -76,7 +79,7 @@ export const levels: readonly MissionDefinition[] = [
     tint: "#77d9bc",
   },
   {
-    id: "ceramics-a",
+    id: "ceramics-a", name: "nameCeramics", par: 170, inspections: [],
     title: "Deliver the ceramics to Loading Bay A.",
     heading: "headingCeramics",
     objective: "missionCeramics",
@@ -97,7 +100,7 @@ export const levels: readonly MissionDefinition[] = [
     tint: "#86c8c1",
   },
   {
-    id: "generator-b",
+    id: "generator-b", name: "nameHeavy", par: 190, inspections: [],
     title: "Deliver the generator to Loading Bay B.",
     heading: "headingGenerator",
     objective: "missionGenerator",
@@ -134,6 +137,32 @@ export const levels: readonly MissionDefinition[] = [
     ],
     tint: "#a2c9a0",
   },
+];
+const perimeter: Point[] = [-13, 13].flatMap(x => [-12, -2, 9].map(z => [x, z] as const));
+function advanced(
+  id: string, name: TextKey, cargo: CargoKind, bay: "A" | "B", pickup: Point,
+  inspections: Point[], center: Point[], rails: Point[], width: number, par: number,
+): MissionDefinition {
+  const base = introductoryLevels.find(level => level.cargo === cargo)!;
+  return {
+    ...base, id, name, heading: name, cargo, bay, pickup,
+    spawn: [pickup[0], pickup[1] - 6], inspections, par,
+    title: `${cargo} / Bay ${bay}`,
+    target: { x: bay === "A" ? -8 : 8, z: 15, width, depth: width },
+    racks: [...perimeter, ...center], barriers: rails,
+    crates: [[-15, -17], [15, -17], [-15, 16], [15, 15]],
+    pallets: [[-15, 3], [15, 3]], cones: [[-3, -17], [3, 17]],
+  };
+}
+export const levels: readonly MissionDefinition[] = [
+  ...introductoryLevels,
+  advanced("quality-control", "nameInspection", "piano", "B", [0, -10], [[8, 4]], [[0, 1]], [[-5, 8], [3, -3]], 5.6, 210),
+  advanced("ceramic-slalom", "nameSlalom", "ceramics", "A", [8, -10], [[0, -3], [-8, 6]], [[0, 4]], [[-4, -7], [5, 8], [0, 11]], 5.2, 240),
+  advanced("heavy-detour", "nameDetour", "generator", "A", [0, -10], [[8, 0], [0, 9]], [[-4, 1], [4, 4]], [[-8, -4], [4, 11]], 5.2, 250),
+  advanced("concert-tour", "nameConcert", "piano", "B", [-8, -10], [[-8, 4], [8, 9]], [[0, -2], [0, 5]], [[4, -7], [-3, 12]], 4.9, 270),
+  advanced("precision-glass", "namePrecision", "ceramics", "B", [0, -10], [[-8, 0], [0, 9]], [[3, 0], [-3, 4]], [[8, -4], [-8, 11]], 4.6, 280),
+  advanced("double-audit", "nameAudit", "generator", "B", [8, -10], [[0, -3], [-8, 5], [8, 10]], [[0, 3]], [[-4, -7], [5, 6], [-4, 11]], 4.8, 300),
+  advanced("master-certification", "nameMaster", "ceramics", "A", [0, -10], [[8, -2], [-8, 5], [0, 10]], [[0, 3]], [[-5, -6], [5, 7], [-4, 12]], 4.6, 320),
 ];
 export const firstMission = levels[0];
 export function resolveLevel(id: string | null | undefined): MissionDefinition {

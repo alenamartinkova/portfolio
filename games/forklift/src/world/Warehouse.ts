@@ -104,6 +104,10 @@ export class Warehouse {
       definition.tint,
       () => `${definition.bay} / ${t("deliveryZone")}`,
     );
+    definition.inspections.forEach(([x, z], i) => {
+      this.zone(x, z, 5, 5, "#c49a51", () => `${i + 1} / ${t("inspection")}`);
+      f.label(() => `${t("inspection")} ${i + 1}`, 3, .5, [x, 3.4, z], "#fff0be", "#625030");
+    });
     // A broad center aisle with an offset gate makes the load worth steering carefully.
     for (const [x, z] of definition.racks) this.rack(x, z);
     for (let z = -15; z < 18; z += 3)

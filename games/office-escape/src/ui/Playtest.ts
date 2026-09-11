@@ -1,5 +1,5 @@
 import type { Game } from '../Game';
-import { route } from '../world/Level';
+import { gateState } from '../systems/SecuritySystem';
 /** Dev-only visible input driver. Exercises the actual controller without teleporting or bypassing collisions. */
 export class Playtest {
     private mode = 'idle';
@@ -33,7 +33,7 @@ export class Playtest {
                 g.input.clear();
             }
             else {
-                const s = this.scenario === 'shortcut' && this.target === 7 ? { x: -2.9, z: 25 } : route[this.target] ?? { x: 3, z: 72.8 };
+                const s = this.scenario === 'shortcut' && this.target === 7 ? { x: -2.9, z: 25 } : g.definition.route[this.target] ?? { x: 3, z: 72.8 };
                 const p = g.player.position;
                 const dx = s.x - p.x, dz = s.z - p.z;
                 const distance = Math.hypot(dx, dz);
@@ -43,6 +43,13 @@ export class Playtest {
                     g.input.keys.add('KeyW');
                     if (distance > 2.1)
                         g.input.keys.add('ShiftLeft');
+                }
+                const gate = g.definition.gates.find(gate => gate.after === this.target - 1);
+                const signal = gate ? gateState(gate, g.level.security.seconds) : undefined;
+                if (!this.launched && g.player.grounded && signal && (signal.active || signal.safeFor < 1.4)) {
+                    g.input.keys.clear();
+                    this.output.textContent = JSON.stringify({ mode: 'waiting for security', target: this.target });
+                    return;
                 }
                 if (!this.launched && g.player.grounded) {
                     g.input.pressed.add('Space');
@@ -75,7 +82,7 @@ export class Playtest {
         }
         if (g.state === 'finished' && this.mode === 'route')
             this.mode = 'COMPLETE';
-        if (this.elapsed > 50 && ['route', 'floor'].includes(this.mode)) {
+        if (this.elapsed > 240 && ['route', 'floor'].includes(this.mode)) {
             this.mode = 'TIMEOUT';
             g.input.clear();
         }

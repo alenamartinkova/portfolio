@@ -12,7 +12,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 let havok: ReturnType<typeof HavokPhysics> | undefined;
 export async function enablePhysics(scene: Scene) {
-  havok ??= HavokPhysics({ locateFile: () => wasmUrl });
+  havok ??= HavokPhysics({ locateFile: () => wasmUrl }).catch(error => { havok = undefined; throw error; });
   const plugin = new HavokPlugin(true, await havok);
   scene.enablePhysics(new Vector3(0, -9.81, 0), plugin);
   scene.getPhysicsEngine()!.setTimeStep(1 / 60);

@@ -1,4 +1,4 @@
-import './ThemeToggle.css'
+import '../../shared/styles/theme-toggle.css'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../hooks'
 import { useT } from '../i18n'

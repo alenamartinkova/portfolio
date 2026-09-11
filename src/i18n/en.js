@@ -16,7 +16,7 @@ export default {
     heading: 'Games',
     meta: {
       title: 'Games · Alena Martinková',
-      description: 'Browser games for a little break: Office Escape, Forklift Certified, LEGO and Hexhaven. Pick your next adventure.',
+      description: 'Browser games for a little break: Office Escape, Forklift Certified, Brick Break and Hexhaven. Pick your next adventure.',
     },
     eyebrow: 'a little off the beaten path',
     intro: 'You found my little corner for play. Pick a game and take a break.',
@@ -28,17 +28,17 @@ export default {
     'office-escape': {
       category: '3D physics · furniture parkour',
       caption: 'out of office. literally.',
-      description: 'Your shift is over. Escape across desks, rolling chairs and meeting tables. Just one rule: don’t touch the floor.',
+      description: 'Ten office escapes across desks and rolling furniture. Collect access cards, time the security beams and keep off the floor.',
     },
     forklift: {
       category: '3D physics · warehouse driving',
       caption: 'a delicate operation',
-      description: 'Three warehouse missions: a piano, fragile ceramics, and a heavy generator. Deliver the cargo without turning the warehouse into a demolition site.',
+      description: 'Ten warehouse missions with fragile loads, inspection stops and precision unloading. Earn three stars on every shift.',
     },
     lego: {
       category: '3D building',
       caption: 'brick by brick',
-      description: 'A little LEGO break. Follow a model or build something of your own, one brick at a time.',
+      description: 'A little brick-building break. Follow a model or build something of your own, one brick at a time.',
     },
     hexhaven: {
       category: '3D board game · 2–4 players',
@@ -80,7 +80,7 @@ export default {
 
   about: {
     funFact: 'Fun fact: when I’m not coding, I build LEGO.',
-    playLabel: 'Try my games.',
+    playLabel: 'build something too →',
     index: 'about',
     title: 'From first diagram to production',
     description:

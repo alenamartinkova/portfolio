@@ -10,7 +10,7 @@ export default {
     heading: 'Hry',
     meta: {
       title: 'Hry · Alena Martinková',
-      description: 'Hry na chvíľu oddychu: Office Escape, Forklift Certified, LEGO a Hexhaven. Vyberte si dobrodružstvo v prehliadači.',
+      description: 'Hry na chvíľu oddychu: Office Escape, Forklift Certified, Brick Break a Hexhaven. Vyberte si dobrodružstvo v prehliadači.',
     },
     eyebrow: 'trochu mimo hlavnej cesty',
     intro: 'Našli ste môj malý kútik na hranie. Vyberte si hru a dajte si pauzu.',
@@ -22,17 +22,17 @@ export default {
     'office-escape': {
       category: '3D fyzika · parkour po nábytku',
       caption: 'konečne mimo kancelárie',
-      description: 'Pracovný deň sa skončil. Utečte po stoloch, stoličkách a nábytku. Jediné pravidlo: nedotknite sa podlahy.',
+      description: 'Desať útekov po stoloch a pojazdnom nábytku. Zbierajte prístupové karty, prechádzajte cez bezpečnostné lúče a nedotknite sa podlahy.',
     },
     forklift: {
       category: '3D fyzika · jazda v sklade',
       caption: 'opatrne s nákladom',
-      description: 'Tri skladové misie: klavír, krehká keramika a ťažký generátor. Doručte náklad a nechajte sklad v čo najlepšom stave.',
+      description: 'Desať skladových misií s krehkým nákladom, kontrolnými zastávkami a presnou vykládkou. Získajte tri hviezdy v každej smene.',
     },
     lego: {
       category: '3D stavanie',
       caption: 'kocku po kocke',
-      description: 'Malá LEGO prestávka. Stavajte podľa predlohy alebo si poskladajte niečo vlastné, kocku po kocke.',
+      description: 'Malá prestávka so stavebnicou. Stavajte podľa predlohy alebo si poskladajte niečo vlastné, kocku po kocke.',
     },
     hexhaven: {
       category: '3D stolová hra · 2–4 hráči',
@@ -74,7 +74,7 @@ export default {
 
   about: {
     funFact: 'Fun fact: keď nekódujem, skladám LEGO.',
-    playLabel: 'Skúste moje hry.',
+    playLabel: 'postavte si niečo aj vy →',
     index: 'o mne',
     title: 'Od prvého diagramu po produkciu',
     description:

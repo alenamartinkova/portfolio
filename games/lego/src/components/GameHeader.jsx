@@ -4,59 +4,25 @@ import {
   Check,
   Copy,
   HelpCircle,
-  Moon,
   Settings,
-  Sun,
   Volume2,
   VolumeX,
 } from 'lucide-react'
-import { readPreference, useLocale, useT } from '../i18n'
-import '../../../../shared/styles/locale-toggle.css'
+import { useLocale, useT } from '../i18n'
+import { mountGameAppearance } from '../../../../shared/game-appearance.js'
 
-function useGameTheme() {
-  const [theme, setTheme] = useState(() =>
-    readPreference('theme', 'dark') === 'light' ? 'light' : 'dark'
-  )
-  useEffect(() => {
-    const root = document.documentElement
-    root.dataset.theme = theme
-    const url = new URL(window.location.href)
-    if (url.searchParams.has('theme')) {
-      url.searchParams.set('theme', theme)
-      window.history.replaceState(null, '', url)
-    }
-    try {
-      localStorage.setItem('theme', theme)
-    } catch {
-      // Theme still applies for this session when storage is unavailable.
-    }
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute(
-        'content',
-        getComputedStyle(root).getPropertyValue('--bg').trim()
-      )
-  }, [theme])
-  return [
-    theme,
-    () => setTheme(current => (current === 'light' ? 'dark' : 'light')),
-  ]
+function GameAppearance({ locale, onLocaleChange }) {
+  const root = useRef(null)
+  useEffect(() => mountGameAppearance(root.current, { locale, onLocaleChange }), [locale, onLocaleChange])
+  return <div data-game-appearance ref={root} />
 }
 
 export default function GameHeader({ state, dispatch }) {
   const t = useT()
   const [locale, setLocale] = useLocale()
-  const [theme, toggleTheme] = useGameTheme()
-  const themeLabel =
-    locale === 'sk'
-      ? theme === 'light'
-        ? 'Prepnúť na tmavý režim'
-        : 'Prepnúť na svetlý režim'
-      : theme === 'light'
-        ? 'Switch to dark theme'
-        : 'Switch to light theme'
   const [share, setShare] = useState(null)
   const input = useRef(null)
+  useEffect(() => setShare(null), [locale])
   useEffect(() => {
     if (share?.url) {
       input.current?.focus()
@@ -97,7 +63,7 @@ export default function GameHeader({ state, dispatch }) {
             href={`/games/?lang=${locale}`}
             title={t.games}
           >
-            Games
+            {locale === 'sk' ? 'Hry' : 'Games'}
           </a>
           <span className="game-nav__separator" aria-hidden="true">
             /
@@ -107,43 +73,10 @@ export default function GameHeader({ state, dispatch }) {
             onClick={() => dispatch({ type: 'collection' })}
             title={t.collection}
           >
-            brick break
+            Brick Break
           </button>
         </div>
         <div className="game-nav__actions game-header-actions">
-          <div
-            className="locale"
-            role="group"
-            aria-label={locale === 'sk' ? 'Jazyk' : 'Language'}
-          >
-            {['en', 'sk'].map(language => (
-              <button
-                key={language}
-                className={`locale__option${locale === language ? ' is-active' : ''}`}
-                onClick={() => {
-                  setLocale(language)
-                  setShare(null)
-                }}
-                lang={language}
-                aria-label={language === 'en' ? 'English' : 'Slovenčina'}
-                aria-pressed={locale === language}
-              >
-                {language.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          <button
-            className="game-nav__icon"
-            onClick={toggleTheme}
-            title={themeLabel}
-            aria-label={themeLabel}
-          >
-            {theme === 'light' ? (
-              <Moon aria-hidden="true" />
-            ) : (
-              <Sun aria-hidden="true" />
-            )}
-          </button>
           {state.screen === 'build' && (
             <button
               className="game-nav__icon game-back"
@@ -194,6 +127,7 @@ export default function GameHeader({ state, dispatch }) {
           >
             <HelpCircle aria-hidden="true" />
           </button>
+          <GameAppearance locale={locale} onLocaleChange={setLocale} />
         </div>
         {share && (
           <div className="game-share-feedback">

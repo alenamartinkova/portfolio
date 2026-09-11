@@ -3,6 +3,6 @@
 export const GAMES = [
   { id: 'office-escape', title: 'Office Escape', icon: 'door', port: 4179, desktopOnly: true },
   { id: 'forklift', title: 'Forklift Certified', icon: 'truck', port: 4178, desktopOnly: true },
-  { id: 'lego', title: 'LEGO · Brick break', icon: 'blocks', port: 4177 },
+  { id: 'lego', title: 'Brick Break', icon: 'blocks', port: 4177 },
   { id: 'hexhaven', title: 'Hexhaven', icon: 'hexagon', port: 4174 },
 ]

@@ -1,22 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Palette } from 'lucide-react'
-import './ColorPicker.css'
+import '../../shared/styles/color-picker.css'
 
-export const ACCENTS = [
-  { id: 'violet', color: '#9c6bff', sk: 'Fialová', en: 'Violet' },
-  { id: 'cyan', color: '#45d8d0', sk: 'Tyrkysová', en: 'Cyan' },
-  { id: 'lime', color: '#a6e34d', sk: 'Limetková', en: 'Lime' },
-  { id: 'amber', color: '#f0b23c', sk: 'Jantárová', en: 'Amber' },
-  { id: 'rose', color: '#ff6b9c', sk: 'Ružová', en: 'Rose' },
-  { id: 'blue', color: '#6b8bff', sk: 'Modrá', en: 'Blue' },
-]
-
-export function readAccent() {
-  try {
-    const saved = localStorage.getItem('motion-accent') || localStorage.getItem('accent')
-    return ACCENTS.find(item => item.id === saved) || ACCENTS[0]
-  } catch { return ACCENTS[0] }
-}
+import { ACCENTS } from '../../shared/appearance.js'
+export { ACCENTS, readAccent } from '../../shared/appearance.js'
 
 export default function ColorPicker({ accent, onChange, locale }) {
   const [open, setOpen] = useState(false)

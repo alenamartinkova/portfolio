@@ -47,7 +47,7 @@ test('touch devices receive localized desktop notices without downloading engine
   }
 });
 
-test('LEGO supports placement, undo and dialogs at every viewport', async ({ page, isMobile }) => {
+test('Brick Break supports placement, undo and dialogs at every viewport', async ({ page, isMobile }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/lego/?lang=en');
