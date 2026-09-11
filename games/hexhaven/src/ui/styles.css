@@ -1,5 +1,5 @@
 :root {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -62,8 +62,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-weight: 500;
+  letter-spacing: -.035em;
 }
 a {
   color: inherit;
@@ -91,7 +91,7 @@ canvas {
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -113,10 +113,10 @@ canvas {
   padding: 9px 12px;
   background: transparent;
   border: 1px solid var(--line-mid);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.3;
   text-decoration: none;
@@ -140,6 +140,7 @@ canvas {
 .hx-start:hover:not(:disabled) {
   background: var(--accent-bright);
   color: var(--on-accent);
+  border-color: var(--accent-bright);
 }
 .hx-eyebrow {
   font-family: var(--font-mono);
@@ -152,23 +153,26 @@ canvas {
   flex-shrink: 0;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  overflow: visible;
-  font-family: var(--font-mono);
+  overflow: hidden;
+  font-family: var(--font-sans);
 }
 .hx-language button {
   min-width: 44px;
   min-height: 44px;
   padding: 0 9px;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: 0;
   color: var(--text-muted);
   background: transparent;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
 }
 .hx-language button[aria-pressed='true'] {
   background: var(--accent-soft);
   color: var(--accent-bright);
 }
+.hx-language button + button { border-left: 1px solid var(--line); }
+.hx-language button:focus-visible { outline-offset: -4px; }
 .hx-language button:hover {
   color: var(--accent-bright);
 }
@@ -251,7 +255,7 @@ canvas {
 }
 .hx-player-summary > span {
   display: block;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 9px;
   color: var(--text-muted);
 }
@@ -271,7 +275,7 @@ canvas {
 }
 .hx-player-score > span {
   display: block;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 8px;
 }
 .hx-player-awards {
@@ -279,14 +283,15 @@ canvas {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 9px;
   color: var(--text-muted);
 }
 .hx-surface {
-  background: var(--surface);
+  background: var(--panel-bg);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-panel);
 }
 .hx-turn-panel {
   position: absolute;
@@ -468,8 +473,8 @@ details[open] > summary::before {
 .hx-hud label {
   display: grid;
   gap: 6px;
-  font-size: 11px;
-  font-family: var(--font-mono);
+  font-size: 12px;
+  font-family: var(--font-sans);
   font-weight: 500;
   color: var(--text-muted);
 }
@@ -479,11 +484,11 @@ details[open] > summary::before {
   width: 100%;
   padding: 8px 9px;
   border: 1px solid var(--line-mid);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   color: var(--text);
   background: var(--surface-2);
-  font-size: 12px;
-  font-family: var(--font-display);
+  font-size: 13px;
+  font-family: var(--font-sans);
 }
 .hx-hud select {
   padding-right: 20px;
@@ -610,7 +615,7 @@ details[open] > summary::before {
   width: calc(100% - 40px);
   max-width: 1030px;
   padding: 14px 18px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
 }
 .hx-hand {
   display: flex;
@@ -628,7 +633,7 @@ details[open] > summary::before {
 }
 .hx-hand > p > span {
   display: block;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 10px;
   color: var(--text-muted);
 }
@@ -777,7 +782,7 @@ details[open] > summary::before {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 10px;
   color: var(--text-muted);
   background: var(--surface);
@@ -803,13 +808,14 @@ details[open] > summary::before {
   overflow: auto;
 }
 .hx-modal {
-  background: var(--surface);
+  background: var(--dialog-bg);
   border: 1px solid var(--line-mid);
   padding: 30px;
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   width: min(100%, 560px);
   max-height: calc(100dvh - 48px);
   overflow: auto;
+  box-shadow: var(--shadow-dialog);
 }
 .hx-setup {
   padding: 34px 40px;
@@ -825,8 +831,8 @@ details[open] > summary::before {
   color: var(--accent-bright);
 }
 .hx-intro {
-  font-size: 13px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.75;
   color: var(--text-muted);
   max-width: 42ch;
   margin-bottom: 25px;
@@ -856,11 +862,12 @@ details[open] > summary::before {
   border: 0;
 }
 .hx-fine {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
   color: var(--text-muted);
   margin-top: 18px;
   text-align: center;
+  line-height: 1.6;
 }
 .hx-form-message {
   margin-top: 14px;
@@ -945,8 +952,8 @@ details[open] > summary::before {
   text-align: left;
 }
 .hx-score-table thead {
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   color: var(--text-muted);
 }
 .hx-sr-only {

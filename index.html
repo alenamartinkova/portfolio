@@ -4,22 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#101018" />
-
-    <!-- Applies stored appearance choices before first paint. Dark + violet
-         are the defaults and carry no attribute, so nothing is set unless the
-         visitor picked something else. -->
-    <script>
-      try {
-        var root = document.documentElement
-        if (localStorage.getItem('theme') === 'light') {
-          root.dataset.theme = 'light'
-        }
-        var accent = localStorage.getItem('accent')
-        if (accent && accent !== 'violet') root.dataset.accent = accent
-        var cursor = localStorage.getItem('cursor')
-        if (cursor) root.dataset.cursor = cursor
-      } catch (e) {}
-    </script>
+    <script src="/appearance-init.js"></script>
 
     <title>Alena Martinková — Full Stack Developer · Tech & Team Lead</title>
     <meta
@@ -66,7 +51,6 @@
     <meta name="twitter:image" content="https://martinkova.dev/images/og-image.jpg" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="alternate icon" href="/favicon.ico" sizes="32x32" />
 
     <script type="application/ld+json">
       {

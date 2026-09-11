@@ -10,6 +10,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
+import { localizeStructuredData } from '../src/seo.js'
 
 const SSR_ENTRY = new URL('../build-ssr/entry-server.js', import.meta.url)
 const HTML_PATH = new URL('../build/index.html', import.meta.url)
@@ -25,8 +26,10 @@ if (!template.includes(PLACEHOLDER)) {
   throw new Error(`prerender: "${PLACEHOLDER}" not found in build/index.html`)
 }
 
-const inject = locale =>
-  template.replace(PLACEHOLDER, `<div id="root">${render(locale)}</div>`)
+const inject = locale => template
+  .replace(PLACEHOLDER, `<div id="root">${render(locale)}</div>`)
+  .replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/, (_, open, json, close) =>
+    open + JSON.stringify(localizeStructuredData(JSON.parse(json), locale, metaFor(locale))).replaceAll('<', '\\u003c') + close)
 
 /** Replace `value` everywhere it appears (title tag, og:, twitter:). */
 function swap(html, from, to) {
@@ -63,8 +66,7 @@ skHtml = swap(
   '<meta property="og:locale:alternate" content="sk_SK" />',
   '<meta property="og:locale:alternate" content="en_US" />'
 )
-// Only the ProfilePage node is locale-specific; the WebSite node lists both.
-skHtml = swap(skHtml, '"inLanguage": "en"', '"inLanguage": "sk"')
+// Structured data is localized by inject(), including the ProfilePage URL/id.
 // Slovak needs the latin-ext faces for č/ď/ľ/š/ť/ž on first paint too.
 skHtml = swap(
   skHtml,

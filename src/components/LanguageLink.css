@@ -1,0 +1,16 @@
+.m-locale {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line-mid, #ffffff29);
+  border-radius: 50%;
+  font: 400 12px/1 var(--font-sans);
+  color: inherit;
+  text-decoration: none;
+}
+@media (max-width: 640px) {
+  .m-locale { min-width: 36px; min-height: 36px; }
+}

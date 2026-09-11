@@ -4,7 +4,8 @@ import { GAMES } from './games/catalog.js'
 
 const SITE_ORIGIN = 'https://martinkova.dev'
 
-// Emitted at build time so <lastmod> can never go stale in the repo.
+// Only canonical portfolio pages belong in the language cluster. Omit lastmod:
+// the build date does not necessarily mean the page's content changed.
 function sitemap(origin) {
   let isSsrBuild = false
 
@@ -17,14 +18,13 @@ function sitemap(origin) {
     generateBundle() {
       if (isSsrBuild) return
 
-      const lastmod = new Date().toISOString().slice(0, 10)
       const alternates = `
     <xhtml:link rel="alternate" hreflang="en" href="${origin}/" />
     <xhtml:link rel="alternate" hreflang="sk" href="${origin}/sk/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${origin}/" />`
       const url = loc => `  <url>
     <loc>${loc}</loc>
-    <lastmod>${lastmod}</lastmod>${alternates}
+${alternates}
   </url>`
 
       this.emitFile({
@@ -61,7 +61,7 @@ export default defineConfig({
   build: {
     outDir: 'build', emptyOutDir: true,
     rollupOptions: {
-      input: { main: 'index.html', games: 'games/index.html' },
+      input: { main: 'index.html', games: 'games/index.html', motion: 'motion/index.html' },
       output: {
         // Match the font preloads in both prerendered portfolio pages.
         assetFileNames: asset => asset.names.some(name => name.endsWith('.woff2'))

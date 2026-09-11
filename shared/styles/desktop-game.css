@@ -19,13 +19,15 @@
   width: min(100%, 520px);
   min-width: 0;
   padding: clamp(20px, 5vw, 40px);
-  background: var(--surface);
+  background: var(--dialog-bg);
   border: 1px solid var(--line-mid);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-dialog);
 }
 .desktop-game__card h1 {
-  font: 600 clamp(28px, 6vw, 40px)/1.15 var(--font-display);
+  font: 500 clamp(28px, 6vw, 40px)/1.15 var(--font-display);
   margin: 16px 0;
+  letter-spacing: -.04em;
 }
 .desktop-game__card p { margin: 0 0 24px; color: var(--text-muted); }
 .desktop-game__card .desktop-game__eyebrow { font: 13px var(--font-mono); color: var(--accent-bright); }

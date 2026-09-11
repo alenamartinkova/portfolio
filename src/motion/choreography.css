@@ -1,0 +1,83 @@
+/* Stable wrappers own scroll measurements; only their children move.
+   No pinned spacers: all effects happen within the existing content height. */
+.m-hero-line { perspective: 900px; overflow: clip; padding-bottom: .14em; margin-bottom: -.14em; }
+.m-hero-line > span { display: block; transform-origin: center bottom; }
+.m-stats > div { perspective: 800px; }
+.m-stats strong { display: block; font-variant-numeric: tabular-nums; }
+.m-layer-slot { min-width: 0; perspective: 900px; }
+.m-layer { height: 100%; overflow: hidden; transform-origin: center; }
+.m-layer::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at var(--light-x, 50%) var(--light-y, 50%), color-mix(in srgb, var(--accent) 24%, transparent), transparent 68%); transition: opacity .25s ease; }
+.m-career-year { display: none; }
+.m-contact { position: relative; isolation: isolate; }
+.m-contact-line { display: block; transform-origin: left bottom; }
+
+@keyframes m-hero-unfold {
+  from { opacity: 0; transform: translateY(110%) rotateX(-65deg) skewY(5deg); }
+  to { opacity: 1; transform: none; }
+}
+
+[data-motion='on'] .m-hero-line > span { animation: m-hero-unfold 1.2s cubic-bezier(.16, 1, .3, 1) both; }
+[data-motion='on'] .m-hero-line:nth-child(2) > span { animation-delay: .16s; }
+[data-motion='on'] .m-hero-line:first-child { transform: translateX(calc(var(--scene-progress, 0) * -8vw)) rotate(calc(var(--scene-progress, 0) * -2deg)); }
+[data-motion='on'] .m-hero-line:nth-child(2) { transform: translateX(calc(var(--scene-progress, 0) * 10vw)) rotate(calc(var(--scene-progress, 0) * 1.5deg)); }
+[data-motion='on'] .m-hero-accent > span { background: linear-gradient(110deg, var(--accent) 20%, var(--text) 48%, var(--accent) 65%); background-size: 230% 100%; background-position: calc(var(--scene-progress, 0) * 100%) 0; background-clip: text; -webkit-background-clip: text; color: transparent; }
+[data-motion='on'] .m-hero-side { transform: translateY(calc(var(--scene-progress, 0) * -140px)); }
+
+[data-motion='on'][data-ready='true'] .m-stat-body {
+  transform: translateY(calc((1 - var(--enter, 1)) * 60px)) rotateX(calc((1 - var(--enter, 1)) * -42deg));
+  opacity: calc(.3 + var(--enter, 1) * .7);
+}
+
+/* Exploded stack: opposing columns rotate into place, then respond to the pointer. */
+[data-motion='on'][data-ready='true'] .m-layer {
+  transform: translate3d(calc((1 - var(--enter, 1)) * var(--direction) * 100px), calc((1 - var(--enter, 1)) * 70px), 0)
+    rotateY(calc((1 - var(--enter, 1)) * var(--direction) * 48deg))
+    rotateZ(calc((1 - var(--enter, 1)) * var(--direction) * 10deg))
+    rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  opacity: calc(.25 + var(--enter, 1) * .75);
+  box-shadow: var(--shadow-panel);
+}
+[data-motion='on'] .m-layer-slot[data-hover='true'] { position: relative; z-index: 2; }
+[data-motion='on'] .m-layer-slot[data-hover='true'] .m-layer { border-color: var(--accent); }
+[data-motion='on'] .m-layer-slot[data-hover='true'] .m-layer::after { opacity: 1; }
+
+/* The year reel follows the entry passing through the reading area. */
+[data-motion='on'] .m-career-year { display: block; height: 1em; overflow: clip; margin-top: 32px; font: 500 clamp(90px, 10vw, 140px)/1 var(--font-display); letter-spacing: -.065em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.m-year-track { transform: translateY(calc(var(--active-index, 0) * -1em)); transition: transform .65s cubic-bezier(.22, 1, .36, 1); }
+.m-year-track > span { display: block; height: 1em; line-height: 1; }
+[data-motion='on'][data-ready='true'] .m-timeline-content { transform: translateX(calc((1 - var(--enter, 1)) * 90px)); opacity: calc(.3 + var(--enter, 1) * .7); }
+[data-motion='on'] .m-timeline-node { background: var(--line-strong); transform: scale(.8); transition: background .35s, box-shadow .35s, transform .35s; }
+[data-motion='on'] .m-timeline li[data-active='true'] .m-timeline-node { background: var(--accent); transform: scale(1.35); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+[data-motion='on'] .m-timeline li[data-active='true'] h3 { color: var(--accent); }
+
+/* A diagonal color curtain straightens as the contact section enters. */
+[data-motion='on'] .m-contact { background: transparent; }
+[data-motion='on'] .m-contact::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--accent); clip-path: polygon(0 calc((1 - var(--enter, 1)) * 14%), 100% 0, 100% calc(100% - (1 - var(--enter, 1)) * 14%), 0 100%); }
+[data-motion='on'][data-ready='true'] .m-contact-line:first-child { transform: translateX(calc((1 - var(--enter, 1)) * -100px)) rotate(calc((1 - var(--enter, 1)) * -4deg)); }
+[data-motion='on'][data-ready='true'] .m-contact-line:last-child { transform: translateX(calc((1 - var(--enter, 1)) * 100px)) rotate(calc((1 - var(--enter, 1)) * 4deg)); }
+[data-motion='on'] .m-contact:focus-within { --enter: 1 !important; }
+[data-motion='on'] .m-contact-links .m-email svg { transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+[data-motion='on'] .m-email:hover svg, [data-motion='on'] .m-email:focus-visible svg { transform: translate(5px, -5px); }
+
+@media (max-width: 800px) {
+  [data-motion='on'] .m-hero-line:first-child { transform: translateX(calc(var(--scene-progress, 0) * -3vw)); }
+  [data-motion='on'] .m-hero-line:nth-child(2) { transform: translateX(calc(var(--scene-progress, 0) * 4vw)); }
+  [data-motion='on'][data-ready='true'] .m-layer { transform: translateX(calc((1 - var(--enter, 1)) * var(--direction) * 35px)) rotateY(calc((1 - var(--enter, 1)) * var(--direction) * 35deg)); }
+  [data-motion='on'][data-ready='true'] .m-timeline-content { transform: translateX(calc((1 - var(--enter, 1)) * 30px)); }
+  [data-motion='on'][data-ready='true'] .m-contact-line:first-child { transform: translateX(calc((1 - var(--enter, 1)) * -30px)); }
+  [data-motion='on'][data-ready='true'] .m-contact-line:last-child { transform: translateX(calc((1 - var(--enter, 1)) * 30px)); }
+}
+
+/* Keep the native reduced-motion preference authoritative for this choreography. */
+@media (prefers-reduced-motion: reduce) {
+  [data-motion] .m-hero-line,
+  [data-motion] .m-hero-line > span,
+  [data-motion] .m-hero-side,
+  [data-motion][data-ready] .m-stat-body,
+  [data-motion][data-ready] .m-layer,
+  [data-motion][data-ready] .m-timeline-content,
+  [data-motion][data-ready] .m-contact-line { transform: none !important; animation: none !important; opacity: 1; }
+  [data-motion] .m-career-year { display: none; }
+  [data-motion] .m-contact::before { clip-path: none; }
+  [data-motion] .m-timeline-node, [data-motion] .m-email svg { transition: none; }
+}

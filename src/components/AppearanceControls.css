@@ -1,0 +1,48 @@
+/* One control style for theme, accent, motion and language. */
+.appearance-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.appearance-controls :is(.theme-toggle, .m-color-trigger, .m-motion-toggle, .m-locale) {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--line-mid);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: 500 12px/1 var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.appearance-controls :is(.theme-toggle, .m-color-trigger, .m-motion-toggle, .m-locale):is(:hover, :focus-visible),
+.appearance-controls .m-color-trigger[aria-expanded='true'] {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.appearance-controls :is(.theme-toggle, .m-color-trigger, .m-motion-toggle, .m-locale):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.appearance-controls :is(.theme-toggle__icons, .theme-toggle__icon, .m-color-trigger > svg, .m-motion-toggle > svg) {
+  width: 18px;
+  height: 18px;
+}
+.appearance-controls .m-color-picker { position: static; }
+.appearance-controls .m-color-panel { right: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .appearance-controls :is(button, a, svg) { transition: none; }
+}

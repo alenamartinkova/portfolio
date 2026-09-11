@@ -14,12 +14,14 @@ test('portfolio and game list fit both languages', async ({ page }) => {
     await page.goto(locale === 'sk' ? '/sk/?lang=sk' : '/?lang=en');
     await expect(page.locator('h1')).toBeVisible();
     await noOverflow(page);
-    if (await page.locator('.nav__burger').isVisible()) {
-      await page.locator('.nav__burger').click();
-      await page.locator('.nav__menu a').last().click();
-      await expect(page.locator('.nav__menu')).toHaveCount(0);
-      await expect(page.locator('#contact')).toBeInViewport();
+    for (const section of ['about', 'stack', 'work', 'career', 'contact']) {
+      await expect(page.locator(`.m-nav nav a[href="#${section}"]`)).toBeVisible();
     }
+    await expect(page.locator('.m-nav a[href*="/games/"]')).toHaveCount(0);
+    await expect(page.locator('.m-profile-note a')).toHaveAttribute('href', `/games/?lang=${locale}`);
+    await expect(page.locator('.m-footer a[href*="/games/"]')).toHaveAttribute('href', `/games/?lang=${locale}`);
+    await page.locator('.m-nav nav a[href="#contact"]').click();
+    await expect(page.locator('#contact')).toBeInViewport();
     await page.goto(`/games/?lang=${locale}`);
     await expect(page.locator('.games-card')).toHaveCount(4);
     await expect(page.locator('.games-card__device')).toHaveCount(2);
