@@ -1,0 +1,14 @@
+.m-color-picker { position: relative; }
+.m-color-trigger { border: 0; background: none; display: grid; place-items: center; width: 40px; height: 44px; color: var(--accent); }
+.m-color-trigger:hover, .m-color-trigger[aria-expanded='true'] { background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: var(--r-md); }
+.m-color-panel { position: absolute; top: calc(100% + 12px); right: 0; width: 264px; padding: 20px; margin: 0; border: 1px solid var(--line-mid); border-radius: var(--r-lg); background: var(--dialog-bg); color: var(--text); box-shadow: var(--shadow-dialog); }
+.m-color-panel > p { font-size: 14px; margin-bottom: 16px; }
+.m-color-panel > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.m-color-panel button { border: 0; background: var(--swatch); color: #10091e; height: 44px; border-radius: var(--r-md); display: grid; place-items: center; }
+.m-color-panel button[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 3px; }
+.m-color-panel button:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+
+@media (max-width: 640px) {
+  .m-color-trigger { width: 32px; }
+  .m-color-panel { right: -92px; width: 244px; }
+}

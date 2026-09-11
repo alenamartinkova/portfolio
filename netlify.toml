@@ -8,6 +8,34 @@
   # Pinned to 24 to match the version used locally.
   NODE_VERSION = "24"
 
+# The experimental portfolio is now the main site. Force redirects even when
+# the compatibility HTML exists; specific language rules precede the fallback.
+[[redirects]]
+  from = "/motion"
+  to = "/sk/"
+  query = { lang = "sk" }
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/motion/*"
+  to = "/sk/"
+  query = { lang = "sk" }
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/motion"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/motion/*"
+  to = "/"
+  status = 301
+  force = true
+
 # Vite fingerprints these filenames, so their contents never change.
 [[headers]]
   for = "/assets/*"

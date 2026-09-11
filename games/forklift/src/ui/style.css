@@ -74,10 +74,11 @@ a:focus-visible {
   inset: var(--nav-h) 0 58px;
 }
 .panel {
-  background: rgba(var(--bg-rgb), 0.94);
+  background: var(--panel-overlay);
   border: 1px solid var(--line-mid);
   backdrop-filter: blur(12px);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-panel);
 }
 .mission {
   position: absolute;
@@ -109,8 +110,8 @@ a:focus-visible {
 h1 {
   font-family: var(--font-display);
   font-size: 28px;
-  letter-spacing: -0.03em;
-  font-weight: 600;
+  letter-spacing: -.035em;
+  font-weight: 500;
   margin: 12px 0 5px;
 }
 .mission p {
@@ -420,17 +421,19 @@ kbd {
 .modal {
   max-height: calc(100dvh - var(--nav-h) - 90px);
   overflow-y: auto;
-  background: var(--surface);
+  background: var(--dialog-bg);
   border: 1px solid var(--line-mid);
   padding: 36px;
   width: min(480px, 90vw);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-dialog);
 }
 .modal h2 {
   font-family: var(--font-display);
   font-size: 38px;
-  font-weight: 600;
+  font-weight: 500;
   margin: 20px 0 8px;
+  letter-spacing: -.04em;
 }
 .modal p {
   color: var(--text-muted);
@@ -441,27 +444,30 @@ kbd {
 .primary {
   border-radius: var(--r-md);
   transition: background var(--dur) var(--ease);
-  border: 0;
+  border: 1px solid var(--accent);
   background: var(--accent);
   color: var(--on-accent);
-  font-weight: 600;
   padding: 16px 18px;
   width: 100%;
   display: flex;
   justify-content: space-between;
-  font-size: 15px;
+  font: var(--font-control);
+  min-height: 44px;
 }
-.primary:hover {
+.primary:hover:not(:disabled) {
   background: var(--accent-bright);
+  border-color: var(--accent-bright);
 }
 .secondary {
   border-radius: var(--r-md);
   background: transparent;
   color: var(--text-muted);
-  border: 0;
+  border: 1px solid var(--line-mid);
   width: 100%;
   padding: 15px;
   margin-top: 7px;
+  font: var(--font-control);
+  min-height: 44px;
 }
 .result-heading {
   display: flex;
@@ -502,6 +508,7 @@ kbd {
   font-variant-numeric: tabular-nums;
   font-size: 15px;
   font-weight: 500;
+  font-family: var(--font-mono);
 }
 .score-list > div:last-child strong {
   color: var(--ok);
@@ -644,12 +651,15 @@ kbd {
   }
 }
 
-.secondary:hover {
-  background: var(--tint-strong);
-  color: var(--text);
+.secondary:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+  border-color: var(--accent-line);
 }
 .score-list,
-.total,
+.total {
+  font-family: var(--font-sans);
+}
 .fork-status strong,
 .property-row strong {
   font-family: var(--font-mono);
@@ -755,7 +765,7 @@ kbd {
   gap: 8px;
   margin-inline: 8px;
   color: var(--text-dim);
-  font: 11px var(--font-mono);
+  font: 12px var(--font-sans);
 }
 .level-picker select {
   max-width: 155px;

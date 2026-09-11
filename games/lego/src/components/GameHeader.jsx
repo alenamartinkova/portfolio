@@ -87,9 +87,7 @@ export default function GameHeader({ state, dispatch }) {
             title={t.portfolio}
             aria-label={t.portfolio}
           >
-            <span className="game-nav__bracket">[</span>
-            AM
-            <span className="game-nav__bracket">]</span>
+            am<span className="game-nav__dot">.</span>
           </a>
           <span className="game-nav__separator" aria-hidden="true">
             /

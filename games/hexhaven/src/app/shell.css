@@ -36,9 +36,10 @@ body {
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line-mid);
-  border-radius: var(--r-md);
-  font: 16px var(--font-display);
+  border-radius: var(--r-xl);
+  font: 16px/1.7 var(--font-sans);
   text-align: center;
+  box-shadow: var(--shadow-dialog);
 }
 .renderer-error button {
   display: block;
@@ -49,8 +50,9 @@ body {
   color: var(--on-accent);
   background: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   font-family: var(--font-mono);
+  font: var(--font-control);
 }
 .resource-flight {
   position: fixed;

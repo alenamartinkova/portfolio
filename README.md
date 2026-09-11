@@ -11,6 +11,7 @@ Use Node 24 and pnpm 9.9.0.
 pnpm install --frozen-lockfile
 pnpm dev          # portfolio, game list and all games at http://localhost:3000
 pnpm build        # prerender portfolio, then build all games into build/
+pnpm check:seo    # validate the generated EN/SK HTML, metadata and assets
 pnpm preview      # serve the complete production output
 pnpm lint         # JavaScript, JSX and TypeScript across the repository
 pnpm typecheck    # games that provide a TypeScript check
@@ -36,12 +37,24 @@ pulsing LEGO hints throughout DOM assertions. Hexhaven's separate 1440p
 performance test keeps motion enabled and verifies that reduced-motion rendering
 becomes idle after damping; LEGO's scene tests cover its animation lifecycle.
 
+The main portfolio uses the new design at `/` (English) and `/sk/` (Slovak).
+`/motion/` remains a local compatibility entry. Netlify permanently redirects
+it to the main portfolio (and `?lang=sk` to `/sk/`).
+The portfolio and games share the `accent` preference and the `am.` identity.
+The portfolio also shares the saved light/dark theme. `public/appearance-init.js`
+applies the theme and accent before paint on the portfolio and game list.
+`shared/styles/foundations.css` defines their typography and component shapes:
+Inter for body text and controls, Space Grotesk for headings, and JetBrains Mono
+for numeric readouts, keyboard shortcuts and small labels. Game panels, dialogs,
+buttons and inputs use the shared radii and theme-aware surface tokens. Keep
+game-specific resource/player colours and compact HUD layouts independent.
+
 ## Structure
 
 ```text
 src/                       portfolio components, translations and entry points
   games/                   React page listing the games at /games/
-  styles/base.css          portfolio reset and background
+  motion/                  main portfolio design, scroll effects and shared color picker
 shared/styles/             fonts, colour tokens and shared navigation styles
 public/                    site assets, fonts and derived photos
 index.html                 portfolio document shell and SEO metadata
@@ -107,6 +120,12 @@ pnpm exec playwright install chromium
 The build prerenders `/` in English and `/sk/` in Slovak, with localized metadata
 and hreflang links. `src/entry-server.jsx` supplies the markup to
 `scripts/prerender.mjs`; language switching preserves the appropriate URL.
+Every portfolio build runs `scripts/check-seo.mjs` against the generated HTML.
+It checks content without JavaScript, headings, language links, canonical and
+social metadata, localized JSON-LD, image/font/script assets, sitemap and robots.
+Canonical language URLs determine the page language; browser storage cannot
+replace the English content at `/` with Slovak content. All client projects
+remain readable without JavaScript, and collapse only after the page initializes.
 Portfolio translations live in `src/i18n/`; each game's translations stay in its
 own source tree. The final static output remains `build/` for Netlify.
 

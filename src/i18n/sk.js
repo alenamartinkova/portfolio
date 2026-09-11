@@ -74,7 +74,7 @@ export default {
 
   about: {
     funFact: 'Fun fact: keď nekódujem, skladám LEGO.',
-    playLabel: 'Poskladajte si tiež',
+    playLabel: 'Skúste moje hry.',
     index: 'o mne',
     title: 'Od prvého diagramu po produkciu',
     description:

@@ -80,7 +80,7 @@ export default {
 
   about: {
     funFact: 'Fun fact: when I’m not coding, I build LEGO.',
-    playLabel: 'Build something too',
+    playLabel: 'Try my games.',
     index: 'about',
     title: 'From first diagram to production',
     description:
@@ -93,7 +93,7 @@ export default {
     stats: [
       'Years of shipping products',
       'Services & apps delivered end to end',
-      'Teams led as tech lead',
+      'Teams led',
     ],
   },
 

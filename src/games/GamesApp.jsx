@@ -1,30 +1,38 @@
+import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowUpRight, Gamepad2 } from 'lucide-react'
 import { LocaleProvider, useLocale, useT } from '../i18n'
-import LocaleToggle from '../components/LocaleToggle'
+import LanguageLink from '../components/LanguageLink'
 import ThemeToggle from '../components/ThemeToggle'
-import Customizer from '../components/Customizer'
+import '../components/AppearanceControls.css'
+import ColorPicker, { readAccent } from '../motion/ColorPicker'
 import { GAMES } from './catalog'
-import '../App.css'
 import './Games.css'
 
 function GamesPage() {
   const t = useT()
-  const [locale] = useLocale()
+  const [locale, setLocale] = useLocale()
   const home = locale === 'sk' ? '/sk/' : '/'
+  const [accent, setAccent] = useState(readAccent)
+  useEffect(() => {
+    document.documentElement.dataset.accent = accent.id
+    try {
+      localStorage.setItem('accent', accent.id)
+      localStorage.removeItem('motion-accent')
+    } catch { /* Non-persistent choices still work. */ }
+  }, [accent])
 
   return (
     <div className="games-page">
       <a className="skip-link" href="#main">{t.nav.skip}</a>
       <header className="games-nav shell">
         <a className="games-nav__home" href={home} aria-label={t.games.back}>
-          <ArrowLeft aria-hidden="true" />
-          <span><span className="games-nav__bracket">[</span>AM<span className="games-nav__bracket">]</span></span>
-          <span className="games-nav__label">{t.games.back}</span>
+          <span className="games-brand">am<span>.</span></span>
+          <span className="games-nav__label"><ArrowLeft aria-hidden="true" />{t.games.back}</span>
         </a>
-        <div className="games-nav__actions">
-          <LocaleToggle />
+        <div className="games-nav__actions appearance-controls">
           <ThemeToggle />
-          <Customizer />
+          <ColorPicker accent={accent} onChange={setAccent} locale={locale} />
+          <LanguageLink locale={locale} onChange={setLocale} page="games" />
         </div>
       </header>
 
@@ -39,7 +47,7 @@ function GamesPage() {
         </div>
 
         <ul className="games-list" aria-label={t.games.list}>
-          {GAMES.map(game => {
+          {GAMES.map((game, index) => {
             const copy = t.games[game.id]
             const Icon = game.icon
             return (
@@ -50,20 +58,23 @@ function GamesPage() {
                   aria-labelledby={`${game.id}-title ${game.id}-play`}
                   aria-describedby={`${game.id}-description${game.desktopOnly ? ` ${game.id}-device` : ''}`}
                 >
-                  <div className="games-card__art" aria-hidden="true">
-                    <span className="games-card__orbit" />
-                    <Icon />
-                    <span className="games-card__art-label">{copy.caption}</span>
+                  <div className="games-card__top">
+                    <span className="games-card__category"><Icon aria-hidden="true" /><span className="games-card__number">0{index + 1} /</span>{copy.category}</span>
+                    <span className="games-card__caption">{copy.caption}</span>
                   </div>
                   <div className="games-card__body">
-                    <span className="games-card__category">{copy.category}</span>
-                    <h2 id={`${game.id}-title`}>{game.title}</h2>
-                    <p id={`${game.id}-description`}>{copy.description}</p>
-                    {game.desktopOnly && <span className="games-card__device" id={`${game.id}-device`}>{t.games.desktopOnly}</span>}
+                    <h2 id={`${game.id}-title`}>{game.title}<span aria-hidden="true">.</span></h2>
+                  </div>
+                  <div className="games-card__bottom">
+                    <div className="games-card__details">
+                      <p id={`${game.id}-description`}>{copy.description}</p>
+                      {game.desktopOnly && <span className="games-card__device" id={`${game.id}-device`}>{t.games.desktopOnly}</span>}
+                    </div>
                     <span className="games-card__play" id={`${game.id}-play`}>
                       {t.games.play}<ArrowUpRight aria-hidden="true" />
                     </span>
                   </div>
+                  <span className="games-card__watermark" aria-hidden="true">0{index + 1}</span>
                 </a>
               </li>
             )

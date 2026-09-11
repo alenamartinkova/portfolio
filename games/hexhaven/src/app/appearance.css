@@ -3,10 +3,5 @@
 
 @import '../../../../shared/styles/fonts.css';
 
-:root {
-  --font-sans: 'Space Grotesk', system-ui, sans-serif;
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-}
 .hx-hud .game-nav { pointer-events: auto; }
 .hx-appearance { display: grid; gap: 16px; margin-bottom: 24px; }
