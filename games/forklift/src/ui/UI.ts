@@ -1,3 +1,4 @@
+import { paints, rimColors, type TruckStyle } from "../player/Customization";
 import { mountGameAppearance } from '../../../../shared/game-appearance.js';
 import type { CampaignRecord } from "../../../../shared/CampaignProgress";
 import { setText, setStyle } from '../../../../shared/dom.js';
@@ -21,7 +22,7 @@ const audioIcon = (muted: boolean) =>
   );
 const key = (k: string) => `<kbd>${k}</kbd>`;
 export class UI {
-  private mode: "loading" | "playing" | "paused" | "results" | "error" =
+  private mode: "loading" | "playing" | "paused" | "garage" | "results" | "error" =
     "loading";
   private muted = false;
   private resultStats?: RunStats;
@@ -53,6 +54,12 @@ export class UI {
       nextLevel: () => void;
       pause: () => void;
       mute: () => boolean;
+      garage: () => void;
+      style: () => TruckStyle;
+      customize: (style: TruckStyle) => void;
+      rotatePreview: (direction: number) => void;
+      light: () => boolean;
+      toggleLight: () => void;
     },
   ) {
     this.render();
@@ -61,6 +68,7 @@ export class UI {
       if (this.lastFrame) this.update(...this.lastFrame);
       if (this.mode === "playing") this.ready();
       else if (this.mode === "paused") this.paused();
+      else if (this.mode === "garage") this.garage();
       else if (this.mode === "results" && this.resultStats)
         this.results(this.resultStats);
       else if (this.mode === "error") this.error(this.errorKey);
@@ -74,14 +82,14 @@ export class UI {
     const links = siteLinks();
     const mission = actions.level();
     const index = levels.indexOf(mission);
-    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><label class="level-picker"><span>${t("levels")}</span><select id="level" aria-label="${t("levels")}" ${this.mode === "loading" ? "disabled" : ""}>${levels.map((level, i) => `<option value="${level.id}" ${level.id === mission.id ? "selected" : ""}>${i + 1} · ${t(level.name)} ${"★".repeat(actions.record(level.id)?.stars ?? 0)}</option>`).join("")}</select></label><button class="game-nav__icon" id="audio" aria-label="${t(this.muted ? "unmute" : "mute")}" title="${t("audio")}">${audioIcon(this.muted)}</button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button><div data-game-appearance></div></div></nav></header>
-    <main class="hud"><section class="mission panel"><div class="eyebrow"><span class="accent-square"></span> ${t("handling")} <span class="mission-number">${String(index + 1).padStart(2, "0")} / ${String(levels.length).padStart(2, "0")}</span></div><h1>${t(mission.name)}</h1><p>${t("destination")} ${mission.bay}.</p><p class="mission-brief">${mission.mass} kg · ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[mission.cargo])} · ${t("campaignGoal").replace("{time}", formatTime(mission.par))}</p><p class="mission-brief" id="inspection-progress">${t("inspection")}: 0 / ${mission.inspections.length}</p><div class="mission-steps"><span class="step active"><i>1</i> ${t("pickup")}</span><b>→</b><span class="step"><i>2</i> ${t("transport")}</span><b>→</b><span class="step"><i>3</i> ${t("deliver")}</span></div><div class="location-label"><span class="live-dot"></span> ${t("depot")} <span>·</span> ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator" } as const)[mission.cargo]).toUpperCase()}</div></section>
+    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><label class="level-picker"><span>${t("levels")}</span><select id="level" aria-label="${t("levels")}" ${this.mode === "loading" ? "disabled" : ""}>${levels.map((level, i) => `<option value="${level.id}" ${level.id === mission.id ? "selected" : ""}>${i + 1} · ${t(level.name)} ${"★".repeat(actions.record(level.id)?.stars ?? 0)}</option>`).join("")}</select></label><button class="game-nav__button" id="garage" aria-label="${t("garage")}" ${this.mode === "loading" ? "disabled" : ""}>${icon('<path d="m3 10 9-7 9 7v11H3Zm4 11V11h10v10M7 15h10M7 18h10"/>')}<span class="game-nav__button-label">${t("garage")}</span></button><button class="game-nav__icon" id="work-light" aria-pressed="${actions.light()}" aria-label="${t(actions.light() ? "lightOn" : "lightOff")}" title="${t(actions.light() ? "lightOn" : "lightOff")}">${icon('<path d="M10 6a6 6 0 0 0 0 12V6ZM14 7h7m-7 5h7m-7 5h7"/>')}</button><button class="game-nav__icon" id="audio" aria-label="${t(this.muted ? "unmute" : "mute")}" title="${t("audio")}">${audioIcon(this.muted)}</button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button><div data-game-appearance></div></div></nav></header>
+    <main class="hud"><section class="mission panel"><div class="eyebrow"><span class="accent-square"></span> ${t("handling")} <span class="mission-number">${String(index + 1).padStart(2, "0")} / ${String(levels.length).padStart(2, "0")}</span></div><h1>${t(mission.name)}</h1><p>${mission.target.rack || mission.atmosphere ? t(mission.objective) : `${t("destination")} ${mission.bay}.`}</p><p class="mission-brief">${mission.mass} kg · ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator", parcels: "levelParcels" } as const)[mission.cargo])} · ${t("campaignGoal").replace("{time}", formatTime(mission.par))}</p>${mission.target.rack || mission.atmosphere ? `<p class="mission-brief shift-brief">${t(mission.briefing)}</p>` : ""}${mission.target.rack ? `<p class="shelf-height">${t("targetHeight")} <strong>${number(mission.target.height ?? 0, 2)} m</strong></p>` : ""}<p class="mission-brief" id="inspection-progress">${t("inspection")}: 0 / ${mission.inspections.length}</p><div class="mission-steps"><span class="step active"><i>1</i> ${t("pickup")}</span><b>→</b><span class="step"><i>2</i> ${t("transport")}</span><b>→</b><span class="step"><i>3</i> ${t("deliver")}</span></div><div class="location-label"><span class="live-dot"></span> ${t(({ day: "dayTag", night: "nightTag", cold: "coldTag", sunset: "sunsetTag" } as const)[mission.atmosphere ?? "day"])} <span>·</span> ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator", parcels: "levelParcels" } as const)[mission.cargo]).toUpperCase()}</div></section>
     <section class="stats panel"><div class="time-row"><span class="eyebrow">${t("shiftTime")}</span><strong id="timer">00:00</strong></div><div class="integrity-label"><span>${t("integrity")}</span><strong id="integrity">100<span>%</span></strong></div><div class="meter"><div id="integrity-bar"></div></div><div class="property-row"><span>${t("property")}</span><strong id="property">$0</strong></div></section>
 
-    <section class="map-panel panel"><div class="eyebrow">${t("map")} <span>${t("north")}</span></div><canvas id="map" width="280" height="260" aria-label="${t("mapDescription")}"></canvas><div class="map-legend"><span><i class="you-dot"></i> ${t("you")}</span><span><i class="cargo-dot"></i> ${t("cargo")}</span><span><i class="bay-dot"></i> ${mission.bay}</span></div></section>
+    <section class="map-panel panel"><div class="eyebrow">${t("map")} <span>${t("north")}</span></div><canvas id="map" width="280" height="260" aria-label="${t("mapDescription")}"></canvas><div class="map-legend"><span><i class="you-dot"></i> ${t("you")}</span><span><i class="cargo-dot"></i> ${t("cargo")}</span><span><i class="bay-dot"></i> ${mission.target.rack ?? mission.bay}</span></div></section>
     <div class="context-hint"><span class="hint-icon">↳</span><span id="hint">${t("hintDrive")}</span></div>
     <section class="dashboard panel"><div class="speed-block"><span class="eyebrow">${t("speed")}</span><div><strong id="speed">0</strong><span>km/h</span><b id="gear">N</b></div></div><div class="fork-status"><div><span>${t("forkHeight")}</span><strong id="forks">0.16 m</strong></div><div><span>${t("mastTilt")}</span><strong id="tilt">0°</strong></div></div></section></main>
-    <footer class="controls"><span>${key("W")}${key("A")}${key("S")}${key("D")} ${t("drive")}</span><span>${key("Q")}${key("E")} ${t("lift")}</span><span>${key("T")}${key("G")} ${t("tilt")}</span><span>${key("SPACE")} ${t("brake")}</span><span>${key("↔")} ${t("look")}</span><span>${key("R")} ${t("retry")}</span><span>${key("ESC")} ${t("pause")}</span></footer><div id="overlay" class="overlay"><div class="modal loading"><div class="eyebrow">NORTHLINE LOGISTICS</div><h2>${t("loading")}<span class="loading-dots">…</span></h2><p>${t("loadingNote")}</p></div></div><div class="desktop-note">${t("desktop")}</div>`;
+    <footer class="controls"><span>${key("W")}${key("A")}${key("S")}${key("D")} ${t("drive")}</span><span>${key("Q")}${key("E")} ${t("lift")}</span><span>${key("T")}${key("G")} ${t("tilt")}</span><span>${key("SPACE")} ${t("brake")}</span><span>${key("↔")} ${t("look")}</span><span>${key("F")} ${t("workLight")}</span><span>${key("R")} ${t("retry")}</span><span>${key("ESC")} ${t("pause")}</span></footer><div id="overlay" class="overlay"><div class="modal loading"><div class="eyebrow">NORTHLINE LOGISTICS</div><h2>${t("loading")}<span class="loading-dots">…</span></h2><p>${t("loadingNote")}</p></div></div><div class="desktop-note">${t("desktop")}</div>`;
     const get = (id: string) => root.querySelector<HTMLElement>("#" + id)!;
     this.timer = get("timer");
     this.integrity = get("integrity");
@@ -101,6 +109,8 @@ export class UI {
     (get("level") as HTMLSelectElement).onchange = () =>
       actions.selectLevel((get("level") as HTMLSelectElement).value);
     get("pause").onclick = () => actions.pause();
+    get("garage").onclick = () => actions.garage();
+    get("work-light").onclick = () => actions.toggleLight();
     get("audio").onclick = () => {
       const muted = (this.muted = actions.mute());
       get("audio").innerHTML = audioIcon(muted);
@@ -111,6 +121,7 @@ export class UI {
     this.lastFrame = undefined;
     this.resultStats = undefined;
     this.mode = "loading";
+    delete this.root.dataset.garage;
     this.render();
   }
   dispose() {
@@ -119,8 +130,11 @@ export class UI {
   }
   ready() {
     this.mode = "playing";
+    delete this.root.dataset.garage;
+    this.overlay.className = "overlay";
     this.overlay.hidden = true;
     this.root.querySelector<HTMLSelectElement>("#level")!.disabled = false;
+    this.root.querySelector<HTMLButtonElement>("#garage")!.disabled = false;
   }
   update(
     s: RunStats,
@@ -194,7 +208,8 @@ export class UI {
     );
     c.font = '600 16px "JetBrains Mono", monospace';
     c.fillStyle = "#a5ebd4";
-    c.fillText(mission.bay, x(target.x) - 5, z(target.z) + 5);
+    c.font = target.rack ? 'bold 11px sans-serif' : 'bold 16px sans-serif';
+    c.fillText(target.rack ?? mission.bay, x(target.x) - (target.rack ? 15 : 5), z(target.z) + 5);
     c.fillStyle = "#70b7e0";
     c.fillRect(x(cargo.x) - 4, z(cargo.z) - 4, 8, 8);
     c.strokeStyle = "#365166";
@@ -214,8 +229,48 @@ export class UI {
     c.stroke();
     c.restore();
   }
+  refreshLight() {
+    const button = this.root.querySelector<HTMLButtonElement>("#work-light");
+    if (!button) return;
+    button.setAttribute("aria-pressed", String(this.actions.light()));
+    button.setAttribute("aria-label", t(this.actions.light() ? "lightOn" : "lightOff"));
+    button.title = t(this.actions.light() ? "lightOn" : "lightOff");
+  }
+  garage() {
+    this.mode = "garage";
+    this.root.dataset.garage = "true";
+    this.overlay.hidden = false;
+    this.overlay.className = "overlay garage-overlay";
+    const style = this.actions.style();
+    this.overlay.innerHTML = `<div class="garage-preview-caption"><div class="eyebrow">NORTHLINE / 07</div><strong>${t("garageTitle")}</strong><div class="preview-orbit"><button id="preview-left" aria-label="${t("look")} ←">↶</button><span>360°</span><button id="preview-right" aria-label="${t("look")} →">↷</button></div></div>
+      <section class="modal garage-modal" role="dialog" aria-labelledby="garage-heading"><div class="eyebrow">NORTHLINE CUSTOMS</div><h2 id="garage-heading">${t("garage")}</h2><p>${t("garageNote")}</p>
+      <fieldset><legend>${t("paint")}</legend><div class="paint-options">${paints.map(p => `<button class="paint-swatch" data-paint="${p.color}" style="--swatch:${p.color}" aria-label="${t(p.name)}" title="${t(p.name)}" aria-pressed="${style.paint === p.color}"><span>✓</span></button>`).join("")}</div><div class="paint-name" id="paint-name">${t(paints.find(p => p.color === style.paint)!.name)}</div></fieldset>
+      <fieldset><legend>${t("rims")}</legend><div class="rim-options">${rimColors.map((color, i) => `<button data-rim="${color}" aria-pressed="${style.rims === color}"><i style="background:${color}"></i>${t((["rimSteel", "rimBrass", "rimDark"] as const)[i])}</button>`).join("")}</div></fieldset>
+      <label class="garage-check"><span>${t("stripes")}</span><input id="safety-stripes" type="checkbox" ${style.stripes ? "checked" : ""}></label>
+      <label class="garage-equipment">${t("equipment")}<select id="equipment"><option value="standard" ${style.kit === "standard" ? "selected" : ""}>${t("kitStandard")}</option><option value="utility" ${style.kit === "utility" ? "selected" : ""}>${t("kitUtility")}</option></select></label>
+      <button class="primary" id="garage-done">${t("garageDone")} <span>→</span></button></section>`;
+    const update = (patch: Partial<TruckStyle>) => {
+      this.actions.customize({ ...this.actions.style(), ...patch });
+      const current = this.actions.style();
+      this.overlay.querySelectorAll<HTMLButtonElement>('[data-paint]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.paint === current.paint)));
+      this.overlay.querySelectorAll<HTMLButtonElement>('[data-rim]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rim === current.rims)));
+      this.overlay.querySelector('#paint-name')!.textContent = t(paints.find(p => p.color === current.paint)!.name);
+    };
+    this.overlay.querySelectorAll<HTMLButtonElement>('[data-paint]').forEach(b => { b.onclick = () => update({ paint: b.dataset.paint! }); });
+    this.overlay.querySelectorAll<HTMLButtonElement>('[data-rim]').forEach(b => { b.onclick = () => update({ rims: b.dataset.rim! }); });
+    const stripes = this.overlay.querySelector<HTMLInputElement>('#safety-stripes')!;
+    stripes.onchange = () => update({ stripes: stripes.checked });
+    const kit = this.overlay.querySelector<HTMLSelectElement>('#equipment')!;
+    kit.onchange = () => update({ kit: kit.value === 'utility' ? 'utility' : 'standard' });
+    this.overlay.querySelector<HTMLButtonElement>('#preview-left')!.onclick = () => this.actions.rotatePreview(-1);
+    this.overlay.querySelector<HTMLButtonElement>('#preview-right')!.onclick = () => this.actions.rotatePreview(1);
+    this.overlay.querySelector<HTMLButtonElement>('#garage-done')!.onclick = () => this.actions.pause();
+    this.overlay.querySelector<HTMLButtonElement>('[data-paint][aria-pressed="true"]')!.focus();
+  }
   paused() {
     this.mode = "paused";
+    delete this.root.dataset.garage;
+    this.overlay.className = "overlay";
     this.overlay.hidden = false;
     this.overlay.innerHTML = `<div class="modal"><div class="eyebrow">${t("breather")}</div><h2>${t("pausedHeading")}</h2><p>${t("pausedNote")}</p><button class="primary" id="resume">${t("resume")} <span>↵</span></button><button class="secondary" id="retry">${t("fresh")}</button></div>`;
     this.overlay.querySelector<HTMLButtonElement>("#resume")!.onclick = () =>
@@ -231,7 +286,7 @@ export class UI {
     const mission = this.actions.level();
     const last = levels.indexOf(mission) === levels.length - 1;
     this.overlay.hidden = false;
-    this.overlay.innerHTML = `<div class="modal results"><div class="eyebrow"><span class="live-dot"></span> ${t("receivedPrefix")} / ${mission.bay}</div><div class="result-heading"><h2>${t("certified")}</h2><span class="grade">${s.grade}</span></div><p>${t(last ? "finalFinished" : "runFinished")}</p><p class="campaign-stars">${"★".repeat(stats.stars ?? 1)}${"☆".repeat(3 - (stats.stars ?? 1))} · ${t("bestLevel")}: ${formatTime(this.actions.record(mission.id)?.bestSeconds ?? stats.seconds)}</p><div class="score-list"><div><span>${t("time")} <small>${formatTime(stats.seconds)}</small></span><strong>+${number(s.time)}</strong></div><div><span>${t("cargoDamage")} <small>${cargoCondition(stats.integrity)}</small></span><strong>−${number(s.cargo)}</strong></div><div><span>${t("propertyDamage")}</span><strong>−${number(s.property)}</strong></div><div><span>${t("bonus")}</span><strong>+${number(s.style)}</strong></div></div><div class="total"><span>${t("total")}</span><strong>${number(s.total)}</strong></div><p class="result-note">${t("collisions")}: ${number(stats.collisions)} · ${t("resultTip")}</p><button class="primary" id="next">${t(last ? "firstLevel" : "nextLevel")} <span>→</span></button><button class="secondary" id="retry">${t("another")} <span>R ↻</span></button></div>`;
+    this.overlay.innerHTML = `<div class="modal results"><div class="eyebrow"><span class="live-dot"></span> ${t(mission.target.rack ? "shelfReceived" : "receivedPrefix")} / ${mission.target.rack ?? mission.bay}</div><div class="result-heading"><h2>${t("certified")}</h2><span class="grade">${s.grade}</span></div><p>${t(last ? "finalFinished" : "runFinished")}</p><p class="campaign-stars">${"★".repeat(stats.stars ?? 1)}${"☆".repeat(3 - (stats.stars ?? 1))} · ${t("bestLevel")}: ${formatTime(this.actions.record(mission.id)?.bestSeconds ?? stats.seconds)}</p><div class="score-list"><div><span>${t("time")} <small>${formatTime(stats.seconds)}</small></span><strong>+${number(s.time)}</strong></div><div><span>${t("cargoDamage")} <small>${cargoCondition(stats.integrity)}</small></span><strong>−${number(s.cargo)}</strong></div><div><span>${t("propertyDamage")}</span><strong>−${number(s.property)}</strong></div><div><span>${t("bonus")}</span><strong>+${number(s.style)}</strong></div></div><div class="total"><span>${t("total")}</span><strong>${number(s.total)}</strong></div><p class="result-note">${t("collisions")}: ${number(stats.collisions)} · ${t("resultTip")}</p><button class="primary" id="next">${t(last ? "firstLevel" : "nextLevel")} <span>→</span></button><button class="secondary" id="retry">${t("another")} <span>R ↻</span></button></div>`;
     this.overlay.querySelector<HTMLButtonElement>("#retry")!.onclick = () =>
       this.actions.retry();
     this.overlay.querySelector<HTMLButtonElement>("#next")!.onclick = () =>

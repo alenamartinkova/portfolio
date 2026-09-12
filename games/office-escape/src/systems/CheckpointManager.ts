@@ -11,7 +11,7 @@ export class CheckpointManager {
             return false;
         for (let i = this.current + 1; i < this.stops.length; i++) {
             const s = this.stops[i];
-            if (allowed(i) && Math.abs(p.x - s.x) < s.w / 2 && Math.abs(p.z - s.z) < s.d / 2 && Math.abs(p.y - PLAYER_HEIGHT / 2 - s.y) < .22) {
+            if (allowed(i) && Math.abs(p.x - s.x) < s.w / 2 && Math.abs(p.z - s.z) < s.d / 2 && Math.abs(p.y - PLAYER_HEIGHT / 2 - s.y) < .3) {
                 this.current = i;
                 return true;
             }

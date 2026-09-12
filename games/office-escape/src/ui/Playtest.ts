@@ -3,6 +3,7 @@ import { gateState } from '../systems/SecuritySystem';
 /** Dev-only visible input driver. Exercises the actual controller without teleporting or bypassing collisions. */
 export class Playtest {
     private mode = 'idle';
+    private levelId = '';
     private scenario = 'normal';
     private target = 1;
     private launched = false;
@@ -26,6 +27,10 @@ export class Playtest {
     }
     update(dt: number) {
         const g = this.game;
+        if (this.levelId !== g.definition.id) {
+            this.levelId = g.definition.id;
+            this.mode = 'idle'; this.target = 1; this.launched = false; this.log = [];
+        }
         this.elapsed += dt;
         if (g.state === 'playing' && this.mode === 'route') {
             if (g.run.falls > this.initialFalls) {
@@ -33,7 +38,7 @@ export class Playtest {
                 g.input.clear();
             }
             else {
-                const s = this.scenario === 'shortcut' && this.target === 7 ? { x: -2.9, z: 25 } : g.definition.route[this.target] ?? { x: 3, z: 72.8 };
+                const s = this.scenario === 'shortcut' && g.definition.id === 'first-evening' && this.target === 7 ? { x: -2.9, z: 25 } : g.definition.route[this.target] ?? g.definition.exit;
                 const p = g.player.position;
                 const dx = s.x - p.x, dz = s.z - p.z;
                 const distance = Math.hypot(dx, dz);
@@ -63,7 +68,7 @@ export class Playtest {
                     this.jumped = true;
                 if (distance < .62 && g.player.grounded && this.jumped) {
                     this.log.push('landed ' + this.target);
-                    this.target += this.scenario === 'shortcut' && this.target === 7 ? 2 : 1;
+                    this.target += this.scenario === 'shortcut' && g.definition.id === 'first-evening' && this.target === 7 ? 2 : 1;
                     this.launched = false;
                     if (this.scenario === 'checkpoint' && g.checkpoints.current === 2) {
                         this.mode = 'floor';

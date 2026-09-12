@@ -1,0 +1,20 @@
+{
+  "name": "deploy-friday",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "dev:server": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": { "three": "^0.164.1" },
+  "devDependencies": {
+    "@types/three": "^0.164.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.0.0"
+  }
+}

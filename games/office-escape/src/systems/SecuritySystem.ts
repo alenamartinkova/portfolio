@@ -1,3 +1,4 @@
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import type { OfficeLevel, SecurityGate } from '../world/levels';
@@ -11,13 +12,17 @@ export function gateState(gate: SecurityGate, seconds: number) {
 }
 export function gatePosition(level: OfficeLevel, after: number) {
   const a = level.route[after], b = level.route[after + 1];
-  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: Math.min(a.y, b.y), width: Math.max(a.w, b.w) + 2.5 };
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: Math.min(a.y, b.y), width: Math.max(a.w, a.d, b.w, b.d) + 1.4, yaw: Math.atan2(b.x - a.x, b.z - a.z) };
 }
 /** Swept segment catches a player crossing a thin beam between rendered frames. */
-export function crossesGate(from: { x: number; y: number; z: number }, to: { x: number; y: number; z: number }, gate: ReturnType<typeof gatePosition>) {
+export function crossesGate(from: { x: number; y: number; z: number }, to: { x: number; y: number; z: number }, gate: { x: number; y: number; z: number; width: number; yaw?: number }) {
+  // Transform the swept player segment into the gate's local frame.
+  const c = Math.cos(gate.yaw ?? 0), s = Math.sin(gate.yaw ?? 0);
+  const local = (p: typeof from) => ({ x: (p.x - gate.x) * c - (p.z - gate.z) * s, y: p.y, z: (p.x - gate.x) * s + (p.z - gate.z) * c });
+  from = local(from); to = local(to);
   let enter = 0, leave = 1;
-  const bounds = { x: [gate.x - gate.width / 2 - .28, gate.x + gate.width / 2 + .28],
-    y: [gate.y - .1, gate.y + 3.6 + PLAYER_HEIGHT / 2], z: [gate.z - .25, gate.z + .25] };
+  const bounds = { x: [-gate.width / 2 - .28, gate.width / 2 + .28],
+    y: [gate.y - .1, gate.y + 3.6 + PLAYER_HEIGHT / 2], z: [-.25, .25] };
   for (const axis of ['x', 'y', 'z'] as const) {
     const delta = to[axis] - from[axis];
     const [min, max] = bounds[axis];
@@ -46,11 +51,14 @@ export class SecuritySystem {
     });
     definition.gates.forEach(definition => {
       const position = gatePosition(this.definition, definition.after);
-      const { x, y, z, width } = position;
-      for (const side of [-1, 1]) f.box('security post', [.12, 3.7, .12], [x + side * width / 2, y + 1.8, z], '#374f60');
-      const beams = [.3, 1.3, 2.3, 3.3].map(height => f.box('security beam', [width, .065, .07], [x, y + height, z], '#fb7564'));
-      const lamp = f.box('security indicator', [.3, .3, .3], [x - width / 2, y + 3.8, z], '#fb7564');
-      f.label(() => t('securitySign'), width, .38, [x, y + 4.2, z], '#f6e1ba', '#374f60');
+      const { x, y, z, width, yaw } = position;
+      const root = new TransformNode('oriented security gate', f.scene);
+      root.position.set(x, y, z); root.rotation.y = yaw;
+      for (const side of [-1, 1]) f.box('security post', [.12, 3.7, .12], [side * width / 2, 1.8, 0], '#374f60', root);
+      const beams = [.3, 1.3, 2.3, 3.3].map(height => f.box('security beam', [width, .065, .07], [0, height, 0], '#fb7564', root));
+      const lamp = f.box('security indicator', [.3, .3, .3], [-width / 2, 3.8, 0], '#fb7564', root);
+      const sign = f.label(() => t('securitySign'), width, .38, [0, 4.2, 0], '#f6e1ba', '#374f60');
+      sign.parent = root;
       this.gates.push({ definition, position, beams, lamp });
     });
     this.paint();

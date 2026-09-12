@@ -5,5 +5,6 @@ export const GAMES = [
   { id: 'forklift', title: 'Forklift Certified', icon: 'truck', port: 4178, desktopOnly: true },
   { id: 'lego', title: 'Brick Break', icon: 'blocks', port: 4177 },
   { id: 'hexhaven', title: 'Hexhaven', icon: 'hexagon', port: 4174 },
+  { id: 'deploy-friday', title: 'Deploy Friday', icon: 'server', number: '06', port: 4180 },
   { id: 'cable-management', title: 'Cable Management', icon: 'cable', port: 4181 },
 ]

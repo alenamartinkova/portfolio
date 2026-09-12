@@ -95,38 +95,7 @@ export class Cargo {
       }
       for (const x of [-0.6, 0.6])
         for (const z of [-0.35, 0.35]) {
-          f.cylinder(
-            "porcelain vase base",
-            0.62,
-            0.18,
-            [x, 0.56, z],
-            "#f5ecdd",
-            this.root,
-          );
-          f.cylinder(
-            "porcelain vase body",
-            0.82,
-            0.85,
-            [x, 1.04, z],
-            "#e7dacf",
-            this.root,
-          );
-          f.cylinder(
-            "porcelain shoulder",
-            0.62,
-            0.3,
-            [x, 1.61, z],
-            "#f5ecdd",
-            this.root,
-          );
-          f.cylinder(
-            "porcelain neck",
-            0.33,
-            0.48,
-            [x, 1.97, z],
-            "#e7dacf",
-            this.root,
-          );
+          f.lathe("shaped porcelain vase", [[.26, 0], [.31, .08], [.39, .28], [.41, .62], [.35, .94], [.22, 1.18], [.16, 1.42], [.19, 1.74], [.14, 1.74], [.12, 1.48]], [x, .47, z], "#eee4d6", this.root);
           f.cylinder(
             "cobalt rim",
             0.4,
@@ -154,6 +123,22 @@ export class Cargo {
         false,
         this.root,
       );
+    } else if (definition.cargo === "parcels") {
+      for (const x of [-.64, .64]) for (const z of [-.38, .38]) {
+        const carton = f.box("shipping parcel", [1.19, .82, .7], [x, .87, z], x < 0 ? "#c99a64" : "#ae7d4e", this.root);
+        f.box("parcel tape", [.14, .83, .712], [0, 0, 0], "#e9d2a1", carton);
+        f.box("carton seam", [1.19, .008, .012], [0, .417, 0], "#795a3d", carton);
+        if (z < 0) {
+          f.label("N / EXPRESS", .56, .22, [.18, .03, -.357], "#263e49", "#f4e9d0", false, carton);
+          for (let i = 0; i < 12; i++)
+            f.box("parcel barcode", [i % 3 === 0 ? .02 : .009, .09, .008], [-.36 + i * .027, -.14, -.359], "#3f433e", carton);
+        }
+      }
+      box("top parcel", [1.62, .6, 1.12], [0, 1.58, 0], "#d5ab78");
+      box("top parcel tape", [.16, .61, 1.13], [0, 1.58, 0], "#f0d9aa");
+      for (const x of [-.96, .96])
+        box("load strap", [.055, .87, 1.53], [x, .88, 0], "#385567");
+      f.label(() => t("fragile"), .86, .2, [0, 1.58, -.566], "#674325", "#efd3a2", false, this.root);
     } else {
       box("generator engine", [2.38, 1.4, 1.32], [0, 1.2, 0], "#567563");
       box("generator roof", [2.5, 0.12, 1.43], [0, 1.96, 0], "#344c46");

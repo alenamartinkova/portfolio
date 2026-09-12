@@ -16,7 +16,7 @@ export default {
     heading: 'Games',
     meta: {
       title: 'Games · Alena Martinková',
-      description: 'Browser games for a little break: Office Escape, Forklift Certified, Brick Break, Hexhaven and Cable Management. Pick your next adventure.',
+      description: 'Browser games for a little break: Office Escape, Forklift Certified, Brick Break, Hexhaven, Deploy Friday and Cable Management. Pick your next adventure.',
     },
     eyebrow: 'a little off the beaten path',
     intro: 'You found my little corner for play. Pick a game and take a break.',
@@ -29,6 +29,11 @@ export default {
       category: '3D puzzle · desk zen',
       caption: 'untangle, unplug, unwind.',
       description: 'Friday evening. Untangle the cables, find a home for every little thing and leave a quieter desk behind. Three evenings, a daily puzzle, and no rush.',
+    },
+    'deploy-friday': {
+      category: 'tower defense · on-call',
+      caption: "it's 16:55. someone just merged.",
+      description: 'Keep production alive until midnight. Build pods, cache the traffic and stop the retry storm. Seven waves, one cloud budget, and absolutely nobody answering Slack.',
     },
     'office-escape': {
       category: '3D physics · furniture parkour',

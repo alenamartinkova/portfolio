@@ -68,7 +68,7 @@ function GamesPage() {
                   aria-describedby={`${game.id}-description${game.desktopOnly ? ` ${game.id}-device` : ''}`}
                 >
                   <div className="games-card__top">
-                    <span className="games-card__category"><Icon aria-hidden="true" /><span className="games-card__number">0{index + 1} /</span>{copy.category}</span>
+                    <span className="games-card__category"><Icon aria-hidden="true" /><span className="games-card__number">{game.number ?? `0${index + 1}`} /</span>{copy.category}</span>
                     <span className="games-card__caption">{copy.caption}</span>
                   </div>
                   <div className="games-card__body">
@@ -83,7 +83,7 @@ function GamesPage() {
                       {t.games.play}<ArrowUpRight aria-hidden="true" />
                     </span>
                   </div>
-                  <span className="games-card__watermark" aria-hidden="true">0{index + 1}</span>
+                  <span className="games-card__watermark" aria-hidden="true">{game.number ?? `0${index + 1}`}</span>
                 </a>
               </li>
             )

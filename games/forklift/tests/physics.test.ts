@@ -289,7 +289,7 @@ for (const level of levels.slice(3)) {
       r.step(.65, ['KeyE']); r.step(.6, ['KeyT']); r.step(.5);
       expect(r.cargo.root.position.y).toBeGreaterThan(.3);
       expect(r.mission.pickedUp).toBe(true);
-      expect(r.mission.inspections.complete).toBe(false);
+      expect(r.mission.inspections.complete).toBe(level.inspections.length === 0);
       expect(r.mission.delivered).toBe(false);
       expect(r.damage.integrity).toBeGreaterThan(95);
       expect(r.damage.propertyDamage).toBe(0);
@@ -322,3 +322,42 @@ it('completes quality control with a real loaded stop and precision delivery', (
     expect(r.damage.propertyDamage).toBe(0);
   } finally { r.dispose(); }
 });
+
+for (const level of levels.slice(10)) {
+  it(`completes ${level.id} with real pickup, support and fork withdrawal`, () => {
+    const r = rig(true, level);
+    try {
+      const driveTo = (z: number) => {
+        for (let i = 0; i < 400 && r.cargo.root.position.z < z; i++) r.step(.05, ['KeyW']);
+        r.step(1, ['Space']);
+      };
+      r.step(2);
+      r.step(1.4, ['KeyW']); r.step(1, ['Space']);
+      r.step(.65, ['KeyE']); r.step(.6, ['KeyT']); r.step(.5);
+      for (const [, z] of level.inspections) {
+        driveTo(z - .7);
+        r.step(2.5, ['Space']);
+      }
+      if (level.target.rack) {
+        driveTo(8.8);
+        r.step(.6, ['KeyG']);
+        const lift = (level.target.height ?? 0) + .5;
+        r.step((lift - r.truck.lift) / .7, ['KeyE']);
+        r.step(.5, ['Space']);
+        driveTo(level.target.z - .95);
+        expect(r.mission.delivered).toBe(false);
+        const lowerTo = (level.target.height ?? 0) + .16;
+        r.step((r.truck.lift - lowerTo) / .7, ['KeyQ']);
+      } else {
+        driveTo(level.target.z - .7);
+        r.step(.6, ['KeyG']); r.step(.9, ['KeyQ']);
+      }
+      r.step(.5); r.step(2.2, ['KeyS']); r.step(1, ['Space']); r.step(2);
+      expect(r.mission.delivered, JSON.stringify({ cargo: r.cargo.root.position, truck: r.truck.root.position, hint: r.mission.hint, integrity: r.damage.integrity, property: r.damage.propertyDamage })).toBe(true);
+      expect(r.cargo.root.position.y).toBeCloseTo(level.target.height ?? 0, 1);
+      expect(r.cargo.root.parent).toBeNull();
+      expect(r.damage.integrity).toBeGreaterThan(95);
+      expect(r.damage.propertyDamage).toBe(0);
+    } finally { r.dispose(); }
+  });
+}

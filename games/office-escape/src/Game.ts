@@ -1,5 +1,5 @@
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
-import { officeLevels, resolveOfficeLevel } from './world/levels';
+import { atExit, officeLevels, resolveOfficeLevel } from './world/levels';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Ray } from '@babylonjs/core/Culling/ray';
 import { Scene } from '@babylonjs/core/scene';
@@ -33,7 +33,7 @@ export class Game {
   private storage = new URLSearchParams(location.search).has('playtest')
     ? undefined
     : browserStorage();
-  progress = new CampaignProgress('office-escape', this.storage);
+  progress = new CampaignProgress('office-escape:routes-v2', this.storage);
   floor = new FloorDetectionSystem();
   audio = new GameAudio();
   ui: UI;
@@ -94,12 +94,23 @@ export class Game {
       this.ui.error();
     }
   }
+  private get startingYaw() {
+    const [start, next] = this.definition.route;
+    return Math.atan2(next.x - start.x, next.z - start.z) - .2;
+  }
   private async createScene() {
     await enablePhysics(this.scene);
     this.physics = new PhysicsInteractionSystem(this.scene);
     this.level = new Level(this.scene, this.physics, this.definition);
     this.player = new PlayerController(this.scene, this.level.f, this.checkpoints.spawn);
-    this.camera = new FollowCamera(this.scene, this.player.position);
+    this.camera = new FollowCamera(this.scene, this.player.position, this.startingYaw);
+    if (this.definition.architecture !== 'office') {
+      const route = this.definition.route;
+      const low = new Vector3(Math.min(...route.map(s => s.x)), Math.min(...route.map(s => s.y)), Math.min(...route.map(s => s.z)));
+      const high = new Vector3(Math.max(...route.map(s => s.x)), Math.max(...route.map(s => s.y)), Math.max(...route.map(s => s.z)));
+      this.camera.overviewTarget = low.add(high).scale(.5);
+      this.camera.overviewDistance = Math.max(18, Vector3.Distance(low, high) * 1.15);
+    }
     for (const mesh of this.player.root.getChildMeshes()) this.level.shadows.addShadowCaster(mesh);
     this.physics.onImpact = (s) => {
       if (this.state === 'playing') this.audio.impact(s);
@@ -165,9 +176,9 @@ export class Game {
     this.floor.reset();
     this.respawnDelay = 0;
     this.player.teleport(this.checkpoints.spawn);
-    this.camera.yaw = -0.32;
+    this.camera.yaw = this.startingYaw;
     this.camera.snap(this.player.position);
-    this.level.exitDoor.position.x = 3;
+    this.level.exitDoor.position.x = this.definition.exit.x;
     this.level.security.reset();
     this.state = 'intro';
     this.play();
@@ -224,7 +235,7 @@ export class Game {
         const hit = this.scene.pickWithRay(new Ray(p, Vector3.Down(), 1.05), (m) =>
           Boolean(m.metadata?.solid),
         );
-        const floor = Boolean(hit?.pickedMesh?.metadata?.forbidden) && this.player.feet < 0.13;
+        const floor = Boolean(hit?.pickedMesh?.metadata?.forbidden) && Boolean(hit?.pickedPoint && Math.abs(this.player.feet - hit.pickedPoint.y) < .13);
         if (securityEvent === 'securityHit') this.recover('securityHit');
         else if (this.floor.update(dt, floor, p.y < -3)) this.recover();
         else if (
@@ -237,11 +248,7 @@ export class Game {
         }
         if (
           this.respawnDelay <= 0 &&
-          p.z > 71 &&
-          p.z < 75 &&
-          Math.abs(p.x - 3) < 2.5 &&
-          this.player.feet > 2.85 &&
-          this.player.grounded
+          atExit(this.definition, p, this.player.grounded)
         ) {
           if (!this.level.security.complete) {
             this.ui.toast('exitLocked');
@@ -261,7 +268,7 @@ export class Game {
       }
     }
     if (this.state === 'finished')
-      this.level.exitDoor.position.x = Math.min(6, this.level.exitDoor.position.x + dt * 2);
+      this.level.exitDoor.position.x = Math.min(this.definition.exit.x + 3, this.level.exitDoor.position.x + dt * 2);
     if (this.state !== 'paused')
       this.camera.update(dt, this.player.position, this.input, this.state === 'intro');
     const nearest = this.physics.nearest(this.player.position);
