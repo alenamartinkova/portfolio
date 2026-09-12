@@ -1,3 +1,5 @@
+import { mission, type MissionId } from './campaign';
+
 // Deterministic 20 Hz rules. No browser, renderer, clock, or storage dependencies.
 export const HZ = 20;
 export const WIDTH = 11;
@@ -34,7 +36,7 @@ export interface Tower {
 export interface Sample { tick: number; latency: number; errors: number; rps: number; budget: number }
 export interface State {
   seed: number; rng: number; tick: number; wave: number; phase: 'planning' | 'running' | 'won' | 'lost';
-  endless: boolean; budget: number; slo: number; processed: number; leaked: number; timeouts: number;
+  mission: MissionId; endless: boolean; budget: number; slo: number; processed: number; leaked: number; timeouts: number;
   latencyTotal: number; spawnMeter: number; nextId: number; towers: Tower[]; packets: Packet[];
   fields: Record<number, number[]>; event: 'deploy' | 'newsletter' | 'hn' | 'migration'; eventUntil: number;
   hotUntil: number; debtUntil: number; mutedUntil: number; cooldowns: Record<Ability, number>; rollbackUsed: boolean;
@@ -66,10 +68,10 @@ function random(s: State) {
   s.rng = (Math.imul(s.rng, 1664525) + 1013904223) >>> 0;
   return s.rng / 4294967296;
 }
-export function createState(seed = 1655, endless = false): State {
+export function createState(seed = 1655, endless = false, level: MissionId = 4): State {
   const s: State = {
     seed: seed >>> 0, rng: seed >>> 0, tick: 0, wave: 1, phase: 'planning', endless,
-    budget: 190, slo: 100, processed: 0, leaked: 0, timeouts: 0, latencyTotal: 0,
+    mission: level, budget: mission(level).budget, slo: 100, processed: 0, leaked: 0, timeouts: 0, latencyTotal: 0,
     spawnMeter: 0, nextId: 1, towers: [], packets: [], fields: {}, event: 'deploy', eventUntil: 0,
     hotUntil: 0, debtUntil: 0, mutedUntil: 0,
     cooldowns: { restart: 0, rollback: 0, hotfix: 0, mute: 0 }, rollbackUsed: false,
@@ -157,6 +159,9 @@ function waveKind(s: State): Kind {
   const r = random(s);
   if (s.tick < s.eventUntil && s.event === 'newsletter') return r < .88 ? 'get' : 'post';
   if (s.tick < s.eventUntil && s.event === 'hn') return r < .8 ? 'bot' : 'get';
+  if (s.mission === 1) return r < .72 ? 'get' : 'post';
+  if (s.mission === 2) return r < .42 ? 'get' : r < .68 ? 'post' : 'bot';
+  if (s.mission === 3) return r < .32 ? 'get' : r < .55 ? 'post' : r < .8 ? 'bot' : 'upload';
   if (s.wave === 1) return r < .85 ? 'get' : 'post';
   if (s.wave === 2) return r < .55 ? 'get' : r < .85 ? 'post' : 'bot';
   return r < .35 ? 'get' : r < .57 ? 'post' : r < .79 ? 'bot' : r < .89 ? 'upload' : 'retry';
@@ -164,17 +169,19 @@ function waveKind(s: State): Kind {
 export function tick(s: State) {
   if (s.phase !== 'running') return;
   s.tick++;
-  const wave = Math.floor((s.tick - 1) / WAVE_TICKS) + 1;
-  if (wave !== s.wave && (s.endless || wave <= 7)) {
+  const level = mission(s.mission);
+  const waveTicks = level.waveSeconds * HZ;
+  const wave = Math.floor((s.tick - 1) / waveTicks) + 1;
+  if (s.mission !== 0 && wave !== s.wave && (s.endless || wave <= level.waves)) {
     s.wave = wave;
-    s.event = (['newsletter', 'hn', 'migration'] as const)[Math.floor(random(s) * 3)];
+    s.event = level.events[Math.floor(random(s) * level.events.length)];
     s.eventUntil = s.tick + 20 * HZ; s.message = s.event;
     s.budget += 25; // Small hourly on-call allowance; still requires processing income.
   }
-  const inWave = (s.tick - 1) % WAVE_TICKS;
-  if ((s.endless || s.tick <= 7 * WAVE_TICKS) && inWave < 60 * HZ) {
+  const inWave = (s.tick - 1) % waveTicks;
+  if (s.mission !== 0 && (s.endless || s.tick <= level.waves * waveTicks) && inWave < (level.waveSeconds - 15) * HZ) {
     const spike = s.tick < s.eventUntil && ['newsletter', 'hn'].includes(s.event) ? 1.65 : 1;
-    s.spawnMeter += (.7 + (s.wave - 1) * .22) * spike / HZ;
+    s.spawnMeter += (level.baseRate + (s.wave - 1) * level.rateGrowth) * spike / HZ;
     while (s.spawnMeter >= 1) { s.spawnMeter--; spawn(s, waveKind(s)); }
   }
   const speed = s.tick < s.hotUntil ? 2 : s.tick < s.debtUntil ? .5 : 1;
@@ -271,12 +278,12 @@ export function tick(s: State) {
     s.recentProcessed = 0; s.recentLeaked = 0; s.recentLatency = 0;
   }
   if (s.slo <= 0) { s.phase = 'lost'; s.message = 'incident'; }
-  else if (!s.endless && s.tick >= 7 * WAVE_TICKS && s.packets.length === 0) { s.phase = 'won'; s.message = 'survived'; }
+  else if (s.mission !== 0 && !s.endless && s.tick >= level.waves * waveTicks && s.packets.length === 0) { s.phase = 'won'; s.message = 'survived'; }
 }
 export class Simulation {
   state: State;
   private history: State[] = [];
-  constructor(seed = 1655, endless = false) { this.state = createState(seed, endless); }
+  constructor(seed = 1655, endless = false, level: MissionId = 4) { this.state = createState(seed, endless, level); }
   start() { if (this.state.phase === 'planning') this.state.phase = 'running'; }
   step() {
     if (this.state.phase !== 'running') return;

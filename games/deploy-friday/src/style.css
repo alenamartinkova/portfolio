@@ -227,3 +227,64 @@ dialog li::marker { color: var(--accent-bright); font-family: var(--font-mono); 
   dialog { padding: 30px 23px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } .shift-note { transform: none; } }
+
+/* Campaign selection and a guided, playable training level. */
+.mission-banner { display: flex; align-items: center; gap: 12px; margin: -4px 0 16px; padding: 12px 16px; border: 1px solid var(--accent-line); border-radius: 8px; background: var(--accent-soft); }
+.mission-banner .tiny { color: var(--accent-bright); font-size: 13px; }
+.mission-banner strong { font-size: 13px; font-weight: 500; }
+.mission-banner > span:last-child { margin-left: auto; color: var(--text-muted); font: 10px var(--font-mono); }
+.mission-briefing { padding: 15px 18px; color: var(--text-muted); background: var(--panel-bg); font-size: 12px; line-height: 1.7; border-bottom: 1px solid var(--line); }
+.campaign-dialog { width: min(850px, calc(100% - 28px)); max-width: 850px; }
+.campaign-dialog h2 { max-width: 22ch; font-size: clamp(28px, 4vw, 40px); }
+.mission-list { display: grid; gap: 10px; margin: 24px 0 18px; }
+.mission-card { display: flex; align-items: center; gap: 16px; min-height: 105px; width: 100%; text-align: left; padding: 17px; border-color: var(--line-mid); background: var(--panel-bg); }
+.mission-card-training { border-color: var(--accent-line); background: var(--accent-soft); }
+.mission-card-number { color: var(--accent-bright); align-self: flex-start; font: 22px/1.2 var(--font-mono); padding-top: 2px; }
+.mission-card-body { display: flex; flex-direction: column; flex: 1; gap: 5px; }
+.mission-card-body strong { font: 500 19px/1.2 var(--font-display); letter-spacing: -.02em; }
+.mission-card-body > span { color: var(--text-muted); font-size: 12px; }
+.mission-card-body small { color: var(--text-dim); font: 9px/1.6 var(--font-mono); }
+.mission-card-status { width: 113px; text-align: right; color: var(--accent-bright); font-size: 11px; }
+.mission-card:disabled { opacity: .62; }
+.mission-card:disabled .mission-card-status { color: var(--text-dim); }
+.training-coach { position: relative; border-bottom: 1px solid var(--accent-line); padding: 20px 22px 16px; background: var(--panel-bg); }
+.training-topline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.training-topline .tiny { color: var(--accent-bright); font-size: 9px; }
+.training-phase { color: var(--text-muted); font-size: 10px; }
+.lesson-progress { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 13px 0; }
+.lesson-progress li { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 6px; border: 1px solid var(--line-mid); color: var(--text-dim); font: 14px var(--font-mono); }
+.lesson-progress li[aria-current='step'] { color: var(--accent-bright); border-color: var(--accent); background: var(--accent-soft); }
+.lesson-progress li.complete { color: #50c5a8; border-color: #50c5a855; }
+.training-content h2 { margin-bottom: 8px; font: 500 26px/1.15 var(--font-display); letter-spacing: -.04em; }
+.training-content p { max-width: 78ch; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.training-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.training-actions button { font-size: 11px; min-height: 44px; }
+.training-actions > button:not(.primary) { border-color: transparent; color: var(--text-muted); }
+.training-note { display: block; margin-top: 10px; color: var(--text-dim); font-size: 10px; line-height: 1.6; }
+.training-pin { position: absolute; z-index: 4; transform: translate(-50%, -100%); background: #f4bc6c; color: #22180d; border: 2px solid #ffdaa4; box-shadow: 0 0 0 7px #f4bc6c22, 0 5px 25px #0007; font-size: 21px; line-height: 1; padding: 8px 12px; min-height: 44px; }
+.training-pin span { display: block; font: 10px/1.4 var(--font-sans); max-width: 125px; margin-top: 4px; }
+.training-pin:not(:disabled):hover { background: #ffdaa4; border-color: #fff0d9; }
+.training-target { outline: 2px solid #f4bc6c !important; outline-offset: 2px; }
+.training-target:disabled { opacity: .75; }
+.training-coach:not([hidden]) ~ .viewport { height: 430px; }
+.result-overlay > #again { margin-top: 10px; }
+@media (max-width: 850px) {
+  .training-coach:not([hidden]) ~ .viewport { height: 450px; }
+  .training-actions > .primary { flex: 1 0 100%; }
+}
+@media (max-width: 560px) {
+  .mission-banner { flex-wrap: wrap; gap: 6px 10px; padding: 12px; }
+  .mission-banner > span:last-child { width: 100%; margin-left: 0; font-size: 9px; }
+  .mission-card { flex-wrap: wrap; gap: 10px; padding: 14px; }
+  .mission-card-number { font-size: 18px; }
+  .mission-card-body { flex-basis: calc(100% - 40px); }
+  .mission-card-body strong { font-size: 18px; }
+  .mission-card-status { width: auto; margin-left: 33px; text-align: left; }
+  .training-coach { padding: 16px 14px; }
+  .training-content h2 { font-size: 23px; }
+  .training-content p { font-size: 12px; }
+  .lesson-progress { gap: 4px; }
+  .lesson-progress li { width: 24px; height: 24px; font-size: 12px; }
+  .training-note { font-size: 9px; }
+  .mission-briefing { padding: 13px; font-size: 11px; }
+}

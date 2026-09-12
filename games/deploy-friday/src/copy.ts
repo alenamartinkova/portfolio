@@ -33,7 +33,7 @@ export const copy = {
     leaderboard: 'Local shift records', noRecords: 'Your first shift is still ahead of you.', seed: 'Seed', close: 'Close',
     runbookTitle: 'A very unofficial runbook',
     rules: [
-      'Defend the DB for seven 75-second waves (about 9 minutes). Unprocessed requests reduce SLO. Zero SLO or an empty budget ends the shift.',
+      'Start with the interactive training level. Then survive four shifts with 3, 4, 5 and 7 waves (about 3–9 minutes). Unprocessed requests reduce SLO. Zero SLO or an empty budget ends the shift.',
       'Click an empty tile and choose a service. Services block tiles, but the game never lets you seal the route. Click a service to upgrade it (up to level 3) or sell it for 65%.',
       'Start with an API Pod and Valkey near the lit route. Build during waves too. Processed requests earn €; every service has an upkeep cost. Watch your burn rate.',
       'GET is fast; POST needs a queue. Bots ignore cache. Big uploads slow traffic and can jam pods. A retry that times out after 18 s returns as three requests, up to two generations.',
@@ -76,7 +76,7 @@ export const copy = {
     leaderboard: 'Lokálne rekordy smien', noRecords: 'Prvá smena je ešte pred tebou.', seed: 'Seed', close: 'Zavrieť',
     runbookTitle: 'Veľmi neoficiálny runbook',
     rules: [
-      'Bráň DB počas siedmich 75-sekundových vĺn (asi 9 minút). Nespracované requesty znižujú SLO. Nulové SLO alebo prázdny rozpočet ukončia smenu.',
+      'Začni interaktívnym tréningom. Potom preži štyri smeny s 3, 4, 5 a 7 vlnami (asi 3–9 minút). Nespracované requesty znižujú SLO. Nulové SLO alebo prázdny rozpočet ukončia smenu.',
       'Klikni na prázdnu dlaždicu a vyber službu. Služby blokujú dlaždice, no hra nedovolí uzavrieť cestu. Kliknutím službu vylepšíš (po úroveň 3) alebo predáš za 65 %.',
       'Začni s API Podom a Valkey pri vysvietenej ceste. Stavať môžeš aj počas vĺn. Za spracovanie dostávaš €; každá služba má prevádzkové náklady. Sleduj ich.',
       'GET je rýchly; POST potrebuje queue. Boti ignorujú cache. Veľké uploady spomaľujú cestu a môžu zaseknúť pody. Retry po 18 s na timeoute vytvorí tri nové requesty, najviac dve generácie.',
