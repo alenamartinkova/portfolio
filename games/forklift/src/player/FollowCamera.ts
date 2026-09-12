@@ -1,4 +1,5 @@
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { Scene } from "@babylonjs/core/scene";
@@ -22,7 +23,12 @@ export class FollowCamera {
     this.camera.fov = 0.88;
     this.camera.inputs.clear();
   }
-  update(dt: number, input: Input) {
+  update(dt: number, input: Input, mobile = false) {
+    const portrait = this.scene.getEngine().getAspectRatio(this.camera) < 1;
+    // Keep a useful horizontal field of view on a phone, where a fixed vertical
+    // field of view otherwise crops the truck at both sides.
+    this.camera.fovMode = mobile && portrait ? Camera.FOVMODE_HORIZONTAL_FIXED : Camera.FOVMODE_VERTICAL_FIXED;
+    this.camera.fov = mobile ? .95 : .88;
     this.orbit +=
       input.axis("ArrowRight", "ArrowLeft") * dt * 1.4 + input.lookX * 0.004;
     this.elevation = Math.max(
@@ -38,14 +44,14 @@ export class FollowCamera {
     input.lookY = 0;
     const target = this.truck.root.position
       .add(new Vector3(0, 0.75, 0))
-      .add(this.truck.forward.scale(1.35));
+      .add(this.truck.forward.scale(mobile ? .6 : 1.35));
     const yaw =
       Math.atan2(this.truck.forward.x, this.truck.forward.z) + this.orbit;
     const desired = target.add(
       new Vector3(
-        -Math.sin(yaw) * 9,
+        -Math.sin(yaw) * (mobile ? 11 : 9),
         Math.sin(this.elevation) * 10 + 1.2,
-        -Math.cos(yaw) * 9,
+        -Math.cos(yaw) * (mobile ? 11 : 9),
       ),
     );
     const direction = desired.subtract(target);
@@ -63,7 +69,7 @@ export class FollowCamera {
     // When a wall compresses the chase distance, rise above the overhead guard.
     const clearance = Math.hypot(desired.x - target.x, desired.z - target.z);
     if (clearance < 5)
-      desired.y = Math.max(desired.y, target.y + 4.5 + (5 - clearance) * 0.6);
+      desired.y = Math.max(desired.y, target.y + (mobile ? 6 : 4.5) + (5 - clearance) * 0.6);
     if (!this.initialized) {
       this.camera.position.copyFrom(desired);
       this.initialized = true;

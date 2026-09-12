@@ -1,6 +1,8 @@
 # Office Escape
 
-A desktop browser game about leaving work without touching the office floor. Built with TypeScript, Babylon.js, Havok Physics and Vite. All geometry and sound are generated locally; there is no backend.
+A desktop and mobile browser game about leaving work without touching the office floor. Built with TypeScript, Babylon.js, Havok Physics and Vite. All geometry and sound are generated locally; there is no backend.
+
+On touch devices, move with the left joystick and drag the scene to turn the camera. Hold Jump to mantle; use Grab / drop to move furniture and Checkpoint to recover. Tap Sprint to turn it on or off, leaving your other thumb free to jump. Pause, resume and level selection are in the header. Touch controls reset on pause, lost focus, cancelled touches and rotation.
 
 ## Setup and commands
 

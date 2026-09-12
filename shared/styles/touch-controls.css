@@ -1,0 +1,80 @@
+.touch-controls {
+  --stick-size: clamp(104px, 29vw, 136px);
+  position: fixed;
+  inset: auto max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  z-index: 10;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+.touch-controls[hidden] { display: none; }
+.touch-controls__hint {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--panel-overlay);
+  border-radius: var(--r-md);
+  padding: 4px 8px;
+}
+.touch-stick, .touch-actions button {
+  pointer-events: auto;
+  touch-action: none;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-overlay);
+  box-shadow: var(--shadow-panel);
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-stick {
+  position: relative;
+  flex: 0 0 var(--stick-size);
+  width: var(--stick-size);
+  height: var(--stick-size);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.touch-stick__arrows { text-align: center; font: 18px/1.65 var(--font-mono); color: var(--text-dim); }
+.touch-stick__knob {
+  position: absolute;
+  width: 42%;
+  height: 42%;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--accent-bright);
+  box-shadow: 0 2px 12px #0004;
+}
+.touch-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: min(48vw, 230px); }
+.touch-actions button {
+  min-width: 0;
+  min-height: 46px;
+  padding: 6px;
+  border-radius: var(--r-lg);
+  color: var(--text);
+  font: 500 11px/1.2 var(--font-sans);
+}
+.touch-actions .touch-action--primary { border-color: var(--accent); color: var(--accent-bright); }
+.touch-controls[data-game="forklift"] .touch-action--primary { grid-column: 1 / -1; }
+.touch-actions button.is-held { background: var(--accent); color: var(--on-accent); border-color: var(--accent-bright); }
+body[data-touch-game] { overscroll-behavior: none; }
+body[data-touch-game] .controls, body[data-touch-game] .desktop-note { display: none; }
+body[data-touch-game] .game-nav__current, body[data-touch-game] .game-nav__button-label { display: none; }
+body[data-touch-game] .game-nav__inner { width: calc(100% - 24px); gap: 8px; }
+body[data-touch-game] .level-picker select { max-width: 115px; }
+@media (max-height: 500px) and (min-width: 600px) {
+  .touch-controls { --stick-size: 108px; }
+  .touch-actions { width: 270px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .touch-controls[data-game="forklift"] .touch-action--primary { grid-column: auto; }
+  .touch-controls__hint { left: 125px; right: 290px; bottom: 0; }
+}

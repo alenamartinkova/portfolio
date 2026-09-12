@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Forklift – mobilná ukážka</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#101018;color:#eee;font:16px/1.5 system-ui,sans-serif}main{max-width:700px;margin:auto;padding:24px;text-align:center}h1{font-size:24px;margin:0 0 4px}p{color:#aaa;margin:0 0 18px}video{display:block;width:auto;max-width:100%;height:calc(100dvh - 180px);min-height:280px;margin:0 auto 16px;background:#000;border-radius:12px}a{color:#ba9eff}output{display:block;font-size:13px;color:#aaa;margin:8px}</style></head>
+<body><main><h1>Forklift na mobile</h1><p>21 sekúnd · jazda, vidlice, kamera a brzda · bez zvuku</p>
+<video controls autoplay muted playsinline preload="auto" aria-label="Ukážka mobilného ovládania Forklift"><source src="forklift-mobile.mp4" type="video/mp4"></video>
+<a href="forklift-mobile.mp4" download>Stiahnuť video MP4 (4,8 MB)</a><output aria-live="polite">Načítavam video…</output></main>
+<script>const video=document.querySelector('video'),status=document.querySelector('output');video.addEventListener('loadeddata',()=>{status.textContent='Video je pripravené.'});video.addEventListener('playing',()=>{status.textContent='Prehráva sa.'});video.addEventListener('error',()=>{status.textContent='Prehliadač nevie prehrať video. Použi odkaz na stiahnutie.'});</script>
+</body></html>

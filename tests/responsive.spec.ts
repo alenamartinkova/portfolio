@@ -151,27 +151,92 @@ test('portfolio and game list fit both languages', async ({ page }) => {
     await expect(page.locator('#contact')).toBeInViewport();
     await page.goto(`/games/?lang=${locale}`);
     await expect(page.locator('.games-card')).toHaveCount(GAMES.length);
-    await expect(page.locator('.games-card__device')).toHaveCount(2);
-    await expect(page.locator('.games-card__device').first()).toContainText(
-      locale === 'sk' ? 'počítači' : 'desktop',
-    );
+    await expect(page.locator('.games-card__device')).toHaveCount(0);
     await noOverflow(page);
   }
 });
 
-test('touch devices receive localized desktop notices without downloading engines', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'Desktop engine startup is checked separately.');
+test('physics games support localized multitouch controls and release them on pause', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'Desktop keyboard controls are covered separately.');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const session = await page.context().newCDPSession(page);
   for (const game of ['office-escape', 'forklift']) {
-    for (const locale of ['en', 'sk']) {
-      await page.goto(`/${game}/?lang=${locale}`);
-      await expect(page.getByRole('heading', { name: locale === 'sk' ? 'Zahrajte si na počítači' : 'Play on desktop' })).toBeVisible();
-      await expect(page.locator('#game')).toBeHidden();
-      await expect(page.getByRole('link')).toHaveAttribute('href', `/games/?lang=${locale}`);
-      const resources = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name));
-      expect(resources.filter(url => /\/(start-|Havok|glslang|twgsl)|\.wasm/.test(url))).toEqual([]);
-      await noOverflow(page);
+    await page.goto(`/${game}/?lang=en&webgl`);
+    if (game === 'office-escape') {
+      await expect(page.locator('#play')).toBeEnabled({ timeout: 60000 });
+      await page.locator('#play').tap();
+    } else await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+    const controls = page.getByRole('region', { name: 'Touch controls' });
+    await expect(controls).toBeVisible();
+    const joystick = page.getByRole('group', { name: 'Joystick — move' });
+    const action = controls.locator(game === 'forklift' ? '[data-code="KeyE"]' : '[data-code="Space"]');
+    for (const item of await page.locator('.game-nav button:visible, .game-nav a:visible, .game-nav select:visible').all()) {
+      const box = (await item.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     }
+    for (const button of await controls.getByRole('button').all()) {
+      const box = (await button.boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      await expect(button).toBeInViewport();
+    }
+    const stick = (await joystick.boundingBox())!;
+    const button = (await action.boundingBox())!;
+    const touchPoints = [
+      { id: 1, x: stick.x + stick.width / 2, y: stick.y + stick.height * .2 },
+      { id: 2, x: button.x + button.width / 2, y: button.y + button.height / 2 },
+    ];
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
+    await expect(action).toHaveClass(/is-held/);
+    if (game === 'forklift') {
+      await expect.poll(async () => parseFloat((await page.locator('#forks').innerText()).replace(',', '.'))).toBeGreaterThan(.25);
+      await expect.poll(async () => parseFloat((await page.locator('#speed').innerText()).replace(',', '.'))).toBeGreaterThan(0);
+    } else {
+      await expect(page.locator('#time')).not.toHaveText('00:00.000');
+    }
+    // A third finger can look around without cancelling movement or the held action.
+    const camera = { id: 3, x: page.viewportSize()!.width / 2, y: page.viewportSize()!.height / 2 };
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [...touchPoints, camera] });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [...touchPoints, { ...camera, x: camera.x + 25 }] });
+    await expect(action).toHaveClass(/is-held/);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(controls.locator('.is-held')).toHaveCount(0);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
+    await page.locator('#pause').click();
+    await expect(controls).toBeHidden();
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.locator('#resume').tap();
+    await expect(controls).toBeVisible();
+    await expect(controls.locator('.is-held')).toHaveCount(0);
+    await expect(controls.locator('.touch-stick__knob')).toHaveAttribute('style', '');
+    // Cancellation and rotation must release all pointers as well.
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+    await expect(controls.locator('.is-held')).toHaveCount(0);
+    if (game === 'office-escape') {
+      const sprint = controls.getByRole('button', { name: 'Sprint', exact: true });
+      await sprint.tap();
+      await expect(sprint).toHaveAttribute('aria-pressed', 'true');
+      await sprint.tap();
+      await expect(sprint).toHaveAttribute('aria-pressed', 'false');
+    }
+    const size = page.viewportSize()!;
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
+    await page.setViewportSize({ width: size.height, height: size.width });
+    await expect(controls.locator('.is-held')).toHaveCount(0);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.setViewportSize(size);
+    if (game === 'forklift') await page.locator('#pause').tap();
+    await page.getByRole('link', { name: 'Prepnúť do slovenčiny' }).click();
+    if (game === 'forklift') await page.locator('#resume').tap();
+    await expect(page.getByRole('region', { name: 'Dotykové ovládanie' })).toBeVisible();
+    await expect(controls).toHaveCount(0);
+    await expect(page.getByRole('button', { name: game === 'forklift' ? 'Brzda' : 'Skok', exact: true })).toBeVisible();
+    await noOverflow(page);
   }
+  expect(errors).toEqual([]);
 });
 
 test('Brick Break supports placement, undo and dialogs at every viewport', async ({ page, isMobile }) => {
@@ -225,7 +290,7 @@ test('desktop physics games load, play and pause', async ({ page, isMobile }) =>
   for (const game of ['office-escape', 'forklift']) {
     await page.setViewportSize({ width: 600, height: 900 });
     await page.goto(`/${game}/?lang=en&webgl`);
-    await expect(page.getByRole('heading', { name: 'Play on desktop' })).toBeVisible();
+    await expect(page.locator('#game')).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(page.locator('.desktop-game')).toHaveCount(0);
     if (game === 'office-escape') {
@@ -245,5 +310,41 @@ test('desktop physics games load, play and pause', async ({ page, isMobile }) =>
   await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
   await expect(page.locator('#speed')).toBeVisible();
   await page.waitForTimeout(500);
+  expect(errors).toEqual([]);
+});
+
+
+test('Forklift leaves the mobile driving view clear and keeps settings in pause', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'The desktop HUD stays available.');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/forklift/?lang=en&webgl');
+  await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+  for (const selector of ['.mission', '.stats', '.context-hint', '.dashboard', '.game-settings'])
+    await expect(page.locator(selector)).toBeHidden();
+  await expect(page.locator('.mobile-goal')).toContainText('Target: B');
+  const canvas = (await page.locator('#game').boundingBox())!;
+  for (const control of await page.locator('.touch-stick, .touch-actions button').all()) {
+    const box = (await control.boundingBox())!;
+    expect(canvas.y + canvas.height).toBeLessThanOrEqual(box.y);
+  }
+  await page.locator('#pause').tap();
+  await expect(page.locator('.mobile-menu-content')).toBeVisible();
+  await expect(page.locator('.mobile-menu-content #level')).toBeVisible();
+  await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true }).click();
+  await expect(page.locator('.mobile-menu-content')).toContainText('Škody v sklade');
+  await page.getByRole('button', { name: 'Garáž', exact: true }).click();
+  await expect(page.locator('.garage-modal')).toBeVisible();
+  await page.locator('#garage-done').click();
+  await expect(page.locator('#overlay')).toBeHidden();
+  await expect(page.locator('.game-settings')).toBeHidden();
+  await page.locator('#pause').tap();
+  await page.locator('#level').selectOption({ index: 11 });
+  await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+  await expect(page.locator('.mobile-goal')).toContainText('R-03');
+  await expect(page.locator('.touch-controls')).toBeVisible();
+  await noOverflow(page);
   expect(errors).toEqual([]);
 });

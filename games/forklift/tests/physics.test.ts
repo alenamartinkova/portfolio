@@ -9,6 +9,7 @@ import HavokPhysics from "@babylonjs/havok";
 import {
   HavokPlugin,
   MeshBuilder,
+  Matrix,
   NullEngine,
   Scene,
   Vector3,
@@ -48,8 +49,9 @@ class HeadlessFactory extends Factory {
 function rig(
   warehouseLevel = false,
   definition: MissionDefinition = firstMission,
+  viewport?: { width: number; height: number },
 ) {
-  const engine = new NullEngine();
+  const engine = viewport ? new NullEngine({ renderWidth: viewport.width, renderHeight: viewport.height, textureSize: 512, deterministicLockstep: false, lockstepMaxSteps: 4 }) : new NullEngine();
   const scene = new Scene(engine);
   const plugin = new HavokPlugin(true, havok);
   scene.enablePhysics(new Vector3(0, -9.81, 0), plugin);
@@ -361,3 +363,28 @@ for (const level of levels.slice(10)) {
     } finally { r.dispose(); }
   });
 }
+
+
+it.each([[320, 332], [390, 608], [844, 210]])('frames the whole mobile truck and forks in a %ix%i driving view', (width, height) => {
+  const r = rig(true, firstMission, { width, height });
+  try {
+    r.step(2);
+    const follow = new FollowCamera(r.scene, r.truck, r.warehouse!.cameraObstacles);
+    follow.update(1 / 60, r.input, true);
+    follow.camera.getViewMatrix(true);
+    follow.camera.getProjectionMatrix(true);
+    const viewport = follow.camera.viewport.toGlobal(width, height);
+    const transform = follow.camera.getTransformationMatrix();
+    const meshes = [...r.truck.root.getChildMeshes(), ...r.truck.forkRoot.getChildMeshes()].filter(mesh => mesh.isEnabled() && mesh.isVisible);
+    for (const mesh of meshes) {
+      mesh.computeWorldMatrix(true);
+      for (const corner of mesh.getBoundingInfo().boundingBox.vectorsWorld) {
+        const point = Vector3.Project(corner, Matrix.Identity(), transform, viewport);
+        expect(point.x, mesh.name).toBeGreaterThan(8);
+        expect(point.x, mesh.name).toBeLessThan(width - 8);
+        expect(point.y, mesh.name).toBeGreaterThan(8);
+        expect(point.y, mesh.name).toBeLessThan(height - 8);
+      }
+    }
+  } finally { r.dispose(); }
+});

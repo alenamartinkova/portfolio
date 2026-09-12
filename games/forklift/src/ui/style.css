@@ -866,3 +866,69 @@ kbd {
 .preview-orbit button { width: 40px; height: 36px; border-radius: 7px; border: 1px solid #7c939a; background: #142a36cc; color: white; font-size: 22px; }
 @media (max-width: 1100px) { .controls { gap: 9px; font-size: 9px; } .garage-overlay { padding-inline: 24px; } .garage-preview-caption strong { font-size: 24px; } }
 @media (max-width: 760px) { .garage-modal { width: 310px; padding: 20px; } .paint-options { gap: 6px; } .paint-swatch { width: 37px; height: 37px; } .garage-preview-caption { display: none; } }
+
+.game-settings { display: contents; }
+.mobile-goal, .mobile-menu-content { display: none; }
+
+/* The phone has a dedicated driving view; menus never compete with the truck. */
+body[data-touch-game] { --nav-h: 56px; --drive-controls-h: calc(180px + env(safe-area-inset-bottom)); }
+body[data-touch-game] #game {
+  position: fixed;
+  top: var(--nav-h);
+  left: 0;
+  width: 100%;
+  height: calc(100dvh - var(--nav-h) - var(--drive-controls-h));
+}
+body[data-touch-game] .game-nav__inner { flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 0; min-height: var(--nav-h); }
+body[data-touch-game] .game-nav__trail, body[data-touch-game] .game-nav__actions { width: auto; padding: 0; flex: 0 0 auto; }
+body[data-touch-game] .game-nav__crumb, body[data-touch-game] .game-nav__separator { display: none; }
+body[data-touch-game] .game-nav .game-settings { display: none; }
+body[data-touch-game] .game-nav #pause { min-width: 44px; min-height: 44px; }
+body[data-touch-game] .mobile-goal { display: grid; flex: 1; min-width: 0; gap: 2px; }
+.mobile-goal span { color: var(--text-dim); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mobile-goal strong { font-size: 13px; font-weight: 500; }
+body[data-touch-game] .hud { inset: var(--nav-h) 0 var(--drive-controls-h); }
+body[data-touch-game] .mission, body[data-touch-game] .stats, body[data-touch-game] .map-panel,
+body[data-touch-game] .context-hint, body[data-touch-game] .dashboard { display: none; }
+body[data-touch-game] .touch-controls[data-game="forklift"] .touch-controls__hint { display: none; }
+body[data-touch-game]:has(.touch-actions :is([data-code="KeyE"], [data-code="KeyQ"], [data-code="KeyT"], [data-code="KeyG"]).is-held) .dashboard {
+  display: flex;
+  top: 8px;
+  right: 12px;
+  bottom: auto;
+  width: auto;
+  padding: 8px 12px;
+}
+body[data-touch-game] .dashboard .speed-block { display: none; }
+body[data-touch-game] .fork-status { display: flex; gap: 20px; padding: 0; border: 0; }
+body[data-touch-game] .overlay { inset: var(--nav-h) 0 0; overflow: auto; padding: 12px; }
+body[data-touch-game] .modal { max-height: calc(100dvh - var(--nav-h) - 24px); width: min(100%, 480px); }
+body[data-touch-game] .mobile-menu-content { display: block; text-align: left; border-top: 1px solid var(--line-mid); margin-top: 24px; padding-top: 12px; }
+.mobile-menu-content h3 { font: 500 22px var(--font-display); margin: 8px 0 12px; }
+.mobile-menu-content dl { font-size: 12px; margin: 20px 0; }
+.mobile-menu-content dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; }
+.mobile-menu-content dt { color: var(--text-muted); }
+.mobile-menu-content dd { margin: 0; font-family: var(--font-mono); }
+.mobile-menu-content .mobile-instructions { font-size: 12px; }
+.mobile-menu-content .game-settings { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.mobile-menu-content .level-picker { width: 100%; position: static; margin: 0; }
+.mobile-menu-content .level-picker > span { display: block; }
+body[data-touch-game] .mobile-menu-content .level-picker select { max-width: 100%; flex: 1; height: 44px; }
+.mobile-menu-content .game-nav__button, .mobile-menu-content .game-nav__icon {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line-mid);
+  border-radius: var(--r-md);
+}
+.mobile-menu-content .game-settings svg { width: 18px; height: 18px; }
+body[data-touch-game] .mobile-menu-content .game-nav__button-label { display: inline; }
+.mobile-menu-content [data-game-appearance] { margin-left: auto; }
+body[data-touch-game] .garage-modal { width: min(100%, 350px); }
+body[data-touch-game] .paint-options { flex-wrap: wrap; }
+body[data-touch-game] .paint-swatch { width: 44px; height: 44px; }
+@media (max-height: 500px) and (min-width: 600px) {
+  body[data-touch-game] { --drive-controls-h: calc(124px + env(safe-area-inset-bottom)); }
+}

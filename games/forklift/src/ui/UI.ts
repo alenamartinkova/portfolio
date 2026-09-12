@@ -25,6 +25,15 @@ export class UI {
   private mode: "loading" | "playing" | "paused" | "garage" | "results" | "error" =
     "loading";
   private muted = false;
+  private mobile = matchMedia('(any-pointer: coarse), (max-width: 760px)');
+  private settings!: HTMLElement;
+  private settingsHome!: HTMLElement;
+  private arrangeSettings = () => {
+    const slot = this.mode === 'paused' && this.mobile.matches
+      ? this.root.querySelector<HTMLElement>('[data-mobile-settings]') : undefined;
+    const target = slot ?? this.settingsHome;
+    if (this.settings && target && this.settings.parentElement !== target) target.prepend(this.settings);
+  };
   private resultStats?: RunStats;
   private errorKey: TextKey = "loadError";
   private lastFrame?: Parameters<UI["update"]>;
@@ -63,6 +72,7 @@ export class UI {
     },
   ) {
     this.render();
+    this.mobile.addEventListener('change', this.arrangeSettings);
     this.unsubscribe = onLocaleChange(() => {
       this.render();
       if (this.lastFrame) this.update(...this.lastFrame);
@@ -90,6 +100,16 @@ export class UI {
     <div class="context-hint"><span class="hint-icon">↳</span><span id="hint">${t("hintDrive")}</span></div>
     <section class="dashboard panel"><div class="speed-block"><span class="eyebrow">${t("speed")}</span><div><strong id="speed">0</strong><span>km/h</span><b id="gear">N</b></div></div><div class="fork-status"><div><span>${t("forkHeight")}</span><strong id="forks">0.16 m</strong></div><div><span>${t("mastTilt")}</span><strong id="tilt">0°</strong></div></div></section></main>
     <footer class="controls"><span>${key("W")}${key("A")}${key("S")}${key("D")} ${t("drive")}</span><span>${key("Q")}${key("E")} ${t("lift")}</span><span>${key("T")}${key("G")} ${t("tilt")}</span><span>${key("SPACE")} ${t("brake")}</span><span>${key("↔")} ${t("look")}</span><span>${key("F")} ${t("workLight")}</span><span>${key("R")} ${t("retry")}</span><span>${key("ESC")} ${t("pause")}</span></footer><div id="overlay" class="overlay"><div class="modal loading"><div class="eyebrow">NORTHLINE LOGISTICS</div><h2>${t("loading")}<span class="loading-dots">…</span></h2><p>${t("loadingNote")}</p></div></div><div class="desktop-note">${t("desktop")}</div>`;
+    this.settingsHome = root.querySelector<HTMLElement>('.game-nav__actions')!;
+    this.settings = document.createElement('div');
+    this.settings.className = 'game-settings';
+    for (const child of Array.from(this.settingsHome.children))
+      if (child.id !== 'pause') this.settings.append(child);
+    this.settingsHome.prepend(this.settings);
+    const goal = document.createElement('div');
+    goal.className = 'mobile-goal';
+    goal.innerHTML = `<span>${t(mission.name)}</span><strong>${t('mobileTarget').replace('{target}', mission.target.rack ?? mission.bay)}</strong>`;
+    this.settingsHome.before(goal);
     const get = (id: string) => root.querySelector<HTMLElement>("#" + id)!;
     this.timer = get("timer");
     this.integrity = get("integrity");
@@ -127,9 +147,11 @@ export class UI {
   dispose() {
     this.cleanupAppearance?.();
     this.unsubscribe();
+    this.mobile.removeEventListener('change', this.arrangeSettings);
   }
   ready() {
     this.mode = "playing";
+    this.arrangeSettings();
     delete this.root.dataset.garage;
     this.overlay.className = "overlay";
     this.overlay.hidden = true;
@@ -238,6 +260,7 @@ export class UI {
   }
   garage() {
     this.mode = "garage";
+    this.arrangeSettings();
     this.root.dataset.garage = "true";
     this.overlay.hidden = false;
     this.overlay.className = "overlay garage-overlay";
@@ -267,12 +290,33 @@ export class UI {
     this.overlay.querySelector<HTMLButtonElement>('#garage-done')!.onclick = () => this.actions.pause();
     this.overlay.querySelector<HTMLButtonElement>('[data-paint][aria-pressed="true"]')!.focus();
   }
+  private mobileMenu() {
+    const mission = this.actions.level();
+    const frame = this.lastFrame;
+    if (!frame) return '';
+    const [stats, hint, , , lift, tilt] = frame;
+    const rows: [string, string][] = [
+      [t('shiftTime'), formatTime(stats.seconds)],
+      [t('integrity'), `${number(stats.integrity, 0)} %`],
+      [t('property'), `$${number(stats.propertyDamage)}`],
+      [t('forkHeight'), `${number(lift, 2)} m`],
+      [t('mastTilt'), `${number(Math.round(-tilt * 180 / Math.PI) || 0, 0)}°`],
+    ];
+    if (mission.target.rack) rows.push([t('targetHeight'), `${number(mission.target.height ?? 0, 2)} m`]);
+    if (mission.inspections.length) rows.push([t('inspection'), `${frame[8] ?? 0} / ${mission.inspections.length}`]);
+    return `<div class="mobile-menu-content"><h3>${t(mission.name)}</h3><p>${t(mission.objective)}</p><p>${t(mission.briefing)}</p><p>${t(hint)}</p>
+      <dl>${rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>
+      <p class="mobile-instructions">${t('mobileInstructions')}</p><div data-mobile-settings></div></div>`;
+  }
   paused() {
+    // Restore controls before replacing a previous pause menu (for example after a locale change).
+    this.settingsHome.prepend(this.settings);
     this.mode = "paused";
     delete this.root.dataset.garage;
     this.overlay.className = "overlay";
     this.overlay.hidden = false;
-    this.overlay.innerHTML = `<div class="modal"><div class="eyebrow">${t("breather")}</div><h2>${t("pausedHeading")}</h2><p>${t("pausedNote")}</p><button class="primary" id="resume">${t("resume")} <span>↵</span></button><button class="secondary" id="retry">${t("fresh")}</button></div>`;
+    this.overlay.innerHTML = `<div class="modal"><div class="eyebrow">${t("breather")}</div><h2>${t("pausedHeading")}</h2><p>${t("pausedNote")}</p><button class="primary" id="resume">${t("resume")} <span>↵</span></button><button class="secondary" id="retry">${t("fresh")}</button>${this.mobileMenu()}</div>`;
+    this.arrangeSettings();
     this.overlay.querySelector<HTMLButtonElement>("#resume")!.onclick = () =>
       this.actions.pause();
     this.overlay.querySelector<HTMLButtonElement>("#retry")!.onclick = () =>
@@ -281,6 +325,7 @@ export class UI {
   }
   results(stats: RunStats) {
     this.mode = "results";
+    this.arrangeSettings();
     this.resultStats = stats;
     const s = scoreRun(stats);
     const mission = this.actions.level();
@@ -295,6 +340,7 @@ export class UI {
   }
   error(message: TextKey) {
     this.mode = "error";
+    this.arrangeSettings();
     this.errorKey = message;
     this.overlay.hidden = false;
     this.overlay.innerHTML = `<div class="modal"><h2>${t("errorHeading")}</h2><p></p><button class="primary">${t("tryAgain")}</button></div>`;

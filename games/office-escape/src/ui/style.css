@@ -134,3 +134,38 @@ kbd { font: 9px var(--font-mono); border: 1px solid var(--line-strong); border-r
 @media (max-width: 650px) { .game-nav__current { display: none; } .level-picker select { max-width: 110px; } .objective { max-width: calc(100% - 205px); } }
 @media (max-width: 550px) { .objective { max-width: calc(100% - 180px); } .game-nav__trail > .game-nav__separator { display: none; } .level-picker select { max-width: 100px; font-size: 10px; } }
 @media (max-height: 650px) { .intro-panel { padding: 20px; } .intro-panel h1 { margin: 12px 0; font-size: 30px; } .intro-panel p { margin: 10px 0; font-size: 12px; } .intro-panel p.desktop-note { margin-top: 10px; } .intro-meta { margin-top: 10px; } .panel-wrap { overflow-y: auto; } }
+
+body[data-touch-game] .route-card, body[data-touch-game] .status-tag { display: none; }
+body[data-touch-game] .panel-wrap { inset: var(--nav-h) 0 0; padding: 16px; overflow: auto; align-items: safe center; pointer-events: auto; }
+body[data-touch-game] .intro-panel { margin: auto; width: min(100%, 470px); }
+body[data-touch-game] .modal { width: min(100%, 500px); }
+body[data-touch-game] .floor-note { display: none; }
+body[data-touch-game] .objective { top: calc(var(--nav-h) + 10px); left: 12px; width: calc(100% - 155px); max-width: 330px; padding: 12px; }
+body[data-touch-game] .objective h2 { margin: 6px 0; font-size: 19px; }
+body[data-touch-game] .objective p { font-size: 10px; }
+body[data-touch-game] .time-card { top: calc(var(--nav-h) + 10px); right: 12px; width: 120px; padding: 12px; }
+body[data-touch-game] #time { font-size: 23px; margin-bottom: 6px; }
+body[data-touch-game] #time span { font-size: 12px; }
+body[data-touch-game] .best-row { padding-top: 6px; }
+body[data-touch-game] .hint { max-width: calc(100% - 24px); margin: 0 auto; font-size: 10px; padding: 8px 10px; }
+body[data-touch-game] .bottom { bottom: calc(185px + env(safe-area-inset-bottom)); }
+body[data-touch-game]:not(.playing) .time-card { display: none; }
+body[data-touch-game] #toast { width: max-content; max-width: calc(100% - 24px); padding: 10px 14px; }
+@media (max-width: 600px) {
+  body[data-touch-game] { --nav-h: 104px; }
+  body[data-touch-game] .game-nav__inner { flex-wrap: wrap; justify-content: center; padding-block: 4px; gap: 0; }
+  body[data-touch-game] .game-nav__trail { justify-content: flex-start; width: 100%; }
+  body[data-touch-game] .game-nav__actions { justify-content: center; gap: 4px; }
+  body[data-touch-game] .game-nav .game-nav__icon { width: 44px; min-height: 44px; }
+  body[data-touch-game] .game-nav .game-nav__button { min-height: 44px; }
+  body[data-touch-game] .level-picker { position: absolute; top: 5px; right: 12px; }
+  body[data-touch-game] .level-picker select { min-height: 44px; max-width: 160px; }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  body[data-touch-game] .objective { width: 220px; padding: 8px 12px; }
+  body[data-touch-game] .objective > p:not(.card-progress), body[data-touch-game] .best-row { display: none; }
+  body[data-touch-game] .objective h2 { font-size: 16px; }
+  body[data-touch-game] .objective .card-progress { margin-top: 4px; }
+  body[data-touch-game] .bottom { bottom: 135px; left: 240px; right: 145px; }
+  body[data-touch-game] .hint { max-width: 100%; }
+}

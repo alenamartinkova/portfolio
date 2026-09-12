@@ -1,9 +1,9 @@
-import { desktopGame } from '../../../shared/desktop-game.js';
+import { loadGame } from '../../../shared/load-game.js';
 import { getLocale } from './i18n';
 import { initializeSiteAppearance } from './ui/SiteAppearance';
 
 initializeSiteAppearance();
-const dispose = desktopGame({
+const dispose = loadGame({
   title: 'Forklift Certified',
   locale: getLocale(),
   load: () => import('./start'),

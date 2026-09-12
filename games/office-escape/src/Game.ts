@@ -127,7 +127,7 @@ export class Game {
     if (!this.ready) return;
     this.ready = false;
     this.state = 'loading';
-    this.input.clear();
+    this.input.setActive(false);
     this.definition = resolveOfficeLevel(id);
     this.run = new RunManager(this.storage, this.definition.id);
     this.checkpoints = new CheckpointManager(this.definition.route);
@@ -156,7 +156,7 @@ export class Game {
   play() {
     if (!this.ready || this.state === 'finished') return;
     this.state = 'playing';
-    this.input.clear();
+    this.input.setActive(true);
     this.audio.start();
     this.ui.playing();
     this.canvas.focus();
@@ -164,7 +164,7 @@ export class Game {
   pause() {
     if (this.state !== 'playing') return;
     this.state = 'paused';
-    this.input.clear();
+    this.input.setActive(false);
     this.physics.grabbed = null;
     this.ui.pause();
   }
@@ -260,7 +260,7 @@ export class Game {
               campaignStars(this.run.seconds, this.definition.par, this.run.falls === 0),
             );
             this.state = 'finished';
-            this.input.clear();
+            this.input.setActive(false);
             this.ui.finish(this.run);
             this.audio.success();
           }

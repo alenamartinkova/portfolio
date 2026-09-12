@@ -15,7 +15,7 @@ describe('Office Escape localization', () => {
     expect(t('exitSign')).toBe('VÝCHOD  →');
     expect(furnitureName('office chair')).toBe('kancelársku stoličku');
     expect(areaNames.map(t)).toContain('Zasadačky');
-    expect(t(areaHints[0])).toContain('Medzerníkom');
+    expect(t(areaHints[0])).toContain('Skok');
     setLocale('en');
     expect(furnitureName('office chair')).toBe('office chair');
   });

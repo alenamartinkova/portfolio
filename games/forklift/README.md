@@ -1,6 +1,8 @@
 # Forklift Certified
 
-A desktop browser physics game: deliver a piano, fragile ceramics, parcels, and a heavy generator across fourteen warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
+A desktop and mobile browser physics game: deliver a piano, fragile ceramics, parcels, and a heavy generator across fourteen warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
+
+On touch devices, drive and steer with the left joystick. Hold the right buttons to raise/lower the forks, tilt the mast or brake, and drag the scene to look around. The driving view sits above the controls, with a wider camera view that keeps the truck visible. Only the mission target and pause remain in the header; mission details, stats, garage, work light, level selection and settings are in the pause menu. Fork height and tilt appear while operating the forks. Multiple fingers can drive, operate the forks and move the camera together. Touch controls reset on pause, lost focus, cancelled touches and rotation.
 
 ## Install and run
 
@@ -27,7 +29,7 @@ Serve built output over HTTP(S); opening index.html as a file will not load ES m
 
 ## Levels
 
-Choose any level from the header. Completing a delivery offers **Next level**; **R** and **Another shift** retry the current level. All levels are available immediately. The selected level is shareable through `?level=ceramics-a&lang=sk`; unknown IDs fall back to the piano mission.
+Choose any level from the header, or from the pause menu on mobile. Completing a delivery offers **Next level**; **R** and **Another shift** retry the current level. All levels are available immediately. The selected level is shareable through `?level=ceramics-a&lang=sk`; unknown IDs fall back to the piano mission.
 
 | Level | Cargo | Route and challenge |
 | --- | --- | --- |
@@ -111,7 +113,7 @@ Cargo damage uses impact impulse normalized by cargo mass, relative speed, and c
 
 ## Known limitations
 
-- Fourteen missions share a warehouse shell, with different obstacle layouts, lighting, cargo and shelf destinations. Desktop keyboard required.
+- Fourteen missions share a warehouse shell, with different obstacle layouts, lighting, cargo and shelf destinations.
 - Ceramic pieces and the generator form a single rigid load; individual components do not shatter. Campaign stars and best times are saved locally; physical run state is not saved.
 - Arcade chassis stabilization intentionally prevents rollovers. Forks are animated rigid bodies rather than a fully constrained hydraulic assembly; extreme trapping can exert large forces.
 - No backend, leaderboard, daily challenge, ghost, networking, or saved physical runs.

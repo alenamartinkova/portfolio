@@ -101,6 +101,7 @@ export class Game {
       });
       this.engine.runRenderLoop(() => this.frame());
       this.ui.ready();
+      this.input.setActive(true);
       this.canvas.focus();
     } catch (error) {
       console.error(error);
@@ -158,7 +159,7 @@ export class Game {
         this.damage.beforeStep([this.truck.body, this.truck.forkBody, this.cargo.body]);
       }
     });
-    this.camera.update(1 / 60, this.input);
+    this.camera.update(1 / 60, this.input, document.body.hasAttribute('data-touch-game'));
   }
   private frame() {
     if (this.restarting || this.disposed) return;
@@ -171,7 +172,7 @@ export class Game {
         dt,
         ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyE', 'KeyQ'].some((k) => this.input.keys.has(k)),
       );
-      this.camera.update(dt, this.input);
+      this.camera.update(dt, this.input, document.body.hasAttribute('data-touch-game'));
       this.effects.update(
         dt,
         this.truck.root.position,
@@ -203,7 +204,7 @@ export class Game {
     );
     if (this.mission.delivered && !this.resultShown) {
       this.resultShown = true;
-      this.input.keys.clear();
+      this.input.setActive(false);
       this.progress.complete(this.level.id, this.mission.seconds, this.stats.stars);
       this.ui.results(this.stats);
       this.audio.success();
@@ -211,11 +212,11 @@ export class Game {
   }
   async playtestInput(keys: string[], seconds: number) {
     if (!import.meta.env.DEV) return;
-    this.input.keys.clear();
+    this.input.clear();
     for (const key of keys)
       if (key !== 'Wait') this.input.keys.add(key.length === 1 ? 'Key' + key : key);
     await new Promise<void>((resolve) => setTimeout(resolve, seconds * 1000));
-    this.input.keys.clear();
+    this.input.clear();
   }
   get stats() {
     return {
@@ -243,10 +244,12 @@ export class Game {
       this.truck.setWorkLight(this.lightOn);
       this.renderDirty = true;
     }
-    this.input.keys.clear();
-    if (this.paused) this.ui.paused();
-    else {
+    if (this.paused) {
+      this.input.setActive(false);
+      this.ui.paused();
+    } else {
       this.ui.ready();
+      this.input.setActive(true);
       this.canvas.focus();
     }
   }
@@ -261,7 +264,7 @@ export class Game {
     if (!this.scene || this.restarting || this.resultShown) return;
     this.paused = true;
     this.garageOpen = true;
-    this.input.keys.clear();
+    this.input.setActive(false);
     this.garageLight.setEnabled(true);
     this.truck.workLight.setEnabled(false);
     this.previewAngle = -.8;
@@ -297,13 +300,14 @@ export class Game {
     url.searchParams.set('level', level.id);
     history.replaceState(null, '', url);
     this.ui.resetLevel();
-    this.input.keys.clear();
+    this.input.setActive(false);
     this.scene.dispose();
     try {
       await this.createScene();
       this.paused = false;
       this.resultShown = false;
       this.ui.ready();
+      this.input.setActive(true);
       this.canvas.focus();
     } catch (error) {
       console.error(error);
