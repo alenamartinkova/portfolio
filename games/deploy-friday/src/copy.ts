@@ -1,7 +1,7 @@
 export type Locale = 'en' | 'sk';
 export const copy = {
   en: {
-    back: 'All games', eyebrow: '06 / TOWER DEFENSE · ON-CALL', tagline: "it's 16:55. someone just merged.",
+    back: 'All games', eyebrow: '05 / TOWER DEFENSE · ON-CALL', tagline: "it's 16:55. someone just merged.",
     intro: 'Your colleague merged a PR and went home. Keep production alive until midnight. You are the entire on-call team.',
     live: 'PRODUCTION', ready: 'READY TO DEPLOY', paused: 'PAUSED', wave: 'Wave', budget: 'Cloud budget', burn: 'burn rate',
     runway: 'runway without income', slo: 'SLO remaining', served: 'processed', incoming: 'in flight',
@@ -44,7 +44,7 @@ export const copy = {
     unavailable: 'The cluster needs WebGL. Enable hardware acceleration and reload to play.', reload: 'Reload game',
   },
   sk: {
-    back: 'Všetky hry', eyebrow: '06 / TOWER DEFENSE · ON-CALL', tagline: "it's 16:55. someone just merged.",
+    back: 'Všetky hry', eyebrow: '05 / TOWER DEFENSE · ON-CALL', tagline: "it's 16:55. someone just merged.",
     intro: 'Kolega mergol PR a šiel domov. Udrž produkciu nažive do polnoci. Celý on-call tím si ty.',
     live: 'PRODUKCIA', ready: 'PRIPRAVENÉ NA DEPLOY', paused: 'PAUZA', wave: 'Vlna', budget: 'Cloud budget', burn: 'náklady',
     runway: 'výdrž bez príjmu', slo: 'Zostávajúce SLO', served: 'spracovaných', incoming: 'v sieti',

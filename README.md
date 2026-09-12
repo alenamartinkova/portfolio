@@ -68,6 +68,7 @@ games/
   hexhaven/                Hexhaven source, HTML entry, tests and documentation
   forklift/                Forklift Certified: Babylon.js + Havok warehouse game
   office-escape/           Babylon.js + Havok office escape game
+  cable-management/        Three.js desk puzzle: cables, drawer and daily levels
 config/
   game.js                  common game URLs, development ports and build output
   playwright.js            shared desktop/mobile browser test configuration
@@ -111,6 +112,7 @@ and `lang=sk` in links back to the game list and portfolio.
 - [Brick Break](games/lego/README.md): twelve procedural models and free
   building at `/lego/`, with local saves, build sharing and optional sound.
 - [Office Escape](games/office-escape/README.md): a third-person Babylon.js + Havok furniture escape at `/office-escape/`. Run `pnpm --filter office-escape dev`.
+- [Cable Management](games/cable-management/README.md): a relaxed 3D desk puzzle at `/cable-management/`, with cable untangling, drawer packing, three evenings and Daily desk. Supports mouse and touch. Run `pnpm --filter cable-management dev`.
 - [Hexhaven](games/hexhaven/README.md): procedural 3D trading and settlement at
   `/hexhaven/`, with local hotseat, bots, IndexedDB saves and deterministic replays.
 

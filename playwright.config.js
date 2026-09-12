@@ -1,10 +1,14 @@
 import { defineConfig } from '@playwright/test'
 import { browserDefaults } from './config/playwright.js'
 
+// Allow parallel worktrees to test without reusing an unrelated preview server.
+const port = Number(process.env.PORTFOLIO_TEST_PORT || 4180)
+const baseURL = `http://127.0.0.1:${port}`
+
 export default defineConfig({
   ...browserDefaults,
   testMatch: '**/responsive.spec.ts',
-  use: { ...browserDefaults.use, baseURL: 'http://127.0.0.1:4180', reducedMotion: 'reduce' },
+  use: { ...browserDefaults.use, baseURL, reducedMotion: 'reduce' },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1280, height: 900 } } },
     ...[
@@ -18,8 +22,8 @@ export default defineConfig({
     })),
   ],
   webServer: {
-    command: 'pnpm exec vite preview --host 127.0.0.1 --port 4180 --strictPort',
-    url: 'http://127.0.0.1:4180',
+    command: `pnpm exec vite preview --host 127.0.0.1 --port ${port} --strictPort`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
   },
 })

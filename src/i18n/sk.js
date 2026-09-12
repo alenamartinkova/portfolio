@@ -10,7 +10,7 @@ export default {
     heading: 'Hry',
     meta: {
       title: 'Hry · Alena Martinková',
-      description: 'Hry na chvíľu oddychu: Office Escape, Forklift Certified, Brick Break, Hexhaven a Deploy Friday. Vyberte si dobrodružstvo v prehliadači.',
+      description: 'Hry na chvíľu oddychu: Office Escape, Forklift Certified, Brick Break, Hexhaven, Deploy Friday a Cable Management. Vyberte si dobrodružstvo v prehliadači.',
     },
     eyebrow: 'trochu mimo hlavnej cesty',
     intro: 'Našli ste môj malý kútik na hranie. Vyberte si hru a dajte si pauzu.',
@@ -19,6 +19,11 @@ export default {
     play: 'Hrať',
     desktopOnly: 'Hrajte na počítači · klávesnica a myš',
     more: 'Ďalšie hry pribudnú čoskoro.',
+    'cable-management': {
+      category: '3D puzzle · desk zen',
+      caption: 'untangle, unplug, unwind.',
+      description: 'Piatok večer. Rozpleťte káble, nájdite miesto pre každú drobnosť a nechajte za sebou pokojnejší stôl. Tri večery, denný hlavolam a žiadny zhon.',
+    },
     'deploy-friday': {
       category: 'tower defense · on-call',
       caption: "it's 16:55. someone just merged.",
