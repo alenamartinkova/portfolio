@@ -1,4 +1,73 @@
 import { expect, test, type Page } from '@playwright/test';
+import { GAMES } from '../games/catalog.js';
+
+test('Cable Management supports selection, rotation, placement and undo on mouse and touch', async ({ page, isMobile }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/cable-management/?lang=en');
+  await expect(page.getByRole('heading', { name: 'A little less tangled.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Drawer', exact: true }).click();
+  const first = page.locator('[data-piece]').first();
+  const pieceId = await first.getAttribute('data-piece');
+  if (isMobile) await first.tap(); else await first.click();
+  await expect(page.getByRole('button', { name: 'Rotate R', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Rotate R', exact: true }).click();
+  await expect(page.locator('#moves')).toHaveText('1 moves');
+  await page.getByRole('button', { name: 'Flip F', exact: true }).click();
+  await expect(page.locator('#moves')).toHaveText('2 moves');
+  await page.getByRole('button', { name: '↶ Undo', exact: true }).click();
+  await page.getByRole('button', { name: '↶ Undo', exact: true }).click();
+  await expect(page.locator('#moves')).toHaveText('0 moves');
+  const canvas = page.locator('#desk');
+  if (isMobile) await canvas.tap(); else await canvas.click();
+  await expect(page.locator('#status')).toContainText('1 /');
+  await expect(page.locator(`[data-piece="${pieceId}"]`)).toHaveAttribute('aria-label', /Tidy/);
+  await page.getByRole('button', { name: '↶ Undo', exact: true }).click();
+  await expect(page.locator('#status')).toContainText('0 /');
+  await expect(page.locator('#moves')).toHaveText('0 moves');
+  await page.getByRole('link', { name: 'Prepnúť do slovenčiny' }).click();
+  await expect(page.getByRole('heading', { name: 'Miesto pre každú drobnosť.' })).toBeVisible();
+  await noOverflow(page);
+  expect(errors).toEqual([]);
+});
+
+test('Cable Management completes three evenings, unlocks daily and restores progress', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Full campaign is covered once; touch controls run at every viewport.');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/cable-management/?lang=en');
+  await expect(page.locator('#daily')).toBeDisabled();
+  for (let level = 0; level < 12; level++) {
+    const isDrawer = level % 4 >= 2;
+    const steps = isDrawer ? await page.locator('[data-piece]').count() : 4 + Math.floor(level / 4) * 2;
+    for (let step = 0; step < steps; step++) {
+      if (await page.locator('#success').isVisible()) break;
+      await page.getByRole('button', { name: '✧ A little help', exact: true }).click();
+    }
+    await expect(page.locator('#success')).toBeVisible();
+    if (level < 11) await page.locator('#success button').click();
+  }
+  await expect(page.getByRole('heading', { name: 'A clear desk. A clear evening.' })).toBeVisible();
+  await expect(page.locator('#daily')).toBeEnabled();
+  await page.locator('#success button').click();
+  await expect(page.locator('#level-label')).toContainText('Daily desk /');
+  const dailyLabel = await page.locator('#level-label').textContent();
+  await page.reload();
+  await expect(page.locator('#daily')).toBeEnabled();
+  await page.locator('#daily').click();
+  await expect(page.locator('#level-label')).toHaveText(dailyLabel!);
+  const drawerVisible = await page.locator('#tray-section').isVisible();
+  const steps = drawerVisible ? await page.locator('[data-piece]').count() : 8;
+  for (let step = 0; step < steps; step++) {
+    if (await page.locator('#success').isVisible()) break;
+    await page.getByRole('button', { name: '✧ A little help', exact: true }).click();
+  }
+  await expect(page.getByRole('heading', { name: 'Enough for today.' })).toBeVisible();
+  await page.reload();
+  await page.locator('#daily').click();
+  await expect(page.locator('#message')).toContainText('already tidy');
+  expect(errors).toEqual([]);
+});
 
 async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -23,7 +92,7 @@ test('portfolio and game list fit both languages', async ({ page }) => {
     await page.locator('.m-nav nav a[href="#contact"]').click();
     await expect(page.locator('#contact')).toBeInViewport();
     await page.goto(`/games/?lang=${locale}`);
-    await expect(page.locator('.games-card')).toHaveCount(4);
+    await expect(page.locator('.games-card')).toHaveCount(GAMES.length);
     await expect(page.locator('.games-card__device')).toHaveCount(2);
     await expect(page.locator('.games-card__device').first()).toContainText(
       locale === 'sk' ? 'počítači' : 'desktop',

@@ -1,7 +1,7 @@
-import { Blocks, Hexagon, Truck, DoorOpen } from 'lucide-react'
+import { Blocks, Hexagon, Truck, DoorOpen, Cable } from 'lucide-react'
 import { GAMES as catalog } from '../../games/catalog.js'
 
-const icons = { blocks: Blocks, hexagon: Hexagon, truck: Truck, door: DoorOpen }
+const icons = { blocks: Blocks, hexagon: Hexagon, truck: Truck, door: DoorOpen, cable: Cable }
 
 export const GAMES = catalog.map(game => ({
   ...game,
