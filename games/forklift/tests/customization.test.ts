@@ -9,7 +9,7 @@ it('restores truck selections across sessions', () => {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => values.set(key, value),
   });
-  const chosen = { paint: '#dc674d', rims: '#dab567', stripes: false, kit: 'utility' as const };
+  const chosen = { ...defaultStyle, finish: 'matte' as const, frame: '#bcc5c9', seat: '#85583b', roof: 'canopy' as const, paint: '#dc674d', rims: '#dab567', stripes: false, kit: 'utility' as const };
   saveStyle(chosen);
   expect(readStyle()).toEqual(chosen);
 });
@@ -27,4 +27,10 @@ it('remains usable when storage is blocked', () => {
   });
   expect(readStyle()).toEqual(defaultStyle);
   expect(() => saveStyle(defaultStyle)).not.toThrow();
+});
+
+it('migrates earlier garage saves without losing existing choices', () => {
+  const old = { paint: '#6699de', rims: '#dab567', stripes: false, kit: 'utility' };
+  expect(normalizeStyle(old)).toEqual({ ...defaultStyle, ...old });
+  expect(normalizeStyle({ ...old, finish: 'invalid', frame: '#ffffff', seat: null, roof: 'glass' })).toEqual({ ...defaultStyle, ...old });
 });

@@ -62,6 +62,7 @@ function rig(
   if (!warehouse) rigid(f.box("floor", [40, 1, 60], [0, -0.5, 0], "#808080"));
   const truck = new ForkliftController(f, definition.spawn),
     cargo = new Cargo(f, definition);
+  truck.setCargo(cargo);
   const mission = new MissionManager(cargo, truck, definition);
   const damage = new DamageSystem(
     plugin,
@@ -388,3 +389,33 @@ it.each([[320, 332], [390, 608], [844, 210]])('frames the whole mobile truck and
     }
   } finally { r.dispose(); }
 });
+
+for (const cargoKind of ['piano', 'parcels', 'generator', 'ceramics'] as const) {
+  it(`resists pushing grounded ${cargoKind}, releases when lifted and allows withdrawal`, () => {
+    const definition = levels.find(level => level.cargo === cargoKind)!;
+    const r = rig(false, definition);
+    try {
+      r.step(1);
+      r.step(1.4, ['KeyW']);
+      r.step(1, ['Space']);
+      const beforePush = r.cargo.root.position.z;
+      r.step(6, ['KeyW']);
+      const pushed = r.cargo.root.position.z - beforePush;
+      expect(pushed).toBeLessThan(1.7);
+      expect(r.truck.pushingGroundedLoad).toBe(true);
+      r.step(1, ['Space']);
+      r.step(.8, ['KeyE']);
+      expect(r.cargo.root.position.y).toBeGreaterThan(.3);
+      const beforeCarry = r.cargo.root.position.z;
+      r.step(2, ['KeyW']);
+      expect(r.truck.pushingGroundedLoad).toBe(false);
+      expect(r.cargo.root.position.z - beforeCarry).toBeGreaterThan(3);
+      r.step(1, ['Space']);
+      r.step(1, ['KeyQ']);
+      const beforeReverse = r.truck.root.position.z;
+      r.step(2, ['KeyS']);
+      expect(r.truck.root.position.z).toBeLessThan(beforeReverse - 2);
+      expect(r.cargo.root.position.y).toBeLessThan(.12);
+    } finally { r.dispose(); }
+  });
+}

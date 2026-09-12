@@ -19,6 +19,9 @@ import { readStyle, saveStyle, type TruckStyle } from './player/Customization';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
+import { renderScale } from './systems/RenderQuality';
+import { Viewport } from '@babylonjs/core/Maths/math.viewport';
 export class Game {
   engine!: AbstractEngine;
   scene!: Scene;
@@ -59,6 +62,7 @@ export class Game {
       pause: () => this.togglePause(),
       mute: () => this.audio.toggle(),
       garage: () => this.openGarage(),
+      settings: () => this.openSettings(),
       style: () => this.truckStyle,
       customize: (style) => this.customize(style),
       rotatePreview: (direction) => { this.previewAngle += direction * .5; this.previewTruck(); },
@@ -92,7 +96,7 @@ export class Game {
         true,
       );
       this.engine.renderEvenInBackground = false;
-      this.engine.setHardwareScalingLevel(Math.max(1, window.devicePixelRatio / 1.5));
+      this.updateRenderResolution();
       await this.createScene();
       window.addEventListener('resize', this.resize);
       this.appearanceObserver.observe(document.documentElement, {
@@ -108,8 +112,14 @@ export class Game {
       this.ui.error('loadError');
     }
   }
-  private resize = () => {
+  private updateRenderResolution() {
+    const rect = this.canvas.getBoundingClientRect();
+    this.engine.setHardwareScalingLevel(renderScale(rect.width, rect.height, window.devicePixelRatio));
     this.engine.resize();
+  }
+  private resize = () => {
+    this.updateRenderResolution();
+    if (this.garageOpen) this.previewTruck();
     this.renderDirty = true;
   };
   private async createScene() {
@@ -120,8 +130,14 @@ export class Game {
     this.truck = new ForkliftController(f, this.level.spawn, this.truckStyle);
     this.truck.workLight.intensity = this.level.atmosphere === 'night' ? 1.35 : .45;
     this.truck.setWorkLight(this.lightOn);
+    this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
     this.cargo = new Cargo(f, this.level);
+    this.truck.setCargo(this.cargo);
     this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
+    const antialias = new DefaultRenderingPipeline('warehouse antialiasing', false, this.scene, [this.camera.camera]);
+    antialias.imageProcessingEnabled = false;
+    antialias.samples = 4;
+    antialias.fxaaEnabled = true;
     this.effects = new Effects(f, this.scene);
     this.damage = new DamageSystem(
       plugin,
@@ -240,7 +256,9 @@ export class Game {
     this.paused = !this.paused;
     if (this.garageOpen) {
       this.garageOpen = false;
+      this.camera.camera.viewport = new Viewport(0, 0, 1, 1);
       this.garageLight.setEnabled(false);
+      this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
       this.truck.setWorkLight(this.lightOn);
       this.renderDirty = true;
     }
@@ -260,12 +278,27 @@ export class Game {
     this.renderDirty = true;
     this.scene?.executeWhenReady(() => { this.renderDirty = true; });
   }
+  private openSettings() {
+    if (!this.scene || this.restarting || this.resultShown) return;
+    this.paused = true;
+    this.input.setActive(false);
+    if (this.garageOpen) {
+      this.garageOpen = false;
+      this.camera.camera.viewport = new Viewport(0, 0, 1, 1);
+      this.garageLight.setEnabled(false);
+      this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
+      this.truck.setWorkLight(this.lightOn);
+    }
+    this.ui.settingsMenu();
+    this.renderDirty = true;
+  }
   private openGarage() {
     if (!this.scene || this.restarting || this.resultShown) return;
     this.paused = true;
     this.garageOpen = true;
     this.input.setActive(false);
     this.garageLight.setEnabled(true);
+    this.truck.model.setEnvironmentIntensity(.7);
     this.truck.workLight.setEnabled(false);
     this.previewAngle = -.8;
     this.previewTruck();
@@ -274,14 +307,18 @@ export class Game {
   }
   private previewTruck() {
     const root = this.truck.root.position;
+    const portrait = document.body.hasAttribute('data-touch-game') && window.innerWidth <= 600;
+    this.camera.camera.viewport = portrait ? new Viewport(0, .36, 1, .64) : new Viewport(0, 0, 1, 1);
+    const distance = portrait ? 8.5 : 7.3;
+    const offset = portrait ? 0 : 1.5;
     const yaw = Math.atan2(this.truck.forward.x, this.truck.forward.z) + this.previewAngle;
     this.camera.camera.position.set(
-      Math.max(-17, Math.min(17, root.x - Math.sin(yaw) * 8.5)),
-      root.y + 4.2,
-      Math.max(-20, Math.min(20, root.z - Math.cos(yaw) * 8.5)),
+      Math.max(-17, Math.min(17, root.x - Math.sin(yaw) * distance)),
+      root.y + 3.15,
+      Math.max(-20, Math.min(20, root.z - Math.cos(yaw) * distance)),
     );
     // Leave visual space for the garage controls on the right.
-    this.camera.camera.setTarget(root.add(new Vector3(Math.cos(yaw) * 1.5, 1, -Math.sin(yaw) * 1.5)));
+    this.camera.camera.setTarget(root.add(new Vector3(Math.cos(yaw) * offset, 1, -Math.sin(yaw) * offset)));
     this.renderDirty = true;
   }
   private customize(style: TruckStyle) {

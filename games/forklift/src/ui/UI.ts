@@ -1,4 +1,4 @@
-import { paints, rimColors, type TruckStyle } from "../player/Customization";
+import { paints, rimColors, finishes, frameColors, seatColors, roofs, type TruckStyle } from "../player/Customization";
 import { mountGameAppearance } from '../../../../shared/game-appearance.js';
 import type { CampaignRecord } from "../../../../shared/CampaignProgress";
 import { setText, setStyle } from '../../../../shared/dom.js';
@@ -22,15 +22,20 @@ const audioIcon = (muted: boolean) =>
   );
 const key = (k: string) => `<kbd>${k}</kbd>`;
 export class UI {
-  private mode: "loading" | "playing" | "paused" | "garage" | "results" | "error" =
+  private mode: "loading" | "playing" | "paused" | "settings" | "garage" | "results" | "error" =
     "loading";
   private muted = false;
-  private mobile = matchMedia('(any-pointer: coarse), (max-width: 760px)');
+  private settingsPage: 'general' | 'levels' = 'general';
   private settings!: HTMLElement;
   private settingsHome!: HTMLElement;
   private arrangeSettings = () => {
-    const slot = this.mode === 'paused' && this.mobile.matches
-      ? this.root.querySelector<HTMLElement>('[data-mobile-settings]') : undefined;
+    const toggle = this.root.querySelector<HTMLButtonElement>('#settings-toggle');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', String(this.mode === 'settings'));
+      toggle.disabled = ['loading', 'results', 'error'].includes(this.mode);
+    }
+    const slot = this.mode === 'settings'
+      ? this.root.querySelector<HTMLElement>('[data-settings-slot]') : undefined;
     const target = slot ?? this.settingsHome;
     if (this.settings && target && this.settings.parentElement !== target) target.prepend(this.settings);
   };
@@ -64,6 +69,7 @@ export class UI {
       pause: () => void;
       mute: () => boolean;
       garage: () => void;
+      settings: () => void;
       style: () => TruckStyle;
       customize: (style: TruckStyle) => void;
       rotatePreview: (direction: number) => void;
@@ -72,17 +78,18 @@ export class UI {
     },
   ) {
     this.render();
-    this.mobile.addEventListener('change', this.arrangeSettings);
     this.unsubscribe = onLocaleChange(() => {
       this.render();
       if (this.lastFrame) this.update(...this.lastFrame);
       if (this.mode === "playing") this.ready();
       else if (this.mode === "paused") this.paused();
+      else if (this.mode === "settings") this.settingsMenu();
       else if (this.mode === "garage") this.garage();
       else if (this.mode === "results" && this.resultStats)
         this.results(this.resultStats);
       else if (this.mode === "error") this.error(this.errorKey);
-      this.root.querySelector<HTMLAnchorElement>('[data-focus="site-language"]')?.focus();
+      if (this.mode === 'settings' && this.settingsPage === 'general')
+        this.root.querySelector<HTMLAnchorElement>('[data-focus="site-language"]')?.focus();
     });
   }
   private render() {
@@ -92,7 +99,7 @@ export class UI {
     const links = siteLinks();
     const mission = actions.level();
     const index = levels.indexOf(mission);
-    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><label class="level-picker"><span>${t("levels")}</span><select id="level" aria-label="${t("levels")}" ${this.mode === "loading" ? "disabled" : ""}>${levels.map((level, i) => `<option value="${level.id}" ${level.id === mission.id ? "selected" : ""}>${i + 1} · ${t(level.name)} ${"★".repeat(actions.record(level.id)?.stars ?? 0)}</option>`).join("")}</select></label><button class="game-nav__button" id="garage" aria-label="${t("garage")}" ${this.mode === "loading" ? "disabled" : ""}>${icon('<path d="m3 10 9-7 9 7v11H3Zm4 11V11h10v10M7 15h10M7 18h10"/>')}<span class="game-nav__button-label">${t("garage")}</span></button><button class="game-nav__icon" id="work-light" aria-pressed="${actions.light()}" aria-label="${t(actions.light() ? "lightOn" : "lightOff")}" title="${t(actions.light() ? "lightOn" : "lightOff")}">${icon('<path d="M10 6a6 6 0 0 0 0 12V6ZM14 7h7m-7 5h7m-7 5h7"/>')}</button><button class="game-nav__icon" id="audio" aria-label="${t(this.muted ? "unmute" : "mute")}" title="${t("audio")}">${audioIcon(this.muted)}</button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button><div data-game-appearance></div></div></nav></header>
+    root.innerHTML = `<header class="game-nav"><nav class="game-nav__inner" aria-label="${t("navigation")}"><div class="game-nav__trail"><a class="game-nav__mark" href="${links.home}" aria-label="Alena Martinková — ${t("portfolio")}">am<span class="game-nav__dot">.</span></a><span class="game-nav__separator" aria-hidden="true">/</span><a class="game-nav__crumb" href="${links.games}">${t("games")}</a><span class="game-nav__separator" aria-hidden="true">/</span><span class="game-nav__current" aria-current="page">Forklift Certified</span></div><div class="game-nav__actions"><button class="game-nav__button" id="settings-toggle" aria-label="${t("settings")}" aria-haspopup="dialog" aria-expanded="${this.mode === 'settings'}" ${this.mode === 'loading' ? 'disabled' : ''}>${icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/>')}<span class="game-nav__button-label">${t("settings")}</span></button><button class="game-nav__button" id="pause" aria-label="${t("pauseGame")}" title="${t("pauseTitle")}">${icon('<path d="M9 5v14M15 5v14"/>')}<span class="game-nav__button-label">${t("pause")}</span></button></div></nav></header>
     <main class="hud"><section class="mission panel"><div class="eyebrow"><span class="accent-square"></span> ${t("handling")} <span class="mission-number">${String(index + 1).padStart(2, "0")} / ${String(levels.length).padStart(2, "0")}</span></div><h1>${t(mission.name)}</h1><p>${mission.target.rack || mission.atmosphere ? t(mission.objective) : `${t("destination")} ${mission.bay}.`}</p><p class="mission-brief">${mission.mass} kg · ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator", parcels: "levelParcels" } as const)[mission.cargo])} · ${t("campaignGoal").replace("{time}", formatTime(mission.par))}</p>${mission.target.rack || mission.atmosphere ? `<p class="mission-brief shift-brief">${t(mission.briefing)}</p>` : ""}${mission.target.rack ? `<p class="shelf-height">${t("targetHeight")} <strong>${number(mission.target.height ?? 0, 2)} m</strong></p>` : ""}<p class="mission-brief" id="inspection-progress">${t("inspection")}: 0 / ${mission.inspections.length}</p><div class="mission-steps"><span class="step active"><i>1</i> ${t("pickup")}</span><b>→</b><span class="step"><i>2</i> ${t("transport")}</span><b>→</b><span class="step"><i>3</i> ${t("deliver")}</span></div><div class="location-label"><span class="live-dot"></span> ${t(({ day: "dayTag", night: "nightTag", cold: "coldTag", sunset: "sunsetTag" } as const)[mission.atmosphere ?? "day"])} <span>·</span> ${t(({ piano: "levelPiano", ceramics: "levelCeramics", generator: "levelGenerator", parcels: "levelParcels" } as const)[mission.cargo]).toUpperCase()}</div></section>
     <section class="stats panel"><div class="time-row"><span class="eyebrow">${t("shiftTime")}</span><strong id="timer">00:00</strong></div><div class="integrity-label"><span>${t("integrity")}</span><strong id="integrity">100<span>%</span></strong></div><div class="meter"><div id="integrity-bar"></div></div><div class="property-row"><span>${t("property")}</span><strong id="property">$0</strong></div></section>
 
@@ -100,16 +107,21 @@ export class UI {
     <div class="context-hint"><span class="hint-icon">↳</span><span id="hint">${t("hintDrive")}</span></div>
     <section class="dashboard panel"><div class="speed-block"><span class="eyebrow">${t("speed")}</span><div><strong id="speed">0</strong><span>km/h</span><b id="gear">N</b></div></div><div class="fork-status"><div><span>${t("forkHeight")}</span><strong id="forks">0.16 m</strong></div><div><span>${t("mastTilt")}</span><strong id="tilt">0°</strong></div></div></section></main>
     <footer class="controls"><span>${key("W")}${key("A")}${key("S")}${key("D")} ${t("drive")}</span><span>${key("Q")}${key("E")} ${t("lift")}</span><span>${key("T")}${key("G")} ${t("tilt")}</span><span>${key("SPACE")} ${t("brake")}</span><span>${key("↔")} ${t("look")}</span><span>${key("F")} ${t("workLight")}</span><span>${key("R")} ${t("retry")}</span><span>${key("ESC")} ${t("pause")}</span></footer><div id="overlay" class="overlay"><div class="modal loading"><div class="eyebrow">NORTHLINE LOGISTICS</div><h2>${t("loading")}<span class="loading-dots">…</span></h2><p>${t("loadingNote")}</p></div></div><div class="desktop-note">${t("desktop")}</div>`;
-    this.settingsHome = root.querySelector<HTMLElement>('.game-nav__actions')!;
+    this.settingsHome = document.createElement('div');
+    this.settingsHome.hidden = true;
+    root.append(this.settingsHome);
     this.settings = document.createElement('div');
-    this.settings.className = 'game-settings';
-    for (const child of Array.from(this.settingsHome.children))
-      if (child.id !== 'pause') this.settings.append(child);
-    this.settingsHome.prepend(this.settings);
+    this.settings.className = 'settings-controls';
+    this.settings.innerHTML = `<div class="settings-toggle-grid">
+      <button class="setting-tile" id="work-light" aria-pressed="${actions.light()}" aria-label="${t(actions.light() ? 'lightOn' : 'lightOff')}">${icon('<path d="M10 6a6 6 0 0 0 0 12V6ZM14 7h7m-7 5h7m-7 5h7"/>')}<span><strong>${t('workLight')}</strong><small id="light-state">${t(actions.light() ? 'settingOn' : 'settingOff')}</small></span></button>
+      <button class="setting-tile" id="audio" aria-pressed="${this.muted}" aria-label="${t(this.muted ? 'unmute' : 'mute')}"><span id="audio-icon">${audioIcon(this.muted)}</span><span><strong>${t('settingsSound')}</strong><small id="audio-state">${t(this.muted ? 'settingOff' : 'settingOn')}</small></span></button></div>
+      <button class="setting-tile setting-garage" id="garage" ${this.mode === 'loading' ? 'disabled' : ''}>${icon('<path d="m3 10 9-7 9 7v11H3Zm4 11V11h10v10M7 15h10M7 18h10"/>')}<span><strong>${t('garage')}</strong><small>${t('settingsGarageNote')}</small></span><b aria-hidden="true">↗</b></button>
+      <div class="settings-appearance"><span>${t('settingsAppearance')}</span><div data-game-appearance></div></div>`;
+    this.settingsHome.append(this.settings);
     const goal = document.createElement('div');
     goal.className = 'mobile-goal';
     goal.innerHTML = `<span>${t(mission.name)}</span><strong>${t('mobileTarget').replace('{target}', mission.target.rack ?? mission.bay)}</strong>`;
-    this.settingsHome.before(goal);
+    root.querySelector('.game-nav__actions')!.before(goal);
     const get = (id: string) => root.querySelector<HTMLElement>("#" + id)!;
     this.timer = get("timer");
     this.integrity = get("integrity");
@@ -126,14 +138,18 @@ export class UI {
     this.mapKey = "";
     this.inspectionProgress = get("inspection-progress");
     this.cleanupAppearance = mountGameAppearance(root.querySelector<HTMLElement>('[data-game-appearance]')!, { locale: getLocale(), onLocaleChange: setLocale });
-    (get("level") as HTMLSelectElement).onchange = () =>
-      actions.selectLevel((get("level") as HTMLSelectElement).value);
+    get('settings-toggle').onclick = () => {
+      if (this.mode === 'settings') actions.pause();
+      else { this.settingsPage = 'general'; actions.settings(); }
+    };
     get("pause").onclick = () => actions.pause();
     get("garage").onclick = () => actions.garage();
     get("work-light").onclick = () => actions.toggleLight();
     get("audio").onclick = () => {
       const muted = (this.muted = actions.mute());
-      get("audio").innerHTML = audioIcon(muted);
+      get("audio-icon").innerHTML = audioIcon(muted);
+      get("audio-state").textContent = t(muted ? "settingOff" : "settingOn");
+      get("audio").setAttribute("aria-pressed", String(muted));
       get("audio").setAttribute("aria-label", muted ? t("unmute") : t("mute"));
     };
   }
@@ -147,7 +163,6 @@ export class UI {
   dispose() {
     this.cleanupAppearance?.();
     this.unsubscribe();
-    this.mobile.removeEventListener('change', this.arrangeSettings);
   }
   ready() {
     this.mode = "playing";
@@ -155,7 +170,8 @@ export class UI {
     delete this.root.dataset.garage;
     this.overlay.className = "overlay";
     this.overlay.hidden = true;
-    this.root.querySelector<HTMLSelectElement>("#level")!.disabled = false;
+    this.root.querySelector<HTMLButtonElement>("#settings-toggle")!.disabled = false;
+    this.root.querySelector("#settings-toggle")!.setAttribute("aria-expanded", "false");
     this.root.querySelector<HTMLButtonElement>("#garage")!.disabled = false;
   }
   update(
@@ -257,6 +273,7 @@ export class UI {
     button.setAttribute("aria-pressed", String(this.actions.light()));
     button.setAttribute("aria-label", t(this.actions.light() ? "lightOn" : "lightOff"));
     button.title = t(this.actions.light() ? "lightOn" : "lightOff");
+    this.root.querySelector("#light-state")!.textContent = t(this.actions.light() ? "settingOn" : "settingOff");
   }
   garage() {
     this.mode = "garage";
@@ -265,13 +282,17 @@ export class UI {
     this.overlay.hidden = false;
     this.overlay.className = "overlay garage-overlay";
     const style = this.actions.style();
+    const select = (field: 'finish' | 'frame' | 'seat' | 'roof', options: readonly { value: string; name: TextKey }[]) =>
+      `<label class="garage-equipment">${t(field)}<select data-style="${field}">${options.map(option => `<option value="${option.value}" ${style[field] === option.value ? 'selected' : ''}>${t(option.name)}</option>`).join('')}</select></label>`;
     this.overlay.innerHTML = `<div class="garage-preview-caption"><div class="eyebrow">NORTHLINE / 07</div><strong>${t("garageTitle")}</strong><div class="preview-orbit"><button id="preview-left" aria-label="${t("look")} ←">↶</button><span>360°</span><button id="preview-right" aria-label="${t("look")} →">↷</button></div></div>
       <section class="modal garage-modal" role="dialog" aria-labelledby="garage-heading"><div class="eyebrow">NORTHLINE CUSTOMS</div><h2 id="garage-heading">${t("garage")}</h2><p>${t("garageNote")}</p>
-      <fieldset><legend>${t("paint")}</legend><div class="paint-options">${paints.map(p => `<button class="paint-swatch" data-paint="${p.color}" style="--swatch:${p.color}" aria-label="${t(p.name)}" title="${t(p.name)}" aria-pressed="${style.paint === p.color}"><span>✓</span></button>`).join("")}</div><div class="paint-name" id="paint-name">${t(paints.find(p => p.color === style.paint)!.name)}</div></fieldset>
-      <fieldset><legend>${t("rims")}</legend><div class="rim-options">${rimColors.map((color, i) => `<button data-rim="${color}" aria-pressed="${style.rims === color}"><i style="background:${color}"></i>${t((["rimSteel", "rimBrass", "rimDark"] as const)[i])}</button>`).join("")}</div></fieldset>
+      <details class="garage-section" open><summary>${t("customBody")}</summary><fieldset><legend>${t("paint")}</legend><div class="paint-options">${paints.map(p => `<button class="paint-swatch" data-paint="${p.color}" style="--swatch:${p.color}" aria-label="${t(p.name)}" title="${t(p.name)}" aria-pressed="${style.paint === p.color}"><span>✓</span></button>`).join("")}</div><div class="paint-name" id="paint-name">${t(paints.find(p => p.color === style.paint)!.name)}</div></fieldset>
+      ${select("finish", finishes)}</details>
+      <details class="garage-section"><summary>${t("customCab")}</summary>${select("frame", frameColors)}${select("seat", seatColors)}${select("roof", roofs)}</details>
+      <details class="garage-section"><summary>${t("customEquipment")}</summary><fieldset><legend>${t("rims")}</legend><div class="rim-options">${rimColors.map((color, i) => `<button data-rim="${color}" aria-pressed="${style.rims === color}"><i style="background:${color}"></i>${t((["rimSteel", "rimBrass", "rimDark"] as const)[i])}</button>`).join("")}</div></fieldset>
       <label class="garage-check"><span>${t("stripes")}</span><input id="safety-stripes" type="checkbox" ${style.stripes ? "checked" : ""}></label>
       <label class="garage-equipment">${t("equipment")}<select id="equipment"><option value="standard" ${style.kit === "standard" ? "selected" : ""}>${t("kitStandard")}</option><option value="utility" ${style.kit === "utility" ? "selected" : ""}>${t("kitUtility")}</option></select></label>
-      <button class="primary" id="garage-done">${t("garageDone")} <span>→</span></button></section>`;
+      </details><button class="primary" id="garage-done">${t("garageDone")} <span>→</span></button></section>`;
     const update = (patch: Partial<TruckStyle>) => {
       this.actions.customize({ ...this.actions.style(), ...patch });
       const current = this.actions.style();
@@ -281,6 +302,9 @@ export class UI {
     };
     this.overlay.querySelectorAll<HTMLButtonElement>('[data-paint]').forEach(b => { b.onclick = () => update({ paint: b.dataset.paint! }); });
     this.overlay.querySelectorAll<HTMLButtonElement>('[data-rim]').forEach(b => { b.onclick = () => update({ rims: b.dataset.rim! }); });
+    this.overlay.querySelectorAll<HTMLSelectElement>('[data-style]').forEach(select => {
+      select.onchange = () => update({ [select.dataset.style!]: select.value });
+    });
     const stripes = this.overlay.querySelector<HTMLInputElement>('#safety-stripes')!;
     stripes.onchange = () => update({ stripes: stripes.checked });
     const kit = this.overlay.querySelector<HTMLSelectElement>('#equipment')!;
@@ -289,6 +313,49 @@ export class UI {
     this.overlay.querySelector<HTMLButtonElement>('#preview-right')!.onclick = () => this.actions.rotatePreview(1);
     this.overlay.querySelector<HTMLButtonElement>('#garage-done')!.onclick = () => this.actions.pause();
     this.overlay.querySelector<HTMLButtonElement>('[data-paint][aria-pressed="true"]')!.focus();
+  }
+  settingsMenu() {
+    // Keep the appearance controls mounted while switching pages or other overlays.
+    this.settingsHome.append(this.settings);
+    this.mode = 'settings';
+    delete this.root.dataset.garage;
+    this.overlay.className = 'overlay settings-overlay';
+    this.overlay.hidden = false;
+    this.root.querySelector('#settings-toggle')!.setAttribute('aria-expanded', 'true');
+    const mission = this.actions.level();
+    const levelPage = this.settingsPage === 'levels';
+    this.overlay.innerHTML = `<section class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
+      <header class="settings-heading"><div><div class="eyebrow">NORTHLINE / ${t('pause')}</div><h2 id="settings-heading">${t(levelPage ? 'chooseLevel' : 'settings')}</h2></div><button class="settings-close" aria-label="${t('settingsResume')}">×</button></header>
+      <div class="settings-body">${levelPage ? `<button class="settings-back">← ${t('settingsBack')}</button><p class="settings-note">${t('chooseLevelNote')}</p><div class="level-grid">${levels.map((level, i) => `<button class="level-card" data-level="${level.id}" aria-pressed="${level.id === mission.id}"><span class="level-number">${String(i + 1).padStart(2, '0')}</span><span><strong>${t(level.name)}</strong><small>${t(({piano:'levelPiano',ceramics:'levelCeramics',generator:'levelGenerator',parcels:'levelParcels'} as const)[level.cargo])} · ${formatTime(level.par)}${this.actions.record(level.id)?.stars ? ' · ' + '★'.repeat(this.actions.record(level.id)!.stars) : ''}</small></span>${level.id === mission.id ? '<b aria-hidden="true">✓</b>' : ''}</button>`).join('')}</div>` : `<button class="settings-mission" id="choose-level"><span class="level-number">${String(levels.indexOf(mission) + 1).padStart(2, '0')}</span><span><small>${t('settingsCurrentLevel')}</small><strong>${t(mission.name)}</strong></span><span class="settings-change">${t('settingsChange')} →</span></button><div data-settings-slot></div>`}</div>
+      <footer class="settings-footer"><button class="primary" id="settings-resume">${t('settingsResume')} <span>↵</span></button></footer></section>`;
+    this.arrangeSettings();
+    const close = () => this.actions.pause();
+    this.overlay.querySelector<HTMLButtonElement>('.settings-close')!.onclick = close;
+    this.overlay.querySelector<HTMLButtonElement>('#settings-resume')!.onclick = close;
+    if (levelPage) {
+      this.overlay.querySelector<HTMLButtonElement>('.settings-back')!.onclick = () => { this.settingsPage = 'general'; this.settingsMenu(); };
+      this.overlay.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button => {
+        button.onclick = () => this.actions.selectLevel(button.dataset.level!);
+      });
+    } else {
+      this.overlay.querySelector<HTMLButtonElement>('#choose-level')!.onclick = () => { this.settingsPage = 'levels'; this.settingsMenu(); };
+    }
+    const handleSettingsKey = (event: KeyboardEvent) => {
+      if (this.mode !== 'settings') return;
+      if (event.key === 'Escape') {
+        if (this.overlay.querySelector('.m-color-panel:not([hidden])')) return;
+        event.preventDefault(); event.stopPropagation(); close();
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(this.overlay.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], select, input')).filter(el => el.getClientRects().length > 0);
+      const first = focusable[0], last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    this.overlay.querySelector('section')!.addEventListener('keydown', handleSettingsKey, true);
+    this.overlay.onkeydown = event => { if (this.mode === 'settings') event.stopPropagation(); };
+    this.overlay.onkeyup = event => { if (this.mode === 'settings') event.stopPropagation(); };
+    this.overlay.querySelector<HTMLButtonElement>(levelPage ? '.settings-back' : '#choose-level')!.focus();
   }
   private mobileMenu() {
     const mission = this.actions.level();
@@ -306,7 +373,7 @@ export class UI {
     if (mission.inspections.length) rows.push([t('inspection'), `${frame[8] ?? 0} / ${mission.inspections.length}`]);
     return `<div class="mobile-menu-content"><h3>${t(mission.name)}</h3><p>${t(mission.objective)}</p><p>${t(mission.briefing)}</p><p>${t(hint)}</p>
       <dl>${rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>
-      <p class="mobile-instructions">${t('mobileInstructions')}</p><div data-mobile-settings></div></div>`;
+      <p class="mobile-instructions">${t('mobileInstructions')}</p></div>`;
   }
   paused() {
     // Restore controls before replacing a previous pause menu (for example after a locale change).
@@ -315,12 +382,13 @@ export class UI {
     delete this.root.dataset.garage;
     this.overlay.className = "overlay";
     this.overlay.hidden = false;
-    this.overlay.innerHTML = `<div class="modal"><div class="eyebrow">${t("breather")}</div><h2>${t("pausedHeading")}</h2><p>${t("pausedNote")}</p><button class="primary" id="resume">${t("resume")} <span>↵</span></button><button class="secondary" id="retry">${t("fresh")}</button>${this.mobileMenu()}</div>`;
+    this.overlay.innerHTML = `<div class="modal"><div class="eyebrow">${t("breather")}</div><h2>${t("pausedHeading")}</h2><p>${t("pausedNote")}</p><button class="primary" id="resume">${t("resume")} <span>↵</span></button><button class="secondary" id="retry">${t("fresh")}</button><button class="secondary" id="pause-settings">${t("settings")}</button>${this.mobileMenu()}</div>`;
     this.arrangeSettings();
     this.overlay.querySelector<HTMLButtonElement>("#resume")!.onclick = () =>
       this.actions.pause();
     this.overlay.querySelector<HTMLButtonElement>("#retry")!.onclick = () =>
       this.actions.retry();
+    this.overlay.querySelector<HTMLButtonElement>("#pause-settings")!.onclick = () => { this.settingsPage = "general"; this.actions.settings(); };
     this.overlay.querySelector<HTMLButtonElement>("#resume")!.focus();
   }
   results(stats: RunStats) {

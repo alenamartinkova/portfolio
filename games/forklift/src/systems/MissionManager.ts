@@ -71,6 +71,8 @@ export class MissionManager {
       this.stage = 3;
     } else if (this.cargo.root.getDirection(Vector3.Up()).y < 0.7) {
       this.hint = "hintTipped";
+    } else if (this.truck.pushingGroundedLoad) {
+      this.hint = "hintDragging";
     } else if (!this.inspections.complete && this.pickedUp && p.y > .2 && distance < 4.8) {
       this.stage = 1;
       this.hint = "inspectionHint";

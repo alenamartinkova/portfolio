@@ -2,7 +2,7 @@
 
 A desktop and mobile browser physics game: deliver a piano, fragile ceramics, parcels, and a heavy generator across fourteen warehouse layouts, then beat your score. Built with TypeScript, Babylon.js, Havok Physics, and Vite. No backend or accounts.
 
-On touch devices, drive and steer with the left joystick. Hold the right buttons to raise/lower the forks, tilt the mast or brake, and drag the scene to look around. The driving view sits above the controls, with a wider camera view that keeps the truck visible. Only the mission target and pause remain in the header; mission details, stats, garage, work light, level selection and settings are in the pause menu. Fork height and tilt appear while operating the forks. Multiple fingers can drive, operate the forks and move the camera together. Touch controls reset on pause, lost focus, cancelled touches and rotation.
+On touch devices, drive and steer with the left joystick. Hold the right buttons to raise/lower the forks, tilt the mast or brake, and drag the scene to look around. The driving view sits above the controls, with a wider camera view that keeps the truck visible. The header keeps the mission target, Settings and Pause. Settings contains level selection, garage, work light, sound, theme, accent color and language; mission details and stats are in the pause menu. Fork height and tilt appear while operating the forks. Multiple fingers can drive, operate the forks and move the camera together. Touch controls reset on pause, lost focus, cancelled touches and rotation.
 
 ## Install and run
 
@@ -29,7 +29,7 @@ Serve built output over HTTP(S); opening index.html as a file will not load ES m
 
 ## Levels
 
-Choose any level from the header, or from the pause menu on mobile. Completing a delivery offers **Next level**; **R** and **Another shift** retry the current level. All levels are available immediately. The selected level is shareable through `?level=ceramics-a&lang=sk`; unknown IDs fall back to the piano mission.
+Open **Settings → Current level** to choose from mission cards with cargo, target time and earned stars. Settings pauses the shift, supports keyboard navigation and Escape, and is also accessible from the pause menu. Completing a delivery offers **Next level**; **R** and **Another shift** retry the current level. All levels are available immediately. The selected level is shareable through `?level=ceramics-a&lang=sk`; unknown IDs fall back to the piano mission.
 
 | Level | Cargo | Route and challenge |
 | --- | --- | --- |
@@ -78,9 +78,9 @@ Drive the low forks into the pallet openings. Raise the load just off the floor,
 
 ## Garage and models
 
-The Garage button opens a paused live view of the current truck. Choose six body colors, three wheel finishes, optional safety stripes, and either classic equipment or a utility kit with a tool case, extinguisher and roof lights. Changes apply immediately and persist across missions and reloads under `forklift:truck-style:v1`. Invalid or unavailable storage falls back to a usable default/session selection. Appearance does not alter the collision shapes, mass or handling.
+**Settings → Garage** opens a paused live view of the current truck. Choose twelve body colors, gloss/satin/matte paint, three cab-frame colors, three upholstery colors, an open guard or a solid canopy, three wheel finishes, optional safety stripes, and either classic equipment or a utility kit with a tool case, extinguisher and roof lights. Collapsible sections keep the options manageable. On phones the garage uses a bottom sheet with the rotatable truck preview above it. Changes apply immediately and persist across missions and reloads under `forklift:truck-style:v1`. Earlier garage saves keep their original choices and receive defaults for the new options. Invalid or unavailable storage falls back to a usable default/session selection. Appearance does not alter the collision shapes, mass or handling.
 
-The procedural truck includes beveled body panels, tire treads, wheel bolts, animated hydraulic pistons, mirrors, steps and dashboard controls. Ceramics use sculpted lathe profiles; parcel stacks have tape, straps and barcodes. No external model downloads or new engine are required.
+The truck uses smooth rounded body panels, curved solid-rubber tires with tread channels, dished alloy wheels, a contoured seat, an open overhead guard and forged tapered forks. PBR enamel, rubber, vinyl and steel use a small generated warehouse reflection map; its intensity follows night/garage lighting. The rear wheels steer, the wheels and steering wheel rotate, and the mast and hydraulic pistons animate with the lift controls. Hoses, chains, mirrors, pedals, lamps and grille details complete the assembly. Static details are batched by material within their moving or optional parent to limit draw calls. Ceramics use sculpted lathe profiles; parcel stacks have tape, straps and barcodes. The warehouse uses rounded rack/carton edges, tubular bollards, cross-braced racks, wall cladding and clerestory windows. Concrete, wood and cardboard use subtle generated mipmapped surface maps; PBR colors are converted to linear space before lighting. Native display density (up to 2×, bounded to five million pixels), 4× MSAA and FXAA reduce jagged edges, with mipmapping and anisotropic filtering on signs. No external model downloads or new engine are required.
 
 ## Architecture
 
@@ -90,9 +90,14 @@ The procedural truck includes beveled body panels, tire treads, wheel bolts, ani
 - `world/Cargo.ts`: piano, ceramic shipping frame, and generator visuals with compound rigid bodies sharing usable pallet openings.
 - `missions/levels.ts`: typed mission catalogue with spawn/pickup positions, destination, cargo mass/fragility, and layout props.
 - `player/ForkliftController.ts`: dynamic chassis, responsive impulse driving, independently animated physical forks, lift/tilt, wheel visuals.
+- `player/TruckModel.ts`: visual-only vehicle assembly, PBR materials, local reflections, geometry batching and wheel/mast animations.
+- `player/TruckGeometry.ts`: smooth rounded solids and extruded forged fork profiles.
 - `player/Customization.ts`: validated truck appearance and resilient local persistence.
 - `player/FollowCamera.ts`: damped follow/orbit, wall avoidance and collision shake.
 - `systems/Physics.ts`: cached Havok initialization, compound rigid bodies and collision filters.
+- `systems/LoadResistance.ts`: feeds grounded horizontal cargo contact back to the chassis, limiting pushing to a mass-dependent crawl while leaving insertion, lifting and withdrawal usable.
+- `systems/RenderQuality.ts`: display-density correction with a bounded render-buffer budget.
+- `world/SurfaceMaterials.ts`: cached PBR surfaces and filtered procedural grain at a consistent physical scale.
 - `systems/Input.ts`: keyboard, mouse and focus handling.
 - `systems/MissionManager.ts`: mission definition, contextual state, unloading validation.
 - `systems/DamageSystem.ts`: collision damage and displaced-property penalties.
@@ -107,7 +112,7 @@ The `MissionDefinition` is the seam for more missions/layouts. Cargo is independ
 
 ## Physics and scoring
 
-Havok steps at 120 Hz. The 1,800 kg chassis uses ground friction, acceleration impulses, yaw steering, and locked roll/pitch for predictable arcade driving. This is not a suspension/tire simulator. Animated fork colliders transfer forces to loads of 180–540 kg without parenting, attaching, or snapping cargo. Separate collision groups stop the carriage hitting its own chassis. The wooden pallet has real gaps for both tines.
+Havok steps at 120 Hz. The 1,800 kg chassis uses ground friction, acceleration impulses, yaw steering, and locked roll/pitch for predictable arcade driving. This is not a suspension/tire simulator. Animated fork colliders transfer forces to loads of 180–540 kg without parenting, attaching, or snapping cargo. Separate collision groups stop the carriage hitting its own chassis. The wooden pallet has real gaps for both tines. Horizontal contact with grounded cargo now slows the truck to a scraping crawl and damps the sliding load. Real lift clearance releases that resistance; inserting forks without contact and reversing out are not penalized. This prevents the animated carriage from bypassing ground resistance.
 
 Cargo damage uses impact impulse normalized by cargo mass, relative speed, and cargo-specific fragility. Warehouse penalties are charged once per displaced prop. A hard hit activates an entire rack as a group of rigid bodies; its decks, beams, posts, and boxes can fall. Completion awards `max(1000, 10000 − seconds × 40)`, subtracts 65 points per lost integrity percentage and the property penalty, and adds 1,500 for a near-pristine collision-free run. Incomplete deliveries score zero; total scores never go negative.
 
@@ -118,7 +123,7 @@ Cargo damage uses impact impulse normalized by cargo mass, relative speed, and c
 - Arcade chassis stabilization intentionally prevents rollovers. Forks are animated rigid bodies rather than a fully constrained hydraulic assembly; extreme trapping can exert large forces.
 - No backend, leaderboard, daily challenge, ghost, networking, or saved physical runs.
 - Restart rebuilds the small scene while reusing Havok WASM. It should take well under a second after assets are loaded, depending on hardware.
-- Procedural low-poly art and synthesized sound. No external model or audio assets are required.
+- The truck, cargo and warehouse have procedural geometry; key surfaces use PBR materials and generated grain rather than scanned assets. Audio is synthesized. No external model or audio assets are required.
 - Very aggressive handling may overturn the piano; retry is always available. A zero-integrity piano can still be delivered for a heavily penalized score.
 - Browser/GPU support varies. WebGL is the compatibility path; WebGPU requires a working browser adapter.
 
@@ -131,3 +136,5 @@ Browser playtesting covered successful full deliveries on WebGL and WebGPU, the 
 Campaign tests cover all fourteen pickup layouts, full clean Havok deliveries for the original three missions and the new quality-control mission, ordered inspection holds, invalid scan conditions, bilingual content and isolated persistent records.
 
 Night/shelf integration tests complete all four new missions using ordinary controller inputs and actual Havok collisions, including clean shelf placement and withdrawal at both heights. Delivery rule tests reject the wrong height, moving/tipped loads, uncleared forks, and off-center placement. Existing ground-delivery routes remain covered.
+
+Rendering tests cover native/retina pixel density and the large-screen pixel budget. Garage tests cover new choices and migration of earlier saves. Havok regression tests compare grounded pushing, lifting/carrying and reverse withdrawal for piano, ceramics, parcels and generator loads.

@@ -30,12 +30,13 @@ export class Warehouse {
     const cold = definition.atmosphere === "cold";
     const sunset = definition.atmosphere === "sunset";
     scene.clearColor = Color4.FromHexString("#95b9caff");
-    scene.ambientColor = new Color3(0.2, 0.24, 0.28);
+    scene.ambientColor = new Color3(0.12, 0.14, 0.16);
+    scene.environmentIntensity = night ? .15 : 1;
     scene.fogMode = Scene.FOGMODE_EXP2;
     scene.fogDensity = 0.008;
     scene.fogColor = new Color3(0.55, 0.68, 0.73);
     const hemi = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
-    hemi.intensity = 0.72;
+    hemi.intensity = 0.6;
     hemi.groundColor = Color3.FromHexString("#687679");
     const sun = new DirectionalLight(
       "skylight",
@@ -68,7 +69,7 @@ export class Warehouse {
       sun.diffuse = Color3.FromHexString("#ffd098");
       sun.intensity = 1.3;
     }
-    this.shadow = new ShadowGenerator(2048, sun);
+    this.shadow = new ShadowGenerator(scene.getEngine().getRenderWidth() > 1600 ? 4096 : 2048, sun);
     this.shadow.usePercentageCloserFiltering = true;
     this.shadow.filteringQuality = ShadowGenerator.QUALITY_HIGH;
     this.shadow.blurKernel = 24;
@@ -79,9 +80,9 @@ export class Warehouse {
     sun.shadowMaxZ = 65;
     this.solid("concrete floor", [36, 1, 42], [0, -0.5, 0], "#8e9b9c");
     for (let x = -16; x <= 16; x += 4)
-      f.box("concrete joint", [0.022, 0.005, 42], [x, 0.006, 0], "#7e8e91");
+      f.box("concrete joint", [0.014, 0.003, 42], [x, 0.006, 0], "#899395");
     for (let z = -18; z <= 18; z += 4)
-      f.box("concrete joint", [36, 0.005, 0.022], [0, 0.006, z], "#7e8e91");
+      f.box("concrete joint", [36, 0.003, 0.014], [0, 0.006, z], "#899395");
     this.solid("back wall", [36, 8, 0.5], [0, 4, 21], "#bac4c5", true);
     this.solid("left wall", [0.5, 8, 42], [-18, 4, 0], "#a2b5bd", true);
     this.solid("right wall", [0.5, 8, 42], [18, 4, 0], "#a2b5bd", true);
@@ -141,6 +142,7 @@ export class Warehouse {
     );
     if (definition.target.rack) this.deliveryRack();
     this.atmosphereDetails();
+    this.architecturalDetails();
     definition.inspections.forEach(([x, z], i) => {
       this.zone(x, z, 5, 5, "#c49a51", () => `${i + 1} / ${t("inspection")}`);
       f.label(() => `${t("inspection")} ${i + 1}`, 3, .5, [x, 3.4, z], "#fff0be", "#625030");
@@ -323,9 +325,33 @@ export class Warehouse {
       }
     }
   }
+  private architecturalDetails() {
+    const f = this.f;
+    // Layered wall cladding, concrete skirting and upper glazing give the shell depth.
+    for (const x of [-17.68, 17.68]) {
+      f.box("wall plinth", [.16, .85, 41], [x, .425, 0], "#8b9290");
+      for (let z = -18; z <= 18; z += 3) {
+        f.box("wall panel joint", [.045, 6.4, .035], [x, 4.2, z], "#87999e");
+        if (this.definition.atmosphere !== 'cold' && this.definition.atmosphere !== 'sunset') {
+          f.beveledBox("clerestory window frame", [.12, 1.25, 2.5], [x, 6.55, z], "#52656c");
+          const glass = f.box("clerestory glazing", [.13, 1.06, 2.29], [x - Math.sign(x) * .05, 6.55, z], "#b5cbd0");
+          glass.material = f.mat(this.definition.atmosphere === 'night' ? "#253d55" : "#c4dcdf", this.definition.atmosphere !== 'night');
+          f.box("window center mullion", [.15, 1.12, .035], [x - Math.sign(x) * .09, 6.55, z], "#64767c");
+        }
+      }
+    }
+    f.box("back wall plinth", [35.4, .85, .15], [0, .425, 20.67], "#8b9290");
+    for (const x of [-15, -3, 3, 15]) {
+      const pipe = f.cylinder("wall service pipe", .08, 6.8, [x, 3.4, 20.6], "#77888c");
+      for (const y of [-2, 0, 2]) f.box("pipe bracket", [.19, .06, .12], [0, y, .03], "#52636c", pipe);
+    }
+  }
   private bollard(x: number, z: number) {
-    this.solid("bollard", [0.28, 1.2, 0.28], [x, 0.6, z], "#ebbd54");
-    this.f.box("bollard band", [0.29, 0.2, 0.29], [x, 0.8, z], "#34434c");
+    const collider = this.solid("bollard collider", [0.28, 1.2, 0.28], [x, 0.6, z], "#ebbd54");
+    collider.isVisible = false;
+    this.f.cylinder("round safety bollard", .28, 1.2, [x, .6, z], "#dfac40");
+    this.f.cylinder("bollard reflective band", .286, .18, [x, .82, z], "#34434c");
+    this.f.beveledBox("bollard base plate", [.44, .065, .44], [x, .033, z], "#4d565b");
   }
   private barrier(x: number, z: number) {
     this.solid("safety rail", [2.6, 0.18, 0.18], [x, 0.85, z], "#f0b848");
@@ -335,14 +361,19 @@ export class Warehouse {
     const f = this.f;
     const firstPart = this.property.length;
     for (const dx of [-2.15, 2.15])
-      for (const dz of [-0.9, 0.9])
-        this.solid(
+      for (const dz of [-0.9, 0.9]) {
+        const upright = this.solid(
           "rack upright",
           [0.14, 4.8, 0.14],
           [x + dx, 2.4, z + dz],
           "#345469",
           true,
         );
+        f.beveledBox("rack foot plate", [.34, .06, .32], [0, -2.37, 0], "#60757c", upright);
+        f.beveledBox("rack foot protector", [.21, .45, .21], [0, -2.14, 0], "#d8a849", upright);
+        for (const h of [-1.45, -.75, -.05, .65, 1.35, 2.05])
+          f.box("rack mounting slot", [.032, .065, .006], [0, h, -.072], "#1e343c", upright);
+      }
     for (const y of [0.2, 2.15, 4.1]) {
       const deck = this.solid(
         "rack deck",
@@ -358,6 +389,11 @@ export class Warehouse {
           "#cf7c3e",
           deck,
         );
+    }
+    const braceParent = this.property[firstPart].mesh;
+    for (const dx of [-2.15, 2.15]) for (const y of [1.2, 3.15]) for (const sign of [-1, 1]) {
+      const brace = f.cylinder("rack diagonal brace", .045, Math.hypot(1.8, 1.65), [x + dx - braceParent.position.x, y - braceParent.position.y, z - braceParent.position.z], "#71868b", braceParent);
+      brace.rotation.x = sign * Math.atan2(1.8, 1.65);
     }
     for (const y of [0.8, 2.8])
       for (const dx of [-1.35, 0, 1.35]) this.crate(x + dx, y, z, 1.05);
@@ -376,6 +412,8 @@ export class Warehouse {
   }
   private crate(x: number, y: number, z: number, size: number) {
     const m = this.f.box("carton", [size, size, size], [x, y, z], "#bc966c");
+    this.f.box("carton top seam", [size * .93, .004, .012], [0, size / 2 + .003, 0], "#8b6c49", m);
+    this.f.box("carton folded flap", [size * .46, .006, size * .93], [-size * .24, size / 2 - .001, 0], "#c49e72", m);
     rigid(m, 12);
     this.property.push({ mesh: m, value: 85, start: m.position.clone() });
     this.f.box(
