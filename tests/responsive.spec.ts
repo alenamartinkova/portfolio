@@ -73,6 +73,64 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
+test('every game shares portfolio typography and theme colors', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'All six engines are compared on desktop; mobile layouts have separate coverage.');
+  for (const [theme, accent] of [['dark', 'violet'], ['light', 'cyan']]) {
+    const preferences = `lang=en&theme=${theme}&accent=${accent}`;
+    await page.goto('/?lang=en');
+    await expect(page.locator('.m-nav .m-brand')).toBeVisible();
+    const themeToggle = page.getByRole('button', { name: `Switch to ${theme} theme`, exact: true });
+    if (await themeToggle.isVisible()) await themeToggle.click();
+    await page.getByRole('button', { name: 'Accent color', exact: true }).click();
+    await page.getByRole('button', { name: accent === 'cyan' ? 'Cyan' : 'Violet', exact: true }).click();
+    await page.getByRole('button', { name: 'Accent color', exact: true }).click();
+    const reference = await page.evaluate(() => ({
+      background: getComputedStyle(document.documentElement).backgroundColor,
+      headingFont: getComputedStyle(document.querySelector('h1')!).fontFamily,
+      brandFont: getComputedStyle(document.querySelector('.m-nav .m-brand')!).fontFamily,
+      accent: getComputedStyle(document.querySelector('.m-nav .m-brand span')!).color,
+    }));
+    for (const game of GAMES) {
+      await page.goto(`/${game.id}/?${preferences}&webgl`);
+      await expect(page.locator('.game-nav__mark')).toBeVisible({ timeout: 60000 });
+      const heading = page.locator('h1:visible, h2:visible').first();
+      await expect(heading).toHaveCSS('font-family', reference.headingFont);
+      await expect(page.locator('.game-nav__mark')).toHaveCSS('font-family', reference.brandFont);
+      await expect(page.locator('.game-nav__dot')).toHaveCSS('color', reference.accent);
+      if (game.id === 'cable-management' || game.id === 'deploy-friday') {
+        const background = await page.evaluate(() => {
+          const body = getComputedStyle(document.body).backgroundColor;
+          return body === 'rgba(0, 0, 0, 0)' ? getComputedStyle(document.documentElement).backgroundColor : body;
+        });
+        expect(background).toBe(reference.background);
+        const action = game.id === 'cable-management'
+          ? page.locator('.cm-modes button[aria-pressed="true"]')
+          : page.locator('.stage-overlay .primary');
+        await expect(action).toHaveCSS('background-color', reference.accent);
+      }
+      await noOverflow(page);
+    }
+  }
+});
+
+test('Deploy Friday navigation stays separate and game controls follow appearance changes', async ({ page }) => {
+  await page.goto('/deploy-friday/?lang=en&theme=dark&accent=violet');
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  const trail = await page.locator('.game-nav__trail').boundingBox();
+  const actions = await page.locator('.game-nav__actions').boundingBox();
+  expect(trail && actions && (trail.x + trail.width <= actions.x + 1 || trail.y + trail.height <= actions.y + 1)).toBe(true);
+  await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
+  await page.getByRole('button', { name: 'Accent color', exact: true }).click();
+  await page.getByRole('button', { name: 'Cyan', exact: true }).click();
+  await page.getByRole('button', { name: 'Accent color', exact: true }).click();
+  const accent = await page.locator('.game-nav__dot').evaluate(element => getComputedStyle(element).color);
+  await expect(page.locator('.stage-overlay .primary')).toHaveCSS('background-color', accent);
+  await page.getByRole('button', { name: 'Start the first wave ↗', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(page.locator('.paused-overlay')).toBeVisible();
+  await noOverflow(page);
+});
+
 test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status === 'passed')
     await page.screenshot({ path: testInfo.outputPath('verified.png'), animations: 'disabled' });

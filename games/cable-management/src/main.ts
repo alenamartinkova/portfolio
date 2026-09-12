@@ -2,6 +2,7 @@ import {
   initializeAppearance,
   readPreference,
   storePreference,
+  siteLinks,
 } from '../../../shared/appearance.js';
 import { mountGameAppearance } from '../../../shared/game-appearance.js';
 import { browserStorage } from '../../../shared/CampaignProgress';
@@ -65,7 +66,11 @@ const undo: string[] = [];
 let disposeAppearance: (() => void) | undefined;
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
-  <header class="cm-header"><a class="cm-back" id="back"></a><div id="appearance"></div></header>
+  <header class="game-nav cm-header"><div class="game-nav__inner">
+    <div class="game-nav__trail"><a class="game-nav__mark" id="home" href="${siteLinks(locale).home}" aria-label="Alena Martinková">am<span class="game-nav__dot">.</span></a>
+    <span class="game-nav__separator">/</span><a class="game-nav__crumb" id="back" href="${siteLinks(locale).games}">${t.back}</a><span class="game-nav__separator">/</span><span class="game-nav__current">Cable Management</span></div>
+    <div class="game-nav__actions"><div id="appearance" data-game-appearance></div></div>
+  </div></header>
   <main class="cm-main">
     <section class="cm-intro"><div><p class="cm-eyebrow" id="eyebrow"></p><h1>Cable Management<span>.</span></h1><p class="cm-tagline">untangle, unplug, unwind.</p></div><p class="cm-intro-copy" id="intro"></p></section>
     <div class="cm-layout">
@@ -79,7 +84,7 @@ app.innerHTML = `
       <section class="cm-tray" id="tray-section"><div class="cm-tray-heading"><h2 id="tray-title"></h2><span id="tray-count"></span></div><div class="cm-inventory" id="inventory"></div><div class="cm-transforms" id="transforms"></div></section>
       <div class="cm-quiet"><span class="cm-coil" aria-hidden="true">◎</span><p id="quiet"></p><button class="cm-sound" data-action="sound" id="sound"></button></div></aside>
     </div>
-  </main><footer class="cm-footer"><span>© ${new Date().getFullYear()} Alena Martinková</span><span>05 / desk zen</span></footer>`;
+  </main><footer class="cm-footer"><span>© ${new Date().getFullYear()} Alena Martinková</span><span>06 / desk zen</span></footer>`;
 
 function el<T extends HTMLElement = HTMLElement>(id: string) {
   return document.getElementById(id) as T;
@@ -92,7 +97,7 @@ try {
   el('stage').innerHTML =
     `<div class="cm-fallback"><p>${t.webgl}</p><button id="retry">${t.retry}</button></div>`;
   el('retry').onclick = () => location.reload();
-  el('back').textContent = `← ${t.back}`;
+  el('back').textContent = t.back;
   el<HTMLAnchorElement>('back').href = `/games/?lang=${locale}`;
   throw new Error('WebGL unavailable; recovery instructions are displayed.');
 }
@@ -133,8 +138,9 @@ function language() {
   t = copy[locale];
   document.documentElement.lang = locale;
   storePreference('locale', locale);
-  el('back').textContent = `← ${t.back}`;
-  el<HTMLAnchorElement>('back').href = `/games/?lang=${locale}`;
+  el('back').textContent = t.back;
+  el<HTMLAnchorElement>('back').href = siteLinks(locale).games;
+  el<HTMLAnchorElement>('home').href = siteLinks(locale).home;
   el('eyebrow').textContent = t.eyebrow;
   el('intro').textContent = t.intro;
   el('evenings-label').textContent = t.evenings;

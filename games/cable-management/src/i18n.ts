@@ -1,7 +1,7 @@
 export const copy = {
   en: {
     back: 'All games',
-    eyebrow: '05 / A LITTLE ROOM TO BREATHE',
+    eyebrow: '06 / A LITTLE ROOM TO BREATHE',
     title: 'Cable Management',
     tagline: 'untangle, unplug, unwind.',
     intro:
@@ -73,7 +73,7 @@ export const copy = {
   },
   sk: {
     back: 'Všetky hry',
-    eyebrow: '05 / TROCHU PRIESTORU NA ODDYCH',
+    eyebrow: '06 / TROCHU PRIESTORU NA ODDYCH',
     title: 'Cable Management',
     tagline: 'untangle, unplug, unwind.',
     intro:
