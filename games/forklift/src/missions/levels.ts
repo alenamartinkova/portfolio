@@ -1,6 +1,13 @@
 import type { TextKey } from "../i18n";
 export type Point = readonly [number, number];
-export type CargoKind = "piano" | "ceramics" | "generator";
+export type CargoKind = "piano" | "ceramics" | "generator" | "parcels";
+export type Atmosphere = "day" | "night" | "cold" | "sunset";
+export interface DeliveryTarget {
+  x: number; z: number; width: number; depth: number;
+  /** Top of the physical supporting surface; omitted for floor deliveries. */
+  height?: number;
+  rack?: string;
+}
 export interface MissionDefinition {
   id: string;
   name: TextKey;
@@ -17,7 +24,8 @@ export interface MissionDefinition {
   pickup: Point;
   spawn: Point;
   bay: "A" | "B";
-  target: { x: number; z: number; width: number; depth: number };
+  target: DeliveryTarget;
+  atmosphere?: Atmosphere;
   racks: readonly Point[];
   barriers: readonly Point[];
   crates: readonly Point[];
@@ -163,6 +171,28 @@ export const levels: readonly MissionDefinition[] = [
   advanced("precision-glass", "namePrecision", "ceramics", "B", [0, -10], [[-8, 0], [0, 9]], [[3, 0], [-3, 4]], [[8, -4], [-8, 11]], 4.6, 280),
   advanced("double-audit", "nameAudit", "generator", "B", [8, -10], [[0, -3], [-8, 5], [8, 10]], [[0, 3]], [[-4, -7], [5, 6], [-4, 11]], 4.8, 300),
   advanced("master-certification", "nameMaster", "ceramics", "A", [0, -10], [[8, -2], [-8, 5], [0, 10]], [[0, 3]], [[-5, -6], [5, 7], [-4, 12]], 4.6, 320),
+  {
+    ...advanced("night-shift", "nameNight", "piano", "B", [8, -7], [], [[-4, -7], [-4, 0], [-4, 7], [4, 3]], [[0, -3]], 5.4, 220),
+    cargo: "parcels", mass: 210, fragility: 1.1, atmosphere: "night",
+    objective: "missionNight", briefing: "briefNight", routeHint: "hintNight",
+    crates: [[-15, -17], [-14, -15], [-2, 12], [0, 13], [2, 12], [-8, 13], [-7, 15], [15, 15]],
+  },
+  {
+    ...advanced("shelf-service", "nameShelf", "piano", "B", [0, -7], [], [[-6, -2], [6, -2], [-6, 8], [6, 8]], [[-10, 4], [10, 4]], 5.2, 230),
+    cargo: "parcels", mass: 210, fragility: 1.1,
+    objective: "missionShelf", briefing: "briefShelf", routeHint: "hintShelfRoute",
+    target: { x: 0, z: 14, width: 5.2, depth: 4, height: 1.35, rack: "R-03" },
+  },
+  {
+    ...advanced("cold-storage", "nameCold", "ceramics", "A", [-8, -7], [[-8, 3]], [[0, -7], [0, 0], [0, 7]], [[5, -3], [5, 11]], 5.2, 260),
+    atmosphere: "cold", objective: "missionCold", briefing: "briefCold", routeHint: "hintCold",
+    target: { x: -8, z: 14, width: 5.2, depth: 4.6, height: 1.65, rack: "C-02" },
+  },
+  {
+    ...advanced("last-dispatch", "nameSunset", "generator", "B", [8, -7], [[8, 3]], [[-7, 0], [-7, 9]], [[0, -6], [0, 6]], 4.8, 200),
+    atmosphere: "sunset", objective: "missionSunset", briefing: "briefSunset", routeHint: "hintSunset",
+    crates: [[-14, -16], [-12, -16], [-10, -16], [-14, -14], [-12, -14], [-14, 15]],
+  },
 ];
 export const firstMission = levels[0];
 export function resolveLevel(id: string | null | undefined): MissionDefinition {

@@ -8,6 +8,7 @@ export class Input {
     private onPause: (force?: boolean) => void,
     private onRetry: () => void,
     private onGesture: () => void,
+    private onLight: () => void = () => {},
   ) {
     window.addEventListener("keydown", this.down);
     window.addEventListener("keyup", this.up);
@@ -18,6 +19,7 @@ export class Input {
     window.addEventListener("pointermove", this.move);
   }
   private down = (e: KeyboardEvent) => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement) return;
     if (
       e.target instanceof HTMLButtonElement &&
       (e.code === "Space" || e.code === "Enter")
@@ -46,6 +48,7 @@ export class Input {
     this.onGesture();
     if (!e.repeat && e.code === "Escape") this.onPause();
     if (!e.repeat && e.code === "KeyR") this.onRetry();
+    if (!e.repeat && e.code === "KeyF") this.onLight();
     this.keys.add(e.code);
   };
   private up = (e: KeyboardEvent) => {

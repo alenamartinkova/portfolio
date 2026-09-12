@@ -70,3 +70,18 @@ describe("mission destinations", () => {
     expect(resolveLevel(null)).toBe(levels[0]);
   });
 });
+
+
+describe('elevated delivery', () => {
+  const target = levels.find(l => l.id === 'shelf-service')!.target;
+  const p = { x: target.x, y: target.height!, z: target.z };
+  it('requires the correct shelf height, a stable load and withdrawn forks', () => {
+    expect(deliveryEligible(p, 0, 1, true, target)).toBe(true);
+    for (const y of [0, target.height! - .2, target.height! + .3])
+      expect(deliveryEligible({ ...p, y }, 0, 1, true, target)).toBe(false);
+    expect(deliveryEligible(p, 0, 1, false, target)).toBe(false);
+    expect(deliveryEligible(p, 1, 1, true, target)).toBe(false);
+    expect(deliveryEligible(p, 0, .6, true, target)).toBe(false);
+    expect(deliveryEligible({ ...p, x: p.x + 2 }, 0, 1, true, target)).toBe(false);
+  });
+});

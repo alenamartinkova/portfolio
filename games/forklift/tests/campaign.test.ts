@@ -34,10 +34,10 @@ describe('inspections', () => {
     }
   });
 });
-it('provides ten named, linked, localized missions with room to unload', () => {
-  expect(levels).toHaveLength(10);
-  expect(new Set(levels.map(l => l.id)).size).toBe(10);
-  expect(new Set(levels.map(l => l.name)).size).toBe(10);
+it('provides fourteen named, linked, localized missions with room to unload', () => {
+  expect(levels).toHaveLength(14);
+  expect(new Set(levels.map(l => l.id)).size).toBe(14);
+  expect(new Set(levels.map(l => l.name)).size).toBe(14);
   expect(Object.keys(en).sort()).toEqual(Object.keys(sk).sort());
   for (const l of levels) { expect(l.target.width).toBeGreaterThan(3.3); expect(l.target.depth).toBeGreaterThan(3.3); }
   expect(levels[9].inspections).toHaveLength(3);
