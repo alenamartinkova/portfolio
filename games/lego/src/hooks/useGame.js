@@ -52,14 +52,23 @@ export default function useGame(clockEnabled) {
       state.result
     )
       return
-    let previous = performance.now()
-    const tick = setInterval(() => {
-      const now = performance.now()
-      if (!document.hidden)
+    let timer
+    const syncClock = () => {
+      clearInterval(timer)
+      if (document.hidden) return
+      let previous = performance.now()
+      timer = setInterval(() => {
+        const now = performance.now()
         dispatch({ type: 'tick', seconds: (now - previous) / 1000 })
-      previous = now
-    }, 500)
-    return () => clearInterval(tick)
+        previous = now
+      }, 500)
+    }
+    document.addEventListener('visibilitychange', syncClock)
+    syncClock()
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', syncClock)
+    }
   }, [clockEnabled, state.screen, state.dialog, state.result])
   useEffect(() => {
     if (!state.hintBrick) return

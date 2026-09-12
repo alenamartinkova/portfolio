@@ -1,3 +1,4 @@
+import { renderBudget, renderPixelRatio } from '../../../shared/render-budget.js';
 import * as THREE from 'three';
 import type { Cable, Point } from './core/cables';
 import { fits, type Cell, type Drawer, type Piece } from './core/drawer';
@@ -34,6 +35,7 @@ export class DeskScene {
   readonly renderer: THREE.WebGLRenderer;
   readonly camera = new THREE.OrthographicCamera(-7, 7, 5, -5, 0.1, 100);
   readonly scene = new THREE.Scene();
+  onInvalidate: () => void = () => {};
   readonly puzzle = new THREE.Group();
   private decor = new THREE.Group();
   private items = new THREE.Group();
@@ -52,11 +54,11 @@ export class DeskScene {
   constructor(readonly canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
+      antialias: renderBudget.antialias,
       alpha: true,
+      powerPreference: 'low-power',
     });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = renderBudget.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -73,7 +75,7 @@ export class DeskScene {
       top: 9,
       bottom: -9,
     });
-    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.mapSize.set(renderBudget.shadowSize, renderBudget.shadowSize);
     key.shadow.bias = -0.002;
     this.scene.add(key);
     this.lamp = new THREE.PointLight('#ffbd68', 24, 15, 2);
@@ -494,8 +496,9 @@ export class DeskScene {
     });
     this.camera.updateProjectionMatrix();
     this.radius = Math.max(0.065, ((halfWidth * 2) / width) * 3.1);
+    this.renderer.setPixelRatio(renderPixelRatio(width, height, devicePixelRatio));
     this.renderer.setSize(width, height, false);
-    this.render(0, false);
+    this.onInvalidate();
   }
   render(dt: number, complete: boolean) {
     this.closure = Math.min(1, this.closure + (complete ? dt * 0.8 : 0));
@@ -505,6 +508,7 @@ export class DeskScene {
     }
     this.lamp.intensity = complete ? 34 : 24;
     this.renderer.render(this.scene, this.camera);
+    return this.mode === 'drawer' && complete && !this.reduce && this.closure < 1;
   }
   dispose() {
     this.observer.disconnect();

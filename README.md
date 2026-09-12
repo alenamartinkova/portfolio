@@ -121,6 +121,24 @@ pnpm sim --games=300 --seed=1     # Hexhaven headless tournament and invariants
 pnpm exec playwright install chromium
 ```
 
+## Game rendering
+
+All six games share the battery-conscious budget in `shared/render-budget.js`:
+60 FPS, at most 1.5 million pixels per canvas and up to 1.25× pixel density.
+Shadows are disabled to leave GPU capacity for smoother motion and antialiasing.
+Renderers request a low-power GPU. Babylon games use 4× MSAA where supported
+and FXAA; Three.js games enable native multisampling. The DOM HUD keeps native
+text resolution.
+
+`shared/render-loop.js` caps Three.js animations and stops scheduling frames
+when the scene is unchanged or the page is hidden. Brick Break sleeps between
+edits, Hexhaven settles after camera/effect animations, Deploy Friday sleeps
+while planning or paused, and Cable Management sleeps after cables settle or
+the drawer closes. The Babylon games stop their loops in paused menus and
+reset the frame clock on resume. Office Escape also settles its intro and
+completion views. Physics and simulation clocks remain independent of the
+render cap. Both Havok games preload their local WASM alongside JavaScript.
+
 ## Portfolio rendering
 
 The build prerenders `/` in English and `/sk/` in Slovak, with localized metadata

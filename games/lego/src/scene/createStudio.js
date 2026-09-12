@@ -1,3 +1,5 @@
+import { createRenderLoop } from '../../../../shared/render-loop.js'
+import { renderBudget, renderPixelRatio } from '../../../../shared/render-budget.js';
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { footprint, supportSurface, brickKey } from '../bricks.js'
@@ -35,14 +37,13 @@ export function createStudio(
   let cameraTween = null,
     celebrationStart = 0,
     spinOffset = 0
-  let animationID = 0
+  const renderLoop = createRenderLoop(tick)
   let referenceDirty = true
   const motionQuery = matchMedia('(prefers-reduced-motion: reduce)')
   // Both canvases are static between interactions. Wake on scene/camera edits
   // and keep drawing only while damping or an animation is still active.
   function invalidate() {
-    if (!disposed && active && !animationID)
-      animationID = requestAnimationFrame(tick)
+    if (!disposed && active) renderLoop.request()
   }
   function invalidateReference() {
     referenceDirty = true
@@ -53,16 +54,15 @@ export function createStudio(
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 300)
   const referenceCamera = new THREE.PerspectiveCamera(37, 1, 0.1, 300)
   const renderer = new Renderer({
-    antialias: true,
+    antialias: renderBudget.antialias,
     alpha: true,
-    powerPreference: 'high-performance',
+    powerPreference: 'low-power',
   })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   renderer.setClearColor(0xf4f2ec, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.05
-  renderer.shadowMap.enabled = true
+  renderer.shadowMap.enabled = renderBudget.shadows
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false
   renderer.shadowMap.needsUpdate = true
@@ -74,7 +74,7 @@ export function createStudio(
   let referenceRenderer
   try {
     referenceRenderer = new Renderer({
-      antialias: true,
+      antialias: renderBudget.antialias,
       alpha: true,
       powerPreference: 'low-power',
     })
@@ -83,7 +83,6 @@ export function createStudio(
     renderer.domElement.remove()
     throw error
   }
-  referenceRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   referenceRenderer.setClearColor(0xf0f0e7, 0)
   referenceRenderer.outputColorSpace = THREE.SRGBColorSpace
   referenceRenderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -158,7 +157,7 @@ export function createStudio(
     s.add(sun)
     if (shadow) {
       sun.castShadow = true
-      sun.shadow.mapSize.set(2048, 2048)
+      sun.shadow.mapSize.set(renderBudget.shadowSize, renderBudget.shadowSize)
       Object.assign(sun.shadow.camera, {
         left: -23,
         right: 23,
@@ -643,6 +642,7 @@ export function createStudio(
       rh = Math.round(rect.height)
     if (rw > 0 && rh > 0 && (rw !== mainWidth || rh !== mainHeight)) {
       invalidate()
+      renderer.setPixelRatio(renderPixelRatio(rw, rh, window.devicePixelRatio))
       renderer.setSize(rw, rh, false)
       resizeCamera(camera, controls, rw / rh, mainWidth > 0, 1.2)
       cameraTween = null
@@ -654,6 +654,7 @@ export function createStudio(
       hh = Math.round(rr.height)
     if (ww > 0 && hh > 0 && (ww !== refWidth || hh !== refHeight)) {
       invalidateReference()
+      referenceRenderer.setPixelRatio(renderPixelRatio(ww, hh, window.devicePixelRatio))
       referenceRenderer.setSize(ww, hh, false)
       resizeCamera(referenceCamera, referenceControls, ww / hh, refWidth > 0)
       refWidth = ww
@@ -691,7 +692,6 @@ export function createStudio(
     if (confetti.instanceColor) confetti.instanceColor.needsUpdate = true
   }
   function tick(now) {
-    animationID = 0
     if (disposed || !active) return
     if (cameraTween) {
       const t = clamp((now - cameraTween.start) / 500, 0, 1),
@@ -750,8 +750,7 @@ export function createStudio(
       invalidate()
   }
   function onVisibility() {
-    cancelAnimationFrame(animationID)
-    animationID = 0
+    renderLoop.stop()
     active = !document.hidden
     invalidateReference()
   }
@@ -931,7 +930,7 @@ export function createStudio(
     dispose() {
       if (disposed) return
       disposed = true
-      cancelAnimationFrame(animationID)
+      renderLoop.dispose()
       resizeObserver.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
       motionQuery.removeEventListener?.('change', invalidate)

@@ -31,6 +31,8 @@ export function mountPlaytest(game: Game) {
         {
           running,
           fps: Math.round(game.engine.getFps()),
+          renderedFrames: game.scene.getFrameId(),
+          renderSize: [game.engine.getRenderWidth(), game.engine.getRenderHeight()],
           truck: game.truck.root.position.asArray().map(f),
           yaw: f(Math.atan2(game.truck.forward.x, game.truck.forward.z)),
           cargo: game.cargo.root.position.asArray().map(f),

@@ -102,6 +102,8 @@ class Controls extends Events {
 }
 
 function environment(t) {
+  let clock = 0
+  t.mock.method(performance, 'now', () => clock)
   const window = new Events(),
     document = new Events()
   window.devicePixelRatio = 1
@@ -142,7 +144,8 @@ function environment(t) {
     document,
     motion,
     frames,
-    frame(now = performance.now()) {
+    frame(now = clock + 1000 / 30) {
+      clock = now
       const callbacks = [...frames.values()]
       frames.clear()
       callbacks.forEach(fn => fn(now))
@@ -250,8 +253,9 @@ test('hints and camera animations render until settled and respect reduced motio
   const [main, reference] = Renderer.instances
   const mainFrames = main.info.render.calls
   const referenceFrames = reference.info.render.calls
-  for (let i = 0; i < 60; i++) env.frame(performance.now() + i * 16)
-  assert.equal(main.info.render.calls - mainFrames, 60, 'hint animation stays smooth')
+  const hintStart = performance.now()
+  for (let i = 0; i < 60; i++) env.frame(hintStart + i * 1000 / 60)
+  assert.equal(main.info.render.calls - mainFrames, 60, 'hint animation stays smooth at 60 FPS')
   assert.equal(reference.info.render.calls, referenceFrames, 'a pulsing hint never redraws the unchanged blueprint')
   studio.setPeel(2)
   env.frame()

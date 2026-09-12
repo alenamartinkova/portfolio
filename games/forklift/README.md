@@ -25,7 +25,9 @@ pnpm build                     # complete portfolio + all games
 pnpm preview                   # preview complete production output
 ```
 
-Serve built output over HTTP(S); opening index.html as a file will not load ES modules or WASM. WebGPU is selected when supported; WebGL is the fallback. Append `?webgl` to force WebGL for compatibility diagnostics. Havok and the WebGPU shader compilers are bundled with the game.
+Serve built output over HTTP(S); opening index.html as a file will not load ES modules or WASM. The game uses WebGL, retaining the detailed models, PBR materials and lighting. Havok is bundled with the game and preloaded alongside the entry script.
+
+Rendering balances smoothness and battery life: 60 FPS, at most 1.5 million canvas pixels and 1.25× pixel density, 4× MSAA where supported plus FXAA, and disabled sun/work-light shadows. The HUD keeps native CSS resolution. The renderer requests a low-power GPU; the browser decides which adapter to use. Paused menus and results render only when their view changes, and hidden pages stop the render loop. Resuming resets the frame clock to prevent physics catch-up. Physics still steps at 120 Hz independently of the render cap.
 
 ## Levels
 
@@ -125,13 +127,13 @@ Cargo damage uses impact impulse normalized by cargo mass, relative speed, and c
 - Restart rebuilds the small scene while reusing Havok WASM. It should take well under a second after assets are loaded, depending on hardware.
 - The truck, cargo and warehouse have procedural geometry; key surfaces use PBR materials and generated grain rather than scanned assets. Audio is synthesized. No external model or audio assets are required.
 - Very aggressive handling may overturn the piano; retry is always available. A zero-integrity piano can still be delivered for a heavily penalized score.
-- Browser/GPU support varies. WebGL is the compatibility path; WebGPU requires a working browser adapter.
+- Browser/GPU support varies. The game requires WebGL support.
 
 ## Verification
 
 The automated tests cover scoring, valid/invalid delivery states, actual Havok startup stability, reverse, physical pickup and release, complete routes for all three missions through real warehouse obstacles, damage from a loaded collision, and camera clearance at a wall. Run them with `pnpm --filter forklift test`. Rendering-independent physics tests use the same vehicle, cargo, warehouse, and damage systems as the browser.
 
-Browser playtesting covered successful full deliveries on WebGL and WebGPU, the results/Retry button, keyboard restart, and deliberate rack crashes. The prototype was tuned after those runs to fix self-collisions, reverse traction, braking, cargo stability, and aisle clearance.
+Browser playtesting covered successful full deliveries on WebGL, the results/Retry button, keyboard restart, and deliberate rack crashes. The prototype was tuned after those runs to fix self-collisions, reverse traction, braking, cargo stability, and aisle clearance.
 
 Campaign tests cover all fourteen pickup layouts, full clean Havok deliveries for the original three missions and the new quality-control mission, ordered inspection holds, invalid scan conditions, bilingual content and isolated persistent records.
 

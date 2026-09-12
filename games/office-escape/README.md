@@ -2,7 +2,7 @@
 
 A desktop and mobile browser game about leaving work without touching the office floor. Built with TypeScript, Babylon.js, Havok Physics and Vite. All geometry and sound are generated locally; there is no backend.
 
-On touch devices, move with the left joystick and drag the scene to turn the camera. Hold Jump to mantle; use Grab / drop to move furniture and Checkpoint to recover. Tap Sprint to turn it on or off, leaving your other thumb free to jump. Pause, resume and level selection are in the header. Touch controls reset on pause, lost focus, cancelled touches and rotation.
+On touch devices, move with the left joystick and drag the scene to turn the camera. Hold Jump to mantle; use Grab / drop to move furniture and Checkpoint to recover. Tap Sprint to turn it on or off, leaving your other thumb free to jump. The compact header contains Settings and Pause. Settings groups level selection, sound, theme, accent color and language in a paused dialog, with the same layout as Forklift Certified. Touch controls reset on pause, lost focus, cancelled touches and rotation.
 
 ## Setup and commands
 
@@ -55,7 +55,7 @@ The first evening keeps the introductory office route and its optional whiteboar
 
 Dragging applies a capped horizontal spring to a nearby body. It slows walking, has a short tether, and never supplies upward force. Chairs and carts have low rectangular collision hulls and damping so they slide without becoming uncontrollable. Boxes and plants can tip. Decorative chair backs, desk legs, monitors and leaves do not snag the player.
 
-Choose any of ten levels in the header; each has a distinct furniture route, target time and color palette. Completion offers the next level and a retry. `?level=last-out&lang=sk` links directly to a floor; invalid IDs select the first evening.
+Choose any of ten levels in **Settings → Current level**, using mission cards with target times, access-card counts and earned stars; each has a distinct furniture route, target time and color palette. Completion offers the next level and a retry. `?level=last-out&lang=sk` links directly to a floor; invalid IDs select the first evening.
 
 | Level | Challenge |
 | --- | --- |
@@ -73,6 +73,14 @@ Choose any of ten levels in the header; each has a distinct furniture route, tar
 Gold cards are collected by landing on their checkpoint. They survive falls, but a fresh run clears them. A checkpoint cannot advance past a missing earlier card. Gates rotate across the direction of each jump, including sideways and reverse crossings. Red security beams send the player to the saved checkpoint; green opens a crossing window and amber warns 0.8 seconds before reactivation. Pausing freezes the security clock. Recovery resets furniture and retains collected cards.
 
 One star rewards an escape, two require no falls, and three additionally require beating the level’s target time. Personal bests are saved per level under `office-escape:best:v3:<id>`; `shared/CampaignProgress.ts` independently saves best stars and fastest time under `office-escape:routes-v2:campaign:v1:<id>`. Previous route records remain in storage under their old keys and are not compared with the redesigned campaign. Blocked or corrupt storage falls back to session progress. Development `?playtest` runs do not save records.
+
+## Visuals and settings
+
+The employee has a smooth articulated rig with hip, knee, shoulder and elbow joints, hands, a collar, lanyard, badge, wristwatch and shoes. Walking, jumping and dragging animate the visual rig independently of the physics capsule.
+
+Furniture has rounded edges, upholstered seats, five-spoke chair bases and casters, cart handles, detailed displays and keyboards, coffee cups and planted ceramic pots. Window transoms, sunshades, pendant fixtures and oak wall slats dress the office; other floors include glass balcony panels, layered tree foliage, rack hardware, server vents and rooftop fan blades. PBR wood, fabric, metal and paint share generated mipmapped surface maps and a local window reflection map. Native-density rendering (up to 2×, capped at five million pixels), MSAA and FXAA smooth the image. Static decorations are merged by material to reduce draw calls. Route landing dimensions and physics rules remain authored separately.
+
+Settings pauses the timer, security and movement, traps keyboard focus and closes with Escape. Language changes preserve the open settings page and the run. Opening settings before starting returns to the introduction; opening it during a run resumes the run on close. Mission selection starts a new run. On phones the header stays on one row and long level lists scroll inside the dialog.
 
 ## Architecture
 
@@ -112,7 +120,7 @@ The panel reports coordinates, grounded state, velocity, completed landings, fal
 
 ## Known limitations
 
-- Desktop keyboard and mouse controls; no touch or gamepad controller yet.
+- Keyboard, mouse and touch controls are supported; no gamepad controller yet.
 - First-time completion and replay appeal still need human playtesting against the 3–5 minute target. The automated precision route is considerably faster.
 - Collision shapes simplify furniture. Desk legs and small desktop clutter are visual decorations; furniture tops and cabinet bodies are solid.
 - Physics is not deterministic across devices. Severe frame stalls can affect jump motion; active timers use wall-clock deltas.

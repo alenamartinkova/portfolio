@@ -13,8 +13,9 @@ The Forklift comparison sums the Vite manifest's static dependency closure of
 `index.html` and `src/start.ts`, counting each JavaScript file once. Builds use
 `pnpm --filter forklift exec vite build --manifest`. Gzip sizes are calculated
 per file with Node's `gzipSync`; they are not measured network transfer times.
-The startup saving is 22.4% minified and 23.1% compressed. WebGPU remains
-available and loads its backend only on compatible browsers without `?webgl`.
+The startup saving measured on that date was 22.4% minified and 23.1% compressed.
+As of 2026-09-12, Forklift uses only WebGL; the optional renderer and its shader
+compiler assets have been removed from the game build.
 The physics WASM and dynamically loaded shaders are outside this JS comparison.
 
 The render counts are covered by the Brick Break scene test and the Office
@@ -46,8 +47,8 @@ settling procedure, without rendering the scene during that procedure.
 
 Production builds, SEO checks, TypeScript checks and all 201 existing tests pass.
 Scene tests now also check independent blueprint rendering and GPU-free office
-settling. Local browser checks cover the production WebGL and automatic-backend
-startup, navigation, pause, appearance controls and portfolio scroll animation.
+settling. Local browser checks covered production startup, navigation, pause,
+appearance controls and portfolio scroll animation.
 
 Chrome DevTools tracing was unavailable in this session. No Lighthouse score,
 Core Web Vitals, FPS improvement or real-network load-time improvement is claimed.

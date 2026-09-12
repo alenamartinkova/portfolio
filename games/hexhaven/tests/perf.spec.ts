@@ -121,7 +121,10 @@ test('1440p occupied-board measurements and production debug isolation', async (
   await page.mouse.down();
   const [active] = await Promise.all([sampleFrames(page, 2000), dragBoard(page, center, 2000)]);
   await page.mouse.up();
-  await sampleFrames(page, 1600);
+  await expect.poll(async () => (await sampleFrames(page, 500)).rendererFrames, {
+    message: 'The board settles without continuously animating the sea',
+    timeout: 20_000,
+  }).toBe(0);
   const idle = await sampleFrames(page, 1800);
   const browser = await page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="board-view"] canvas');
@@ -154,8 +157,9 @@ test('1440p occupied-board measurements and production debug isolation', async (
   for (const measurement of [active, idle]) {
     expect(measurement.renderer.drawCalls).toBeLessThanOrEqual(120);
     expect(measurement.renderer.triangles).toBeLessThanOrEqual(150_000);
-    expect(measurement.rendererFrames).toBeGreaterThan(0);
   }
+  expect(active.rendererFrames).toBeGreaterThan(0);
+  expect(idle.rendererFrames).toBe(0);
   const output = fileURLToPath(new URL('../docs/screenshots/', import.meta.url));
   await mkdir(output, { recursive: true });
   await page.screenshot({ path: `${output}performance-1440p.png`, animations: 'disabled' });

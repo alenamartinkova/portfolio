@@ -91,7 +91,7 @@ test('every game shares portfolio typography and theme colors', async ({ page, i
       accent: getComputedStyle(document.querySelector('.m-nav .m-brand span')!).color,
     }));
     for (const game of GAMES) {
-      await page.goto(`/${game.id}/?${preferences}&webgl`);
+      await page.goto(`/${game.id}/?${preferences}`);
       await expect(page.locator('.game-nav__mark')).toBeVisible({ timeout: 60000 });
       const heading = page.locator('h1:visible, h2:visible').first();
       await expect(heading).toHaveCSS('font-family', reference.headingFont);
@@ -162,7 +162,7 @@ test('physics games support localized multitouch controls and release them on pa
   page.on('pageerror', error => errors.push(error.message));
   const session = await page.context().newCDPSession(page);
   for (const game of ['office-escape', 'forklift']) {
-    await page.goto(`/${game}/?lang=en&webgl`);
+    await page.goto(`/${game}/?lang=en`);
     if (game === 'office-escape') {
       await expect(page.locator('#play')).toBeEnabled({ timeout: 60000 });
       await page.locator('#play').tap();
@@ -289,14 +289,17 @@ test('desktop physics games load, play and pause', async ({ page, isMobile }) =>
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   for (const game of ['office-escape', 'forklift']) {
     await page.setViewportSize({ width: 600, height: 900 });
-    await page.goto(`/${game}/?lang=en&webgl`);
+    await page.goto(`/${game}/?lang=en`);
     await expect(page.locator('#game')).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(page.locator('.desktop-game')).toHaveCount(0);
     if (game === 'office-escape') {
       await expect(page.locator('#play')).toBeEnabled({ timeout: 60000 });
       await page.locator('#play').click();
-    } else await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+    } else {
+      await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+      await expect(page.locator('#speed')).toBeVisible();
+    }
     await page.keyboard.down('KeyW');
     await page.waitForTimeout(300);
     await page.keyboard.up('KeyW');
@@ -305,11 +308,6 @@ test('desktop physics games load, play and pause', async ({ page, isMobile }) =>
     await page.locator('#resume').click();
     await noOverflow(page);
   }
-  // Exercise WebGPU when available, including the browser's WebGL fallback.
-  await page.goto('/forklift/?lang=en');
-  await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
-  await expect(page.locator('#speed')).toBeVisible();
-  await page.waitForTimeout(500);
   expect(errors).toEqual([]);
 });
 
@@ -318,7 +316,7 @@ test('Forklift leaves the mobile driving view clear and keeps settings in pause'
   test.skip(!isMobile, 'The desktop HUD stays available.');
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/forklift/?lang=en&webgl');
+  await page.goto('/forklift/?lang=en');
   await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
   for (const selector of ['.mission', '.stats', '.context-hint', '.dashboard', '.game-settings'])
     await expect(page.locator(selector)).toBeHidden();

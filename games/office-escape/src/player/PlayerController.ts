@@ -1,5 +1,5 @@
 import { CharacterSupportedState, PhysicsCharacterController } from '@babylonjs/core/Physics/v2/characterController';
-import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { EmployeeModel } from './EmployeeModel';
 import { Ray } from '@babylonjs/core/Culling/ray';
 import { Scene } from '@babylonjs/core/scene';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -22,24 +22,14 @@ export class PlayerController {
     private coyote = 0;
     private buffer = 0;
     private jumpCooldown = 0;
-    private walk = 0;
-    private limbs: Mesh[] = [];
+    private model: EmployeeModel;
     constructor(private scene: Scene, f: Factory, spawn: Vector3) {
         this.controller = new PhysicsCharacterController(spawn, { capsuleHeight: PLAYER_HEIGHT, capsuleRadius: .28 }, scene);
         this.controller.characterMass = 7;
         this.controller.characterStrength = 45;
         this.controller.maxSlopeCosine = .7;
         this.root = new TransformNode('employee', scene);
-        f.box('cream shirt', [.58, .65, .34], [0, 1.04, 0], '#f0e6cf', this.root);
-        f.box('head', [.38, .4, .36], [0, 1.56, 0], '#d8a67a', this.root);
-        f.box('hair', [.4, .15, .38], [0, 1.77, 0], '#3b4842', this.root);
-        f.box('orange tie', [.08, .4, .025], [0, 1.07, .182], '#d58350', this.root);
-        f.box('badge', [.12, .16, .025], [-.16, 1.18, .182], '#96bdb1', this.root);
-        for (const side of [-1, 1]) {
-            this.limbs.push(f.box('trouser leg', [.21, .62, .26], [side * .16, .4, 0], '#365a56', this.root));
-            this.limbs.push(f.box('sleeve', [.18, .57, .26], [side * .39, 1, 0], '#e9ddc5', this.root));
-            f.box('shoe', [.23, .16, .38], [side * .16, .1, .045], '#253d3c', this.root);
-        }
+        this.model = new EmployeeModel(f, this.root);
         this.teleport(spawn);
     }
     get position() { return this.controller.getPosition(); }
@@ -104,7 +94,6 @@ export class PlayerController {
         }
         this.root.position.copyFrom(this.position);
         this.root.position.y -= PLAYER_HEIGHT / 2;
-        this.walk += dt * (this.moving ? 12 : 2);
-        this.limbs.forEach((m, i) => { m.rotation.x = this.grounded && this.moving ? Math.sin(this.walk + (i < 2 ? 0 : Math.PI)) * .45 : !this.grounded ? (i % 2 ? .8 : -.3) : 0; });
+        this.model.update(dt, this.moving, this.grounded, dragging);
     }
 }

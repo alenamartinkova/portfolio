@@ -29,13 +29,19 @@ export function buildArchitecture(f: Factory, physics: PhysicsInteractionSystem,
   };
   solid('forbidden ground floor', [width, .4, depth], [cx, -.2, cz], level.floor, true);
   for (let z = front; z < back; z += 3)
-    f.box('floor grid', [width, .012, .025], [cx, .01, z], frame);
+    f.box('floor grid', [width, .006, .008], [cx, .01, z], frame);
   for (let x = left; x < right; x += 3)
-    f.box('floor grid', [.025, .012, depth], [x, .01, cz], frame);
+    f.box('floor grid', [.008, .006, depth], [x, .01, cz], frame);
 
   if (theme !== 'rooftop') {
     // Back wall and perimeter columns give scale without a ceiling over jumps.
     solid('building rear wall', [width, height, .3], [cx, height / 2, back], dark ? '#253848' : '#738b8c');
+    f.box('wall skirting', [width, .16, .08], [cx, .1, back - .2], frame);
+    for (let x = left + 1.5; x < right; x += 3) {
+      f.box('wall inset panel', [2.85, height - .5, .04], [x, height / 2, back - .18], dark ? '#2b3e4c' : '#91a09a');
+      f.box('wall vertical trim', [.035, height, .08], [x - 1.46, height / 2, back - .23], frame);
+    }
+
     for (const x of [left, right]) {
       for (let z = front; z <= back; z += 5) {
         f.box('structural column', [.22, height, .22], [x, height / 2, z], frame);
@@ -71,6 +77,8 @@ export function buildArchitecture(f: Factory, physics: PhysicsInteractionSystem,
         f.box('balcony handrail', [.08, .08, depth], [x + (x < cx ? 1.1 : -1.1), y + 1.05, cz], trim);
         for (let z = front; z < back; z += 3) {
           f.box('balcony baluster', [.06, 1.05, .06], [x + (x < cx ? 1.1 : -1.1), y + .525, z], frame);
+          f.box('balcony glass panel', [.025, .78, 2.85], [x + (x < cx ? 1.1 : -1.1), y + .54, z + 1.5], '#b4c8c1');
+
           f.box('perimeter workstation', [1.3, .15, 1.8], [x, y + 1.3, z], '#d7bd91');
           f.box('perimeter monitor', [.1, .55, .8], [x, y + 1.65, z], '#344b59');
         }
@@ -80,7 +88,12 @@ export function buildArchitecture(f: Factory, physics: PhysicsInteractionSystem,
     if (theme === 'lobby') {
       f.cylinder('reception island', 3, 1, [2, .5, 5], '#73948a');
       f.cylinder('indoor tree trunk', .22, 4, [2, 2, 5], '#816c50');
-      f.cylinder('sculpted tree canopy', 2.6, 1.3, [2, 4, 5], '#739c79');
+      for (let i = 0; i < 9; i++) {
+        const a = i * 2.4;
+        f.tube('indoor tree branch', [[2, 2.7, 5], [2 + Math.sin(a) * .5, 3.5, 5 + Math.cos(a) * .5], [2 + Math.sin(a), 3.8 + i % 2 * .4, 5 + Math.cos(a)]], .045, '#816c50');
+        f.sphere('tree foliage', [1.1, .9, 1.1], [2 + Math.sin(a) * .9, 3.9 + i % 2 * .4, 5 + Math.cos(a) * .9], i % 2 ? '#618261' : '#73946b');
+      }
+
       f.label(() => t('receptionArea').toUpperCase(), 5, .8, [cx, 4, back - .25], '#efe5cf', frame);
     }
   }
@@ -89,11 +102,23 @@ export function buildArchitecture(f: Factory, physics: PhysicsInteractionSystem,
       for (let z = front + 2; z < back - 1; z += 3.5) {
         const rackHeight = theme === 'archive' ? 7 : theme === 'servers' ? 4.8 : 3.4;
         solid('perimeter storage rack', [1.8, rackHeight, 2.6], [x, rackHeight / 2, z], frame);
+        for (const side of [-1, 1]) {
+          f.box('rack metal frame', [.065, rackHeight, .08], [x + side * .85, rackHeight / 2, z - 1.34], '#758d8d');
+          f.box('rack metal foot', [.3, .07, .35], [x + side * .85, .04, z - 1.2], '#344752');
+        }
+
         for (let y = .6; y < rackHeight; y += .8) {
           f.box('storage shelf', [1.9, .07, 2.7], [x, y, z], trim);
           for (let j = 0; j < 3; j++) {
             f.box(theme === 'servers' ? 'server module' : 'archive carton', [.45, .5, .9], [x - .55 + j * .55, y + .28, z - .85], theme === 'servers' ? '#24323e' : '#bba27b');
-            if (theme === 'servers') light([.08, .04, .04], [x - .55 + j * .55, y + .35, z - 1.32]);
+            if (theme === 'servers') {
+              light([.08, .025, .035], [x - .55 + j * .55, y + .35, z - 1.32]);
+              for (let slot = 0; slot < 4; slot++)
+                f.box('server ventilation slot', [.32, .018, .016], [x - .55 + j * .55, y + .12 + slot * .042, z - 1.31], '#657d83');
+            } else {
+              f.box('carton tape', [.075, .012, .9], [x - .55 + j * .55, y + .536, z - .85], '#d7c6a0');
+              f.box('archive index label', [.22, .12, .014], [x - .55 + j * .55, y + .29, z - 1.31], '#e9e2ce');
+            }
           }
         }
       }
@@ -118,6 +143,14 @@ export function buildArchitecture(f: Factory, physics: PhysicsInteractionSystem,
         for (let z = front + 2; z < back; z += 4)
           light([3.02, .2, 1.5], [x, y, z]);
       f.cylinder('roof extraction fan', 2, .5, [x, 16.25, cz], '#8098a8');
+      f.cylinder('fan inner recess', 1.7, .012, [x, 16.51, cz], '#2e424e');
+      f.cylinder('fan metal hub', .3, .1, [x, 16.56, cz], '#97aaa9');
+      for (let blade = 0; blade < 6; blade++) {
+        const a = blade * Math.PI / 3;
+        const mesh = f.sphere('fan metal blade', [.28, .04, .75], [x + Math.sin(a) * .4, 16.535, cz + Math.cos(a) * .4], '#7b9296');
+        mesh.rotation.y = a + .35;
+      }
+
     }
     for (let i = 0; i < 18; i++) {
       const x = i % 2 ? left - 7 : right + 7, z = front + Math.floor(i / 2) * 5;

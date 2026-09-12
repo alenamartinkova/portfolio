@@ -1,3 +1,4 @@
+import { createRenderLoop } from '../../../shared/render-loop.js';
 import {
   initializeAppearance,
   readPreference,
@@ -53,10 +54,7 @@ let selected: number | undefined,
   moves = 0,
   calm = 0;
 let crossingCount = 0,
-  lastFrame = 0,
-  accumulator = 0,
-  tick = 0,
-  animation = 0;
+  accumulator = 0;
 let snapshot: string | null = null,
   pointerId: number | null = null,
   pointerStart: Point | null = null,
@@ -90,9 +88,13 @@ function el<T extends HTMLElement = HTMLElement>(id: string) {
   return document.getElementById(id) as T;
 }
 const canvas = el<HTMLCanvasElement>('desk');
+let settledFor = 0, crossingElapsed = 0;
+const renderLoop = createRenderLoop(frame);
+function wake() { settledFor = 0; renderLoop.request(); }
 let scene: DeskScene;
 try {
   scene = new DeskScene(canvas);
+  scene.onInvalidate = wake;
 } catch {
   el('stage').innerHTML =
     `<div class="cm-fallback"><p>${t.webgl}</p><button id="retry">${t.retry}</button></div>`;
@@ -121,6 +123,7 @@ function pushSnapshot(value = capture()) {
   if (undo.length > 40) undo.shift();
 }
 function restore(value: string) {
+  wake();
   const state = JSON.parse(value);
   cables = state.cables;
   drawer = state.drawer;
@@ -243,12 +246,14 @@ function renderSuccess() {
   box.innerHTML = `<span class="cm-success-icon" aria-hidden="true">✓</span><p class="cm-eyebrow">${t.done}</p><h3 id="success-title">${title}</h3><p>${text}</p>${button(dailyDate ? 'reset' : last ? 'daily' : 'next', dailyDate ? t.replay : last ? t.daily : eveningEnd ? t.nextEvening : t.next)}`;
 }
 function refreshScene() {
+  wake();
   if (spec.mode === 'untangle') scene.showCables(cables);
   else scene.showDrawer(drawer);
   scene.setProgress(progress.evenings);
   renderUI();
 }
 function load(level: number, date?: string) {
+  wake();
   cancelPointer();
   index = level;
   dailyDate = date;
@@ -268,6 +273,7 @@ function load(level: number, date?: string) {
   refreshScene();
 }
 function finish() {
+  wake();
   if (complete) return;
   complete = true;
   grip = null;
@@ -286,6 +292,7 @@ function finish() {
   el('success').querySelector('button')?.focus({ preventScroll: true });
 }
 function commit() {
+  wake();
   moves++;
   calm = 0;
   scene.updateItems(drawer, selected);
@@ -293,6 +300,7 @@ function commit() {
   if (spec.mode === 'drawer' && drawerComplete(drawer)) finish();
 }
 function turn(flip = false) {
+  wake();
   const piece = current();
   if (!piece || complete) return;
   pushSnapshot();
@@ -304,6 +312,7 @@ function turn(flip = false) {
   message();
 }
 function action(name: string) {
+  wake();
   if (pointerId !== null) cancelPointer();
   switch (name) {
     case 'sound':
@@ -398,6 +407,7 @@ app.addEventListener('click', (event) => {
 });
 
 function select(id: number) {
+  wake();
   selected = id;
   hover = null;
   scene.preview(drawer);
@@ -407,6 +417,7 @@ function select(id: number) {
   if (p) message(`${t.selected}: ${t.names[p.kind]}`);
 }
 function startPointer(event: PointerEvent) {
+  wake();
   if (complete || pointerId !== null || event.button !== 0) return;
   const target = event.target as Element,
     tray = target.closest<HTMLElement>('[data-piece]');
@@ -458,6 +469,7 @@ function startPointer(event: PointerEvent) {
   event.preventDefault();
 }
 function movePointer(event: PointerEvent) {
+  wake();
   if (pointerId !== event.pointerId || !pointerStart) return;
   dragged ||=
     Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) >
@@ -479,6 +491,7 @@ function movePointer(event: PointerEvent) {
   }
 }
 function endPointer(event: PointerEvent) {
+  wake();
   if (pointerId !== event.pointerId) return;
   const rect = canvas.getBoundingClientRect(),
     inside =
@@ -531,6 +544,7 @@ function releasePointer() {
     canvas.releasePointerCapture(id);
 }
 function cancelPointer() {
+  wake();
   if (pointerId !== null && snapshot) {
     const saved = snapshot;
     releasePointer();
@@ -564,6 +578,7 @@ app.addEventListener('keydown', (event) => {
   }
   if (target === canvas && spec.mode === 'drawer' && current()) {
     if (event.key.startsWith('Arrow')) {
+      wake();
       event.preventDefault();
       hover ??= [0, 0, 0];
       const axis =
@@ -589,14 +604,13 @@ app.addEventListener('keydown', (event) => {
 function visibility() {
   cancelPointer();
   audio.pause(document.hidden);
-  lastFrame = 0;
   accumulator = 0;
 }
 document.addEventListener('visibilitychange', visibility);
 window.addEventListener('blur', cancelPointer);
-function frame(time: number) {
-  const dt = lastFrame ? Math.min((time - lastFrame) / 1000, 0.066) : 0;
-  lastFrame = time;
+function frame(_time: number, delta: number) {
+  const dt = Math.min(delta, 0.066);
+  let closing = false;
   if (!document.hidden) {
     if (spec.mode === 'untangle' && !complete) {
       accumulator += dt;
@@ -606,7 +620,9 @@ function frame(time: number) {
         accumulator -= 1 / 60;
       }
       scene.updateCables(cables);
-      if (tick++ % 6 === 0) {
+      crossingElapsed += dt;
+      if (crossingElapsed >= .1) {
+        crossingElapsed %= .1;
         const points = crossings(
           cables.map((c) => c.nodes.map((n) => scene.screen(n))),
         );
@@ -622,17 +638,18 @@ function frame(time: number) {
           ? calm + dt
           : 0;
       if (calm > 1.1) finish();
+      settledFor = !grip && movement < .001 ? settledFor + dt : 0;
     }
-    scene.render(dt, complete);
+    closing = scene.render(dt, complete);
   }
-  animation = requestAnimationFrame(frame);
+  return closing || (spec.mode === 'untangle' && !complete && (Boolean(grip) || settledFor < 1.5));
 }
 language();
 load(index);
-animation = requestAnimationFrame(frame);
+renderLoop.request();
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
-    cancelAnimationFrame(animation);
+    renderLoop.dispose();
     document.removeEventListener('visibilitychange', visibility);
     window.removeEventListener('blur', cancelPointer);
     disposeAppearance?.();

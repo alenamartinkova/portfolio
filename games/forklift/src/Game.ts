@@ -20,7 +20,7 @@ import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
-import { renderScale } from './systems/RenderQuality';
+import { renderBudget, renderScale } from './systems/RenderQuality';
 import { Viewport } from '@babylonjs/core/Maths/math.viewport';
 export class Game {
   engine!: AbstractEngine;
@@ -49,8 +49,10 @@ export class Game {
   private previewAngle = -.8;
   private disposed = false;
   private renderDirty = true;
+  private rendering = false;
+  private renderFrame = () => this.frame();
   private appearanceObserver = new MutationObserver(() => {
-    this.renderDirty = true;
+    this.requestRender();
   });
   constructor(private canvas: HTMLCanvasElement) {
     this.ui = new UI(document.querySelector('#ui')!, {
@@ -79,31 +81,23 @@ export class Game {
   }
   async start() {
     try {
-      // WebGPU may be disabled by device policy; a failed adapter initialization falls back to WebGL.
-      if (!new URLSearchParams(location.search).has('webgl') && 'gpu' in navigator) {
-        try {
-          const { createWebGPUEngine } = await import('./systems/WebGPU');
-          const gpu = await createWebGPUEngine(this.canvas);
-          if (gpu) this.engine = gpu;
-        } catch {
-          /* Loading an optional backend must not prevent WebGL fallback. */
-        }
-      }
-      this.engine ??= new Engine(
+      this.engine = new Engine(
         this.canvas,
-        true,
-        { preserveDrawingBuffer: false, stencil: true },
+        false,
+        { preserveDrawingBuffer: false, stencil: true, powerPreference: 'low-power' },
         true,
       );
       this.engine.renderEvenInBackground = false;
+      this.engine.maxFPS = renderBudget.fps;
       this.updateRenderResolution();
       await this.createScene();
       window.addEventListener('resize', this.resize);
+      document.addEventListener('visibilitychange', this.visibility);
       this.appearanceObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['lang', 'data-theme', 'data-accent'],
       });
-      this.engine.runRenderLoop(() => this.frame());
+      this.requestRender();
       this.ui.ready();
       this.input.setActive(true);
       this.canvas.focus();
@@ -112,6 +106,22 @@ export class Game {
       this.ui.error('loadError');
     }
   }
+  private requestRender = () => {
+    this.renderDirty = true;
+    if (!this.engine || !this.scene || this.disposed || this.restarting || document.hidden || this.rendering) return;
+    // A paused interval must not become physics catch-up time on resume.
+    this.engine.performanceMonitor.reset();
+    this.rendering = true;
+    this.engine.runRenderLoop(this.renderFrame);
+  };
+  private stopRendering() {
+    this.engine?.stopRenderLoop(this.renderFrame);
+    this.rendering = false;
+  }
+  private visibility = () => {
+    if (document.hidden) this.stopRendering();
+    else this.requestRender();
+  };
   private updateRenderResolution() {
     const rect = this.canvas.getBoundingClientRect();
     this.engine.setHardwareScalingLevel(renderScale(rect.width, rect.height, window.devicePixelRatio));
@@ -120,7 +130,7 @@ export class Game {
   private resize = () => {
     this.updateRenderResolution();
     if (this.garageOpen) this.previewTruck();
-    this.renderDirty = true;
+    this.requestRender();
   };
   private async createScene() {
     this.scene = new Scene(this.engine);
@@ -136,7 +146,8 @@ export class Game {
     this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
     const antialias = new DefaultRenderingPipeline('warehouse antialiasing', false, this.scene, [this.camera.camera]);
     antialias.imageProcessingEnabled = false;
-    antialias.samples = 4;
+    // Multisampling smooths geometry; FXAA also covers devices without MSAA support.
+    antialias.samples = renderBudget.samples;
     antialias.fxaaEnabled = true;
     this.effects = new Effects(f, this.scene);
     this.damage = new DamageSystem(
@@ -152,8 +163,8 @@ export class Game {
     );
     this.mission = new MissionManager(this.cargo, this.truck, this.level);
     warehouse.finishShadows();
-    if (this.level.atmosphere === 'night') {
-      const lampShadow = new ShadowGenerator(1024, this.truck.workLight);
+    if (renderBudget.shadows && this.level.atmosphere === 'night') {
+      const lampShadow = new ShadowGenerator(renderBudget.lampShadowSize, this.truck.workLight);
       lampShadow.usePercentageCloserFiltering = true;
       lampShadow.bias = .002;
       lampShadow.normalBias = .04;
@@ -176,32 +187,35 @@ export class Game {
       }
     });
     this.camera.update(1 / 60, this.input, document.body.hasAttribute('data-touch-game'));
+    this.scene.executeWhenReady(this.requestRender);
   }
   private frame() {
     if (this.restarting || this.disposed) return;
     const dt = Math.min(0.05, this.engine.getDeltaTime() / 1000);
     const halted = this.paused || this.resultShown;
     this.scene.physicsEnabled = !halted;
-    if (!halted) {
-      this.damage.update(dt);
-      this.mission.update(
-        dt,
-        ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyE', 'KeyQ'].some((k) => this.input.keys.has(k)),
-      );
-      this.camera.update(dt, this.input, document.body.hasAttribute('data-touch-game'));
-      this.effects.update(
-        dt,
-        this.truck.root.position,
-        Math.atan2(this.truck.forward.x, this.truck.forward.z),
-        this.input.keys.has('Space') && Math.abs(this.truck.speed) > 2.5,
-      );
-    }
-    this.audio.update(dt, this.truck.speed, this.truck.hydraulic, halted);
-    // The paused/result scene is static; leave its last frame on the canvas.
-    if (!halted || this.renderDirty) {
-      this.scene.render();
+    if (halted) {
+      this.audio.update(0, this.truck.speed, this.truck.hydraulic, true);
+      if (this.renderDirty) this.scene.render();
       this.renderDirty = false;
+      this.stopRendering();
+      return;
     }
+    this.damage.update(dt);
+    this.mission.update(
+      dt,
+      ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyE', 'KeyQ'].some((k) => this.input.keys.has(k)),
+    );
+    this.camera.update(dt, this.input, document.body.hasAttribute('data-touch-game'));
+    this.effects.update(
+      dt,
+      this.truck.root.position,
+      Math.atan2(this.truck.forward.x, this.truck.forward.z),
+      this.input.keys.has('Space') && Math.abs(this.truck.speed) > 2.5,
+    );
+    this.audio.update(dt, this.truck.speed, this.truck.hydraulic, halted);
+    this.scene.render();
+    this.renderDirty = false;
     this.ui.update(
       this.stats,
       this.mission.hint,
@@ -260,8 +274,10 @@ export class Game {
       this.garageLight.setEnabled(false);
       this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
       this.truck.setWorkLight(this.lightOn);
-      this.renderDirty = true;
+      this.requestRender();
     }
+    this.audio.update(0, this.truck.speed, this.truck.hydraulic, this.paused);
+    this.requestRender();
     if (this.paused) {
       this.input.setActive(false);
       this.ui.paused();
@@ -275,8 +291,8 @@ export class Game {
     this.lightOn = !this.lightOn;
     this.truck?.setWorkLight(this.lightOn);
     this.ui.refreshLight();
-    this.renderDirty = true;
-    this.scene?.executeWhenReady(() => { this.renderDirty = true; });
+    this.requestRender();
+    this.scene?.executeWhenReady(this.requestRender);
   }
   private openSettings() {
     if (!this.scene || this.restarting || this.resultShown) return;
@@ -290,7 +306,7 @@ export class Game {
       this.truck.setWorkLight(this.lightOn);
     }
     this.ui.settingsMenu();
-    this.renderDirty = true;
+    this.requestRender();
   }
   private openGarage() {
     if (!this.scene || this.restarting || this.resultShown) return;
@@ -302,7 +318,7 @@ export class Game {
     this.truck.workLight.setEnabled(false);
     this.previewAngle = -.8;
     this.previewTruck();
-    this.scene.executeWhenReady(() => { this.renderDirty = true; });
+    this.scene.executeWhenReady(this.requestRender);
     this.ui.garage();
   }
   private previewTruck() {
@@ -319,18 +335,19 @@ export class Game {
     );
     // Leave visual space for the garage controls on the right.
     this.camera.camera.setTarget(root.add(new Vector3(Math.cos(yaw) * offset, 1, -Math.sin(yaw) * offset)));
-    this.renderDirty = true;
+    this.requestRender();
   }
   private customize(style: TruckStyle) {
     this.truckStyle = style;
     saveStyle(style);
     this.truck.applyStyle(style);
-    this.renderDirty = true;
-    this.scene.executeWhenReady(() => { this.renderDirty = true; });
+    this.requestRender();
+    this.scene.executeWhenReady(this.requestRender);
   }
   async restart(level: MissionDefinition = this.level) {
     if (!this.scene || this.restarting) return;
     this.restarting = true;
+    this.stopRendering();
     this.level = level;
     this.garageOpen = false;
     const url = new URL(location.href);
@@ -346,6 +363,8 @@ export class Game {
       this.ui.ready();
       this.input.setActive(true);
       this.canvas.focus();
+      this.restarting = false;
+      this.requestRender();
     } catch (error) {
       console.error(error);
       this.ui.error('restartError');
@@ -355,11 +374,13 @@ export class Game {
   }
   dispose() {
     this.disposed = true;
+    this.stopRendering();
     this.appearanceObserver.disconnect();
     this.input.dispose();
     this.ui.dispose();
     this.audio.dispose();
     window.removeEventListener('resize', this.resize);
+    document.removeEventListener('visibilitychange', this.visibility);
     this.scene?.dispose();
     this.engine?.dispose();
   }

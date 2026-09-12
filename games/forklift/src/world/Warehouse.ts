@@ -10,6 +10,7 @@ import { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator"
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Factory } from "./Factory";
 import { rigid } from "../systems/Physics";
+import { renderBudget } from "../systems/RenderQuality";
 export interface PropertyObject {
   mesh: Mesh;
   value: number;
@@ -20,7 +21,7 @@ export interface PropertyObject {
 export class Warehouse {
   property: PropertyObject[] = [];
   cameraObstacles = new Set<Mesh>();
-  shadow: ShadowGenerator;
+  shadow?: ShadowGenerator;
   constructor(
     public scene: Scene,
     public f: Factory,
@@ -69,15 +70,16 @@ export class Warehouse {
       sun.diffuse = Color3.FromHexString("#ffd098");
       sun.intensity = 1.3;
     }
-    this.shadow = new ShadowGenerator(scene.getEngine().getRenderWidth() > 1600 ? 4096 : 2048, sun);
-    this.shadow.usePercentageCloserFiltering = true;
-    this.shadow.filteringQuality = ShadowGenerator.QUALITY_HIGH;
-    this.shadow.blurKernel = 24;
-    this.shadow.darkness = 0.25;
-    this.shadow.bias = .001;
-    this.shadow.normalBias = .025;
-    sun.shadowMinZ = 1;
-    sun.shadowMaxZ = 65;
+    if (renderBudget.shadows) {
+      this.shadow = new ShadowGenerator(renderBudget.shadowSize, sun);
+      this.shadow.usePercentageCloserFiltering = true;
+      this.shadow.filteringQuality = ShadowGenerator.QUALITY_LOW;
+      this.shadow.darkness = 0.25;
+      this.shadow.bias = .001;
+      this.shadow.normalBias = .025;
+      sun.shadowMinZ = 1;
+      sun.shadowMaxZ = 65;
+    }
     this.solid("concrete floor", [36, 1, 42], [0, -0.5, 0], "#8e9b9c");
     for (let x = -16; x <= 16; x += 4)
       f.box("concrete joint", [0.014, 0.003, 42], [x, 0.006, 0], "#899395");
@@ -436,6 +438,7 @@ export class Warehouse {
     return m;
   }
   finishShadows() {
+    if (!this.shadow) return;
     for (const m of this.scene.meshes)
       if (
         m.name !== "concrete floor" &&

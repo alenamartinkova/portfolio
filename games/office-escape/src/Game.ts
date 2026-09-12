@@ -1,3 +1,5 @@
+import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
+import { renderBudget, renderScale } from './systems/RenderQuality';
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
 import { atExit, officeLevels, resolveOfficeLevel } from './world/levels';
 import { Engine } from '@babylonjs/core/Engines/engine';
@@ -37,23 +39,30 @@ export class Game {
   floor = new FloorDetectionSystem();
   audio = new GameAudio();
   ui: UI;
-  state: 'loading' | 'intro' | 'playing' | 'paused' | 'finished' = 'loading';
+  state: 'loading' | 'intro' | 'playing' | 'paused' | 'settings' | 'finished' = 'loading';
+  private settingsReturn: 'intro' | 'playing' = 'intro';
   private respawnDelay = 0;
   private ready = false;
   private renderDirty = true;
+  private rendering = false;
+  private disposed = false;
+  private idleTime = 0;
+  private renderFrame = () => this.frame();
   private appearanceObserver = new MutationObserver(() => {
-    this.renderDirty = true;
+    this.requestRender();
   });
   private playtest?: Playtest;
   constructor(private canvas: HTMLCanvasElement) {
-    this.engine = new Engine(canvas, true, { stencil: true });
+    this.engine = new Engine(canvas, false, { stencil: true, powerPreference: 'low-power' });
     this.engine.renderEvenInBackground = false;
-    this.engine.setHardwareScalingLevel(Math.max(1, devicePixelRatio / 1.5));
+    this.engine.maxFPS = renderBudget.fps;
+    this.engine.setHardwareScalingLevel(renderScale(canvas.clientWidth, canvas.clientHeight, devicePixelRatio));
     this.scene = new Scene(this.engine);
     this.run = new RunManager(this.storage, this.definition.id);
     this.input = new Input(canvas, (force) => {
       if (this.state === 'playing') this.pause();
       else if (!force && this.state === 'paused') this.play();
+      else if (!force && this.state === 'settings') this.closeSettings();
     });
     this.ui = new UI(document.querySelector('#ui')!, {
       level: () => this.definition,
@@ -66,7 +75,9 @@ export class Game {
         ),
       play: () => this.play(),
       restart: () => this.restart(),
-      pause: () => (this.state === 'paused' ? this.play() : this.pause()),
+      pause: () => this.state === 'settings' ? this.closeSettings() : this.state === 'paused' ? this.play() : this.pause(),
+      settings: () => this.openSettings(),
+      closeSettings: () => this.closeSettings(),
       mute: () => {
         this.audio.start();
         return this.audio.toggle();
@@ -83,17 +94,34 @@ export class Game {
       this.ready = true;
       this.state = 'intro';
       this.ui.ready();
+      this.requestRender();
       window.addEventListener('resize', this.resize);
+      document.addEventListener('visibilitychange', this.visibility);
       this.appearanceObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['lang', 'data-theme', 'data-accent'],
       });
-      this.engine.runRenderLoop(() => this.frame());
+      this.requestRender();
     } catch (e) {
       console.error(e);
       this.ui.error();
     }
   }
+  private requestRender = () => {
+    this.renderDirty = true;
+    if (!this.ready || this.disposed || document.hidden || this.rendering) return;
+    this.engine.performanceMonitor.reset();
+    this.rendering = true;
+    this.engine.runRenderLoop(this.renderFrame);
+  };
+  private stopRendering() {
+    this.engine.stopRenderLoop(this.renderFrame);
+    this.rendering = false;
+  }
+  private visibility = () => {
+    if (document.hidden) this.stopRendering();
+    else this.requestRender();
+  };
   private get startingYaw() {
     const [start, next] = this.definition.route;
     return Math.atan2(next.x - start.x, next.z - start.z) - .2;
@@ -111,7 +139,11 @@ export class Game {
       this.camera.overviewTarget = low.add(high).scale(.5);
       this.camera.overviewDistance = Math.max(18, Vector3.Distance(low, high) * 1.15);
     }
-    for (const mesh of this.player.root.getChildMeshes()) this.level.shadows.addShadowCaster(mesh);
+    const pipeline = new DefaultRenderingPipeline('office antialiasing', false, this.scene, [this.camera.camera]);
+    pipeline.imageProcessingEnabled = false;
+    pipeline.samples = renderBudget.samples;
+    pipeline.fxaaEnabled = true;
+    for (const mesh of this.player.root.getChildMeshes()) this.level.shadows?.addShadowCaster(mesh);
     this.physics.onImpact = (s) => {
       if (this.state === 'playing') this.audio.impact(s);
     };
@@ -122,10 +154,13 @@ export class Game {
     };
     // Settle furniture before exposing controls. No simulation runs while paused.
     settlePhysics(this.scene);
+    this.idleTime = 0;
+    this.scene.executeWhenReady(this.requestRender);
   }
   async selectLevel(id: string) {
     if (!this.ready) return;
     this.ready = false;
+    this.stopRendering();
     this.state = 'loading';
     this.input.setActive(false);
     this.definition = resolveOfficeLevel(id);
@@ -144,18 +179,22 @@ export class Game {
       this.ready = true;
       this.state = 'intro';
       this.ui.ready();
+      this.requestRender();
     } catch (error) {
       console.error(error);
       this.ui.error();
     }
   }
   private resize = () => {
+    this.engine.setHardwareScalingLevel(renderScale(this.canvas.clientWidth, this.canvas.clientHeight, devicePixelRatio));
     this.engine.resize();
-    this.renderDirty = true;
+    this.requestRender();
   };
   play() {
     if (!this.ready || this.state === 'finished') return;
     this.state = 'playing';
+    this.idleTime = 0;
+    this.requestRender();
     this.input.setActive(true);
     this.audio.start();
     this.ui.playing();
@@ -167,6 +206,23 @@ export class Game {
     this.input.setActive(false);
     this.physics.grabbed = null;
     this.ui.pause();
+    this.audio.update(0, false, 0, true);
+    this.requestRender();
+  }
+  private openSettings() {
+    if (!this.ready || this.state === 'finished' || this.state === 'settings') return;
+    this.settingsReturn = this.state === 'intro' ? 'intro' : 'playing';
+    this.state = 'settings';
+    this.input.setActive(false);
+    this.physics.grabbed = null;
+    this.ui.settings();
+    this.requestRender();
+  }
+  private closeSettings() {
+    if (this.state !== 'settings') return;
+    if (this.settingsReturn === 'playing') this.play();
+    else { this.state = 'intro'; this.ui.ready(); this.canvas.focus(); }
+    this.requestRender();
   }
   restart() {
     if (!this.ready) return;
@@ -197,6 +253,14 @@ export class Game {
     const dt = Math.min(this.engine.getDeltaTime() / 1000, 0.04);
     const active = this.state === 'playing';
     this.scene.physicsEnabled = active && this.respawnDelay <= 0;
+    if (this.state === 'paused' || this.state === 'settings') {
+      this.audio.update(0, false, 0, true);
+      if (this.renderDirty) this.scene.render();
+      this.renderDirty = false;
+      this.stopRendering();
+      return;
+    }
+    this.idleTime = active ? 0 : this.idleTime + dt;
     this.playtest?.update(dt);
     if (active) {
       this.run.update(
@@ -269,8 +333,7 @@ export class Game {
     }
     if (this.state === 'finished')
       this.level.exitDoor.position.x = Math.min(this.definition.exit.x + 3, this.level.exitDoor.position.x + dt * 2);
-    if (this.state !== 'paused')
-      this.camera.update(dt, this.player.position, this.input, this.state === 'intro');
+    this.camera.update(dt, this.player.position, this.input, this.state === 'intro');
     const nearest = this.physics.nearest(this.player.position);
     const interaction = this.physics.grabbed
       ? { name: this.physics.grabbed.name, grabbed: true }
@@ -283,17 +346,20 @@ export class Game {
       0,
     );
     this.audio.update(dt, active && this.player.grounded && this.player.moving, rolling, !active);
-    if (this.state !== 'paused' || this.renderDirty) {
-      this.scene.render();
-      this.renderDirty = false;
-    }
+    this.scene.render();
+    this.renderDirty = false;
+    // Allow the intro camera / exit door to settle, then retain their last frame.
+    if (!active && this.idleTime >= 2) this.stopRendering();
   }
   dispose() {
+    this.disposed = true;
+    this.stopRendering();
     this.appearanceObserver.disconnect();
     this.ui.dispose();
     this.input.dispose();
     this.audio.dispose();
     window.removeEventListener('resize', this.resize);
+    document.removeEventListener('visibilitychange', this.visibility);
     this.scene.dispose();
     this.engine.dispose();
   }

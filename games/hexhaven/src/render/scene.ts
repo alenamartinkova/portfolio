@@ -1,3 +1,5 @@
+import { createRenderLoop } from '../../../../shared/render-loop.js';
+import { renderBudget, renderPixelRatio } from '../../../../shared/render-budget.js';
 import {
   ACESFilmicToneMapping,
   Color,
@@ -43,15 +45,14 @@ export interface BoardScene {
 }
 export function createBoardScene(container: HTMLElement, board: Board): BoardScene {
   const renderer = new WebGLRenderer({
-    antialias: true,
+    antialias: renderBudget.antialias,
     alpha: false,
-    powerPreference: 'high-performance',
+    powerPreference: 'low-power',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.3;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = renderBudget.shadows;
   renderer.shadowMap.type = PCFSoftShadowMap;
   // The light and board are static. Refresh shadows when pieces change or
   // dice animate, rather than for every sea shimmer and camera movement.
@@ -92,7 +93,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   const key = new DirectionalLight('#ffffff', 3.1);
   key.position.set(-5, 11, 5);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.mapSize.set(renderBudget.shadowSize, renderBudget.shadowSize);
   key.shadow.camera.left = -6.6;
   key.shadow.camera.right = 6.6;
   key.shadow.camera.top = 6.6;
@@ -119,35 +120,19 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     colorBlind = false,
     disposed = false,
     dirty = true,
-    animation = 0,
-    timer = 0,
     frames = 0,
     frameMs = 0,
-    lastTime = 0,
-    activeUntil = 0,
-    targetsArmed = false;
+    activeUntil = 0;
+  const renderLoop = createRenderLoop(frame);
   const focusStart = new Vector3(),
     focusEnd = new Vector3(),
     projected = new Vector3();
   let focusElapsed = 1,
     focusDuration = 0.6;
-  function requestFrame(): void {
-    timer = 0;
-    if (!disposed && !document.hidden) animation = window.requestAnimationFrame(frame);
-  }
-  function schedule(active = false): void {
-    if (disposed || document.hidden || animation || timer) return;
-    if (active) requestFrame();
-    else timer = window.setTimeout(requestFrame, 42);
-  }
   function invalidate(): void {
     dirty = true;
     activeUntil = performance.now() / 1000 + 0.24;
-    if (timer) {
-      window.clearTimeout(timer);
-      timer = 0;
-    }
-    schedule(true);
+    renderLoop.request();
   }
   const picking = createPicking(
     renderer.domElement,
@@ -158,13 +143,11 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     invalidate,
   );
   scene.add(picking.group);
-  function frame(now: number): void {
-    animation = 0;
+  function frame(now: number, elapsed: number): void {
     if (disposed || document.hidden) return;
     const start = performance.now(),
       time = now / 1000,
-      delta = Math.min(0.05, lastTime ? time - lastTime : 1 / 60);
-    lastTime = time;
+      delta = Math.min(0.05, elapsed);
     if (focusElapsed < focusDuration) {
       focusElapsed = Math.min(focusDuration, focusElapsed + delta);
       const t = focusElapsed / focusDuration,
@@ -193,7 +176,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     picking.pulse(time, reducedMotion);
     const shake = fx.cameraShake(time);
     renderer.domElement.style.transform = shake ? `translateX(${shake}px)` : '';
-    if (dirty || cameraChanged || effectActive || targetsArmed || !reducedMotion) {
+    if (dirty || cameraChanged || effectActive || !reducedMotion) {
       renderer.render(scene, camera);
       frames++;
       frameMs = frameMs * 0.9 + (performance.now() - start) * 0.1;
@@ -203,13 +186,13 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       effectActive ||
       cameraChanged ||
       focusElapsed < focusDuration ||
-      time < activeUntil ||
-      (targetsArmed && !reducedMotion);
-    if (active || !reducedMotion) schedule(active);
+      time < activeUntil;
+    if (active) renderLoop.request();
   }
   function resize(): void {
     const width = Math.max(1, container.clientWidth),
       height = Math.max(1, container.clientHeight);
+    renderer.setPixelRatio(renderPixelRatio(width, height, window.devicePixelRatio));
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     const compact = window.matchMedia(
@@ -236,16 +219,6 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   }
   const observer = new ResizeObserver(resize);
   observer.observe(container);
-  function visibility(): void {
-    if (document.hidden) {
-      if (animation) window.cancelAnimationFrame(animation);
-      if (timer) window.clearTimeout(timer);
-      animation = 0;
-      timer = 0;
-      lastTime = 0;
-    } else invalidate();
-  }
-  document.addEventListener('visibilitychange', visibility);
   controls.addEventListener('change', invalidate);
   controls.addEventListener('start', invalidate);
   resize();
@@ -282,10 +255,8 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
   }
   function dispose(): void {
     disposed = true;
-    if (animation) window.cancelAnimationFrame(animation);
-    if (timer) window.clearTimeout(timer);
+    renderLoop.dispose();
     observer.disconnect();
-    document.removeEventListener('visibilitychange', visibility);
     controls.removeEventListener('change', invalidate);
     controls.removeEventListener('start', invalidate);
     controls.dispose();
@@ -337,7 +308,6 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     dispose,
     highlight: picking.highlight,
     setTargets: (targets, onSelect) => {
-      targetsArmed = targets.length > 0;
       picking.setTargets(targets, onSelect);
     },
     setSettings: (settings) => {

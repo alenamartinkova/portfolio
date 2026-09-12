@@ -1,4 +1,9 @@
 export const en = {
+  settings: 'Settings', settingsResume: 'Back to the game', settingsBack: 'All settings',
+  settingsSound: 'Sound', settingsAppearance: 'Appearance & language', settingOn: 'On', settingOff: 'Off',
+  settingsCurrentLevel: 'Current level', settingsChange: 'Change', settingsCards: 'Cards',
+  chooseLevel: 'Choose a level', chooseLevelNote: 'Choosing a level starts a new escape.',
+
   briefShaft: "The lift is out. Spiral up the maintenance ledges through three storeys. Hold Jump to mantle, turn the camera, and wait for green at the beams.",
   briefDescent: "Start on the roof and work your way down. Brake in the air for small landings; sprinting every drop will overshoot. Collect three cards on the way.",
   briefAtrium: "Climb around the open atrium, then cross the narrow skybridge. Look up for the next landing. Three access cards unlock the upper exit.",
@@ -93,6 +98,11 @@ export const en = {
 export type TextKey = keyof typeof en;
 export type Locale = 'en' | 'sk';
 export const sk: Record<TextKey, string> = {
+  settings: 'Nastavenia', settingsResume: 'Späť do hry', settingsBack: 'Všetky nastavenia',
+  settingsSound: 'Zvuk', settingsAppearance: 'Vzhľad a jazyk', settingOn: 'Zapnuté', settingOff: 'Vypnuté',
+  settingsCurrentLevel: 'Aktuálny level', settingsChange: 'Zmeniť', settingsCards: 'Karty',
+  chooseLevel: 'Vyber si level', chooseLevelNote: 'Výberom levelu začneš nový útek.',
+
   briefShaft: "Výťah nejde. Obíď šachtu po servisných plošinách cez tri podlažia. Podrž Skok pri hrane, otáčaj kameru a pri lúčoch počkaj na zelenú.",
   briefDescent: "Začni na streche a zostupuj po servisných plošinách. Pred malým doskokom vo vzduchu pribrzdi; šprintom ho ľahko preletíš. Cestou zober tri karty.",
   briefAtrium: "Stúpaj okolo otvoreného átria a prejdi po úzkej lávke. Ďalší doskok hľadaj aj nad sebou. Tri prístupové karty odomknú horný východ.",

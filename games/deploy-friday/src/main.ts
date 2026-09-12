@@ -1,3 +1,4 @@
+import { createRenderLoop } from '../../../shared/render-loop.js';
 import './style.css';
 import { initializeAppearance, readPreference, siteLinks } from '../../../shared/appearance.js';
 import { mountGameAppearance } from '../../../shared/game-appearance.js';
@@ -19,9 +20,10 @@ let training: Training | null = null;
 let coachKey = '';
 let paused = false, speed = 1, selected: number | null = null, chosen: Service = 'pod', radial = false;
 let scene: ClusterScene | null = null, cleanupAppearance: (() => void) | undefined;
-let accumulator = 0, previous = performance.now(), lastUI = -1, panelKey = '', finished = false, saved = false;
+let accumulator = 0, lastUI = -1, panelKey = '', finished = false, saved = false;
 let lastMessage = '', lastWave = 1, lastPing = 0;
 const audio = new ServerAudio();
+const renderLoop = createRenderLoop(frame);
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const serviceKinds = Object.keys(SERVICES) as Service[];
@@ -131,6 +133,7 @@ function mount() {
   cleanupAppearance = mountGameAppearance($('appearance'), { locale, onLocaleChange: (next: Locale) => { const campaignOpen = $<HTMLDialogElement>('campaign').open; locale = next; panelKey = ''; mount(); if (campaignOpen) showCampaign(); } });
   try {
     scene = new ClusterScene($('viewport'), $('cluster'));
+    scene.onInvalidate = () => { updateLabels(); renderLoop.request(); };
     scene.onSelect = cell => {
       if (['won', 'lost'].includes(sim.state.phase)) return;
       selected = cell; radial = !sim.state.towers.some(t => t.cell === cell) && ![START, DB, 16, 60].includes(cell);
@@ -244,6 +247,7 @@ function inspector() {
   }
 }
 function update() {
+  renderLoop.request();
   const s = sim.state, t = copy[locale], c = campaignCopy[locale], level = mission(s.mission), burn = burnRate(s);
   $('budget').textContent = money(s.budget);
   const seconds = burn ? Math.floor(s.budget / burn) : null;
@@ -426,16 +430,15 @@ document.addEventListener('keydown', event => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && sim.state.phase === 'running' && (!training || training.status === 'watch')) { paused = true; accumulator = 0; audio.suspend(true); update(); }
 });
-function frame(now: number) {
-  const delta = Math.min(.25, (now - previous) / 1000); previous = now;
+function frame(_now: number, delta: number) {
   if (!paused && scene && sim.state.phase === 'running') {
     accumulator += delta * speed;
     while (accumulator >= 1 / HZ) { if (training) training.step(); else sim.step(); accumulator -= 1 / HZ; }
   }
-  if (lastUI !== sim.state.tick || now % 500 < 20) { lastUI = sim.state.tick; update(); }
+  if (lastUI !== sim.state.tick) { lastUI = sim.state.tick; update(); }
   scene?.render(sim.state, radial ? SERVICES[chosen].range : 0);
-  requestAnimationFrame(frame);
+  return !paused && !!scene && sim.state.phase === 'running';
 }
-requestAnimationFrame(frame);
+renderLoop.request();
 window.addEventListener('pagehide', () => { audio.suspend(true); });
-if (import.meta.hot) import.meta.hot.dispose(() => { cleanupAppearance?.(); scene?.dispose(); audio.dispose(); });
+if (import.meta.hot) import.meta.hot.dispose(() => { renderLoop.dispose(); cleanupAppearance?.(); scene?.dispose(); audio.dispose(); });

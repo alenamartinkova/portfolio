@@ -1,3 +1,4 @@
+import { renderBudget, renderPixelRatio } from '../../../shared/render-budget.js';
 import * as THREE from 'three';
 import { DB, HEIGHT, position, REQUESTS, SERVICES, START, WIDTH, type State } from './core/simulation';
 
@@ -19,11 +20,11 @@ export class ClusterScene {
   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   private hovered: number | null = null;
   selected: number | null = null;
+  onInvalidate: () => void = () => {};
   onSelect: (cell: number) => void = () => {};
   onHover: (cell: number | null) => void = () => {};
   constructor(private host: HTMLElement, private canvas: HTMLCanvasElement) {
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: renderBudget.antialias, alpha: true, powerPreference: 'low-power' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.camera.position.set(12, 15, 15); this.camera.lookAt(0, 0, 0);
     this.scene.add(new THREE.HemisphereLight(0xbac5ff, 0x24223f, 2.2));
@@ -59,10 +60,12 @@ export class ClusterScene {
   private material(color: number) { return new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: .18 }); }
   private resize() {
     const w = this.host.clientWidth, h = this.host.clientHeight;
+    this.renderer.setPixelRatio(renderPixelRatio(w, h, devicePixelRatio));
     this.renderer.setSize(w, h, false);
     const aspect = w / h, view = Math.max(6.5, 8.3 / aspect);
     this.camera.left = -view * aspect; this.camera.right = view * aspect;
     this.camera.top = view; this.camera.bottom = -view; this.camera.updateProjectionMatrix();
+    this.onInvalidate();
   }
   private pick(event: PointerEvent) {
     const r = this.canvas.getBoundingClientRect();
@@ -70,8 +73,12 @@ export class ClusterScene {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     return this.raycaster.intersectObjects(this.tiles)[0]?.object.userData.cell as number | undefined;
   }
-  private move = (event: PointerEvent) => { this.hovered = this.pick(event) ?? null; this.onHover(this.hovered); };
-  private leave = () => { this.hovered = null; this.onHover(null); };
+  private move = (event: PointerEvent) => {
+    const next = this.pick(event) ?? null;
+    if (next === this.hovered) return;
+    this.hovered = next; this.onHover(next); this.onInvalidate();
+  };
+  private leave = () => { this.hovered = null; this.onHover(null); this.onInvalidate(); };
   private click = (event: PointerEvent) => {
     if (event.button !== 0) return;
     const cell = this.pick(event);
