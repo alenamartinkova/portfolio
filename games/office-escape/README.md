@@ -45,11 +45,11 @@ The game uses the same shared fonts, design tokens, navigation and language butt
 
 ## Rules and routes
 
-Stay on furniture. Mint dots identify the main route, rings mark safe checkpoints, and orange chairs/carts/boxes can move. There are four areas: open office, meeting rooms, coffee break, and the final archive climb. The raised green emergency exit ends the run once every required access card is collected.
+Stay on furniture and maintenance platforms. Mint markers and arrows point to the next landing, rings mark safe checkpoints, and orange chairs/carts/boxes can move. Routes now include reception loops, dispatch switchbacks, server aisles, a 22-metre shaft climb, descending rooftop maintenance platforms and a multi-storey atrium. Each level defines its own three-dimensional route, architecture, four named checkpoints and exit position.
 
-Floor detection checks the tagged floor directly below the capsule's feet. A continuous 85 ms contact fails the run; furniture, side walls, and transient contacts do not. Recovery takes approximately 320 ms, retains time and falls, restores the latest checkpoint and resets movable furniture without rebuilding the scene. Restoring furniture prevents a lost cart from making the level impossible.
+Floor detection checks the tagged floor directly below the capsule's feet, including forbidden balcony floors on upper storeys. A continuous 85 ms contact fails the run; furniture, side walls, and transient contacts do not. Recovery takes approximately 320 ms, retains time and falls, restores the latest checkpoint at its original height and resets movable furniture without rebuilding the scene. Restoring furniture prevents a lost cart from making the level impossible.
 
-The standard route has 21 furniture stops plus the exit landing. Small alternate lines use the archive box and rotating chair in the open office. The advanced meeting-room shortcut uses the narrow, movable whiteboard resting on low cabinets; landing off-center can displace it. Peripheral desks provide more places to experiment. Sprinting and learning the route allow a sub-two-minute finish.
+The first evening keeps the introductory office route and its optional whiteboard shortcut. Later levels change direction, climb and descend, and mix wide checkpoint landings with narrow beams. Drag the mouse to look around corners or find the next ledge above you. Hold Space to mantle; release sprint to brake before a small landing below you. Elevated furniture has a local support height, so cabinet bodies never block a lower route through the same coordinates.
 
 Dragging applies a capped horizontal spring to a nearby body. It slows walking, has a short tether, and never supplies upward force. Chairs and carts have low rectangular collision hulls and damping so they slide without becoming uncontrollable. Boxes and plants can tip. Decorative chair backs, desk legs, monitors and leaves do not snag the player.
 
@@ -57,20 +57,20 @@ Choose any of ten levels in the header; each has a distinct furniture route, tar
 
 | Level | Challenge |
 | --- | --- |
-| First evening | Wide, stable landings; learn jumping and checkpoints. |
-| Visitor badge | First required access card and a mirrored route. |
-| Rolling stock | More rolling furniture and two cards. |
-| Security training | First timed security gate. |
-| Balancing the books | Narrow landings and a later security gate. |
-| Archive expedition | Three cards and more movable furniture. |
-| Night shift | Two gates with different timing phases. |
-| Executive floor | Narrow platforms and security during the archive climb. |
-| Lockdown | Three cards and three independently timed gates. |
-| Last one out | Smallest landings, moving furniture and all three gates. |
+| First evening | Wide, stable furniture in the original office; learn jumping and checkpoints. |
+| Visitor badge | Loop around a reception lounge, double back, and climb to a mezzanine card. |
+| Rolling stock | Three dispatch lanes with U-turns, rolling carts and loose boxes. |
+| Server switchbacks | Sideways server aisles, elevation changes and two timed gates. |
+| Lift out of order | Three spiralling circuits up a 22-metre shaft; cards at each landing. |
+| Archive expedition | Climb stacks, drop into the returns aisle, then climb to the upper archive. |
+| Night shift | Descend from an 18-metre roof through small landings and three gates. |
+| Open atrium | Climb around multiple storeys, then cross a narrow bridge over the atrium. |
+| Lockdown | Narrow crosswise beams, repeated height changes and four timed gates. |
+| Last one out | Rolling dispatch, spiral ascent, skybridge, steep descent and a final roof climb. |
 
-Gold cards are collected by landing on their checkpoint. They survive falls, but a fresh run clears them. A checkpoint cannot advance past a missing earlier card. Red security beams send the player to the saved checkpoint; green opens a crossing window and amber warns 0.8 seconds before reactivation. Pausing freezes the security clock. Recovery resets furniture and retains collected cards.
+Gold cards are collected by landing on their checkpoint. They survive falls, but a fresh run clears them. A checkpoint cannot advance past a missing earlier card. Gates rotate across the direction of each jump, including sideways and reverse crossings. Red security beams send the player to the saved checkpoint; green opens a crossing window and amber warns 0.8 seconds before reactivation. Pausing freezes the security clock. Recovery resets furniture and retains collected cards.
 
-One star rewards an escape, two require no falls, and three additionally require beating the level’s target time. Personal bests are saved per level under `office-escape:best:v2:<id>`; `shared/CampaignProgress.ts` independently saves best stars and fastest time under `office-escape:campaign:v1:<id>`. Blocked or corrupt storage falls back to session progress. Development `?playtest` runs do not save records.
+One star rewards an escape, two require no falls, and three additionally require beating the level’s target time. Personal bests are saved per level under `office-escape:best:v3:<id>`; `shared/CampaignProgress.ts` independently saves best stars and fastest time under `office-escape:routes-v2:campaign:v1:<id>`. Previous route records remain in storage under their old keys and are not compared with the redesigned campaign. Blocked or corrupt storage falls back to session progress. Development `?playtest` runs do not save records.
 
 ## Architecture
 
@@ -84,8 +84,9 @@ One star rewards an escape, two require no falls, and three additionally require
 - `systems/Input.ts`: keyboard/pointer state and focus handling.
 - `systems/Audio.ts`: Web Audio footsteps, jumps, landing thumps, rolling, electrical ambience and result cues.
 - `world/levels.ts`: ten authored routes, card locations, gate timings, palettes and target times.
-- `world/Level.ts`: furniture, checkpoint markers, office set dressing, lighting and exit.
-- `systems/SecuritySystem.ts`: access cards, checkpoint guards, timed beam visuals and swept collision detection.
+- `world/Level.ts`: furniture with local support heights, directional markers, lighting and level-specific exit.
+- `world/Architecture.ts`: reception, dispatch, server racks, lift shaft, atrium balconies, archive and rooftop scenery.
+- `systems/SecuritySystem.ts`: access cards, checkpoint guards, oriented timed beam visuals and swept collision detection.
 - `world/Factory.ts`: reusable geometry, materials and signs.
 - `i18n/index.ts`: typed EN/SK dictionaries, language persistence and live scene-label updates.
 - `ui/SiteAppearance.ts`: shared theme, accent preferences and localized navigation.
@@ -96,7 +97,7 @@ Future levels can reuse the systems with a different route and furniture layout.
 
 ## Validation
 
-Real Havok integration tests traverse all ten full routes using the player controller, sprint jumps, dynamic furniture, card collection and safe crossing windows. Unit tests cover security timing, swept beam collision, card/reset rules, per-level records, sustained versus transient floor contact, out-of-world failure, landed checkpoint activation, forward-only progress, timer lifecycle, improved-best persistence and unavailable/corrupt storage. The portfolio's tests also check catalog integration and routing.
+Real Havok integration tests traverse all ten full routes at both 60 and 30 FPS using the player controller, sprint jumps, dynamic furniture, card collection and safe crossing windows. They also verify recovery onto the final checkpoint at its original height. Route invariants check meaningful vertical variety, reachable exit jumps and storey-specific exit detection. Unit tests cover security timing, swept beam collision, card/reset rules, per-level records, sustained versus transient floor contact, out-of-world failure, landed checkpoint activation, forward-only progress, timer lifecycle, improved-best persistence and unavailable/corrupt storage. The portfolio's tests also check catalog integration and routing.
 
 For repeatable browser checks, open `/office-escape/?playtest` on the development server. The visible panel offers:
 

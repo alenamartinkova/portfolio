@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { officeLevels, resolveOfficeLevel } from '../src/world/levels';
+import { atExit, officeLevels, resolveOfficeLevel } from '../src/world/levels';
 import { crossesGate, gateState, SecuritySystem } from '../src/systems/SecuritySystem';
 import { RunManager } from '../src/systems/RunManager';
 import { CheckpointManager } from '../src/systems/CheckpointManager';
@@ -15,8 +15,9 @@ it('has ten distinct routes, valid checkpoints, and physically reachable jumps',
   for (const level of officeLevels) {
     expect(new CheckpointManager(level.route).stops).toHaveLength(4);
     for (const index of level.cards) expect(level.route[index].checkpoint).toBeDefined();
-    for (let i = 1; i < level.route.length; i++) {
-      const a = level.route[i - 1], b = level.route[i];
+    const route = [...level.route, { ...level.exit, w: 5, d: 4 }];
+    for (let i = 1; i < route.length; i++) {
+      const a = route[i - 1], b = route[i];
       // Measure edge-to-edge clearance with a capsule margin, using the actual jump constants.
       const dx = Math.max(0, Math.abs(a.x - b.x) - (a.w + b.w) / 2 + .6);
       const dz = Math.max(0, Math.abs(a.z - b.z) - (a.d + b.d) / 2 + .6);
@@ -72,4 +73,48 @@ it('keeps Office Escape best times separate for every level', () => {
   const a = new RunManager(storage, 'first-evening'); a.update(50, true); a.finish();
   expect(new RunManager(storage, 'first-evening').best).toBe(50);
   expect(new RunManager(storage, 'last-out').best).toBeNull();
+});
+
+it('mixes compact loops, tall climbs, descending routes and narrow bridges', () => {
+  const shaft = resolveOfficeLevel('accounts').route;
+  expect(Math.max(...shaft.map(s => s.y)) - Math.min(...shaft.map(s => s.y))).toBeGreaterThan(20);
+  expect(Math.max(...shaft.map(s => s.z)) - Math.min(...shaft.map(s => s.z))).toBeLessThan(15);
+  expect(shaft.some((s, i) => shaft.slice(i + 1).some(b => b.x === s.x && b.z === s.z && b.y - s.y > 6))).toBe(true);
+  const descent = resolveOfficeLevel('night-shift').route;
+  expect(descent[0].y - descent.at(-1)!.y).toBeGreaterThan(12);
+  for (const id of ['reception', 'rolling-stock', 'security-training', 'archive', 'executive', 'lockdown', 'last-out']) {
+    const route = resolveOfficeLevel(id).route;
+    expect(route.some((s, i) => i > 0 && s.z < route[i - 1].z || i > 0 && s.x < route[i - 1].x)).toBe(true);
+  }
+  expect(resolveOfficeLevel('executive').route.some(s => s.kind === 'beam' && s.w < 1.5)).toBe(true);
+});
+
+it('rotates security collision with lateral, diagonal and reverse crossings', () => {
+  for (const yaw of [Math.PI / 2, -Math.PI / 2, Math.PI, Math.PI / 4]) {
+    const gate = { x: 7, y: 12, z: -4, width: 3, yaw };
+    const world = (x: number, z: number, y = 14) => ({ x: gate.x + x * Math.cos(yaw) + z * Math.sin(yaw), y, z: gate.z - x * Math.sin(yaw) + z * Math.cos(yaw) });
+    expect(crossesGate(world(0, -2), world(0, 2), gate)).toBe(true);
+    expect(crossesGate(world(0, 2), world(0, -2), gate)).toBe(true);
+    expect(crossesGate(world(4, -2), world(4, 2), gate)).toBe(false);
+    expect(crossesGate(world(0, -2, 3), world(0, 2, 3), gate)).toBe(false);
+  }
+});
+
+it('requires a landed exit at the correct storey', () => {
+  for (const level of officeLevels) {
+    const p = { ...level.exit, y: level.exit.y + PLAYER_HEIGHT / 2 };
+    expect(atExit(level, p, true)).toBe(true);
+    expect(atExit(level, p, false)).toBe(false);
+    expect(atExit(level, { ...p, y: p.y - 5 }, true)).toBe(false);
+    expect(atExit(level, { ...p, x: p.x + 3 }, true)).toBe(false);
+  }
+});
+
+it('keeps repeated shaft coordinates distinct when saving checkpoints', () => {
+  const level = resolveOfficeLevel('accounts'), checkpoints = new CheckpointManager(level.route);
+  const start = level.route[0], upper = checkpoints.stops[2];
+  expect(checkpoints.update(new Vector3(start.x, start.y + PLAYER_HEIGHT / 2, start.z), true)).toBe(false);
+  expect(checkpoints.update(new Vector3(upper.x, upper.y + PLAYER_HEIGHT / 2, upper.z), false)).toBe(false);
+  expect(checkpoints.update(new Vector3(upper.x, upper.y + PLAYER_HEIGHT / 2, upper.z), true)).toBe(true);
+  expect(checkpoints.spawn.y).toBeCloseTo(upper.y + PLAYER_HEIGHT / 2 + .09);
 });

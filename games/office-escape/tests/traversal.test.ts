@@ -4,7 +4,7 @@ import HavokPhysics from '@babylonjs/havok';
 import { HavokPlugin, MeshBuilder, NullEngine, Scene, Vector3, FreeCamera } from '@babylonjs/core';
 import { Factory } from '../src/world/Factory';
 import { Level } from '../src/world/Level';
-import { officeLevels } from '../src/world/levels';
+import { atExit, officeLevels } from '../src/world/levels';
 import { PhysicsInteractionSystem, settlePhysics } from '../src/systems/PhysicsInteractionSystem';
 import { CheckpointManager } from '../src/systems/CheckpointManager';
 import { PlayerController } from '../src/player/PlayerController';
@@ -14,8 +14,9 @@ let havok: Awaited<ReturnType<typeof HavokPhysics>>;
 beforeAll(async () => {
   havok = await HavokPhysics({ wasmBinary: Uint8Array.from(readFileSync(new URL('../node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm', import.meta.url))).buffer });
 });
-for (const definition of officeLevels) {
-  it(`traverses ${definition.id} using actual jumps, furniture and security timing`, () => {
+for (const { definition, fps } of officeLevels.flatMap(definition => [60, 30].map(fps => ({ definition, fps })))) {
+  const dt = 1 / fps;
+  it(`traverses ${definition.id} at ${fps} fps using actual jumps, furniture and security timing`, () => {
     const engine = new NullEngine(); const scene = new Scene(engine);
     const label = vi.spyOn(Factory.prototype, 'label').mockImplementation(function(this: Factory) { return MeshBuilder.CreatePlane('label', { size: .01 }, this.scene); });
     try {
@@ -29,15 +30,15 @@ for (const definition of officeLevels) {
       const stepPhysics = () => {
         scene.incrementRenderId();
         for (const mesh of scene.meshes) mesh.computeWorldMatrix(true);
-        scene.getPhysicsEngine()!._step(1 / 60);
+        scene.getPhysicsEngine()!._step(dt);
       };
       const render = vi.spyOn(scene, 'render');
       settlePhysics(scene);
       expect(render).not.toHaveBeenCalled();
       render.mockRestore();
       let target = 1, launched = false, jumped = false, complete = false;
-      for (let frame = 0; frame < 120 * 60; frame++) {
-        const s = definition.route[target] ?? { x: 3, z: 72.8 };
+      for (let frame = 0; frame < 120 * fps; frame++) {
+        const s = definition.route[target] ?? definition.exit;
         const before = player.position.clone();
         const dx = s.x - before.x, dz = s.z - before.z, distance = Math.hypot(dx, dz);
         keys.clear();
@@ -49,19 +50,30 @@ for (const definition of officeLevels) {
           if (!launched && player.grounded) { pressed.add('Space'); keys.add('Space'); launched = true; jumped = false; }
           if (launched) keys.add('Space');
         }
-        player.update(1 / 60, input, Math.atan2(dx, dz), false);
-        physics.update(1 / 60, player.position, player.forward);
-        const event = level.security.update(1 / 60, before, player.position, player.grounded);
+        player.update(dt, input, Math.atan2(dx, dz), false);
+        physics.update(dt, player.position, player.forward);
+        const event = level.security.update(dt, before, player.position, player.grounded);
         expect(event, `${definition.id} beam at stop ${target}`).not.toBe('securityHit');
         expect(player.feet, `${definition.id} fell at stop ${target}: ${player.position}`).toBeGreaterThan(.2);
         if (!player.grounded) jumped = true;
         checkpoints.update(player.position, player.grounded, n => level.security.canSaveCheckpoint(n));
         if (distance < .62 && player.grounded && jumped) { target++; launched = false; }
-        if (player.position.z > 71 && Math.abs(player.position.x - 3) < 2.5 && player.feet > 2.85 && player.grounded && level.security.complete) { complete = true; break; }
+        if (atExit(definition, player.position, player.grounded) && level.security.complete) { complete = true; break; }
         stepPhysics();
       }
       expect(complete, `stuck at ${target}: ${player.position}`).toBe(true);
       expect(checkpoints.current).toBe(3);
+      expect(target).toBeGreaterThanOrEqual(definition.route.length);
+      // Recovery must land on the saved storey even when another checkpoint shares x/z.
+      physics.reset();
+      player.teleport(checkpoints.spawn);
+      keys.clear(); pressed.clear();
+      for (let frame = 0; frame < fps; frame++) {
+        player.update(dt, input, 0, false);
+        stepPhysics();
+      }
+      expect(player.grounded).toBe(true);
+      expect(player.feet).toBeCloseTo(checkpoints.stops[3].y, 0);
     } finally { label.mockRestore(); scene.dispose(); engine.dispose(); }
   }, 20000);
 }

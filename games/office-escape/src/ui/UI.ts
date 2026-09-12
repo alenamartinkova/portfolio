@@ -4,7 +4,6 @@ import { officeLevels, type OfficeLevel } from '../world/levels';
 import { setText } from '../../../../shared/dom.js';
 import {
   areaHints,
-  areaNames,
   furnitureName,
   getLocale,
   onLocaleChange,
@@ -77,7 +76,7 @@ export class UI {
     </nav></header>
     <div class="objective panel"><span class="eyebrow"><i class="accent-square"></i>${t('levelLabel').replace('{number}', String(officeLevels.indexOf(level) + 1).padStart(2, '0'))}</span><h2>${t(level.name)}</h2><p>${t('objective')}</p><p class="card-progress" id="cards"></p></div>
     <div class="time-card panel"><span class="eyebrow">${t('clock')}</span><strong id="time">00:00<span>.000</span></strong><div class="best-row"><span>${t('best')}</span><b id="best">— — : — —</b></div></div>
-    <section class="route-card panel"><div class="route-title"><span class="live-dot"></span>${t('route')}<span id="progress">01 / 04</span></div><ol>${areaNames.map((name, i) => `<li data-area="${i}"><span>0${i + 1}</span>${t(name)}<b></b></li>`).join('')}</ol><div class="falls"><span>${t('incidents')}</span><b id="falls">00</b></div></section>
+    <section class="route-card panel"><div class="route-title"><span class="live-dot"></span>${t('route')}<span id="progress">01 / 04</span></div><ol>${level.areas.map((name, i) => `<li data-area="${i}"><span>0${i + 1}</span>${t(name)}<b></b></li>`).join('')}</ol><div class="falls"><span>${t('incidents')}</span><b id="falls">00</b></div></section>
     <div class="bottom"><div class="hint panel" id="hint">${t(areaHints[0])}</div><div class="controls"><span><kbd>W A S D</kbd>${t('move')}</span><span><kbd>SPACE</kbd>${t('jump')}</span><span><kbd>SHIFT</kbd>${t('sprint')}</span><span><kbd>E</kbd>${t('drag')}</span><span><kbd>R</kbd>${t('checkpoint')}</span><span class="look">${t('look')}</span></div></div>
     <div class="status-tag"><span class="live-dot"></span>${t('overtime')}</div><div id="toast" role="status" aria-live="polite" class="${this.toastTimer > 0 ? 'show' : ''}">${this.toastKey ? t(this.toastKey) : ''}</div><div id="flash"></div><div class="panel-wrap" id="panel"></div>`;
     this.panel = this.root.querySelector('#panel')!;
@@ -177,7 +176,7 @@ export class UI {
             '{object}',
             furnitureName(interaction.name),
           )
-        : t(areaHints[area]),
+        : t(this.actions.level().architecture === 'office' ? areaHints[area] : this.actions.level().briefing),
     );
     if (this.toastTimer > 0) {
       this.toastTimer -= dt;

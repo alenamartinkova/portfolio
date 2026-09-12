@@ -13,7 +13,7 @@ export class RunManager {
     private levelId = 'legacy',
   ) {
     try {
-      const raw = storage?.getItem(`office-escape:best:v2:${this.levelId}`);
+      const raw = storage?.getItem(`office-escape:best:v3:${this.levelId}`);
       const v = Number(raw);
       if (raw && Number.isFinite(v) && v > 0) this.best = v;
     } catch {
@@ -30,7 +30,7 @@ export class RunManager {
     if (this.best === null || this.seconds < this.best) {
       this.best = this.seconds;
       try {
-        this.storage?.setItem(`office-escape:best:v2:${this.levelId}`, String(this.best));
+        this.storage?.setItem(`office-escape:best:v3:${this.levelId}`, String(this.best));
       } catch {
         /* Session best is retained. */
       }
