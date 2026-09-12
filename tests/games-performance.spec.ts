@@ -49,6 +49,28 @@ test('catalog is visible without JavaScript and hydrates stored Slovak/light pre
   expect(errors).toEqual([])
 })
 
+test('office-escape: rapid jump input cannot avoid lava recovery', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto('/office-escape/?lang=en')
+  await page.locator('#play').click()
+  await page.keyboard.down('s')
+  await page.keyboard.down('Shift')
+  // Jump backwards off the starting desk and keep buffering the next jump.
+  for (let i = 0; i < 80; i++) {
+    await page.keyboard.press('Space')
+    await page.waitForTimeout(35)
+    if (Number(await page.locator('#falls').textContent()) > 0) break
+  }
+  await page.keyboard.up('s')
+  await page.keyboard.up('Shift')
+  await expect.poll(async () => Number(await page.locator('#falls').textContent())).toBeGreaterThan(0)
+  const falls = await page.locator('#falls').textContent()
+  await page.waitForTimeout(1000)
+  await expect(page.locator('#falls')).toHaveText(falls)
+  expect(errors).toEqual([])
+})
+
 for (const game of GAMES) test(`${game.id}: production rendering, idle and interaction`, async ({ page }, info) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))

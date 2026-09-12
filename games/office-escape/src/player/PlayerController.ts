@@ -19,9 +19,11 @@ export class PlayerController {
     moving = false;
     onJump = () => { };
     onLand = (_speed: number) => { };
+    onGroundContact = (_position: Vector3, _supportDistance: number) => false;
     private coyote = 0;
     private buffer = 0;
     private jumpCooldown = 0;
+    private downwardTravel = 0;
     private model: EmployeeModel;
     private oldVelocity = Vector3.Zero();
     private velocity = Vector3.Zero();
@@ -39,14 +41,21 @@ export class PlayerController {
     }
     get position() { return this.controller.getPosition(); }
     get feet() { return this.position.y - PLAYER_HEIGHT / 2; }
-    teleport(p: Vector3) { this.controller.setPosition(p); this.controller.setVelocity(Vector3.Zero()); this.root.position.copyFrom(p); this.root.position.y -= PLAYER_HEIGHT / 2; this.coyote = 0; this.buffer = 0; this.jumpCooldown = .15; }
+    teleport(p: Vector3) { this.controller.setPosition(p); this.controller.setVelocity(Vector3.Zero()); this.root.position.copyFrom(p); this.root.position.y -= PLAYER_HEIGHT / 2; this.coyote = 0; this.buffer = 0; this.jumpCooldown = .15; this.downwardTravel = 0; }
     update(dt: number, input: Input, yaw: number, dragging: boolean) {
         const support = this.controller.checkSupport(dt, this.down);
         const supported = support.supportedState === CharacterSupportedState.SUPPORTED;
+        const wasGrounded = this.grounded;
         const oldVelocity = this.oldVelocity.copyFrom(this.controller.getVelocity());
-        if (supported && !this.grounded && oldVelocity.y < -1)
-            this.onLand(-oldVelocity.y);
+        // Havok support includes its contact skin and this step's travel, so a
+        // fixed visual-feet threshold can miss the very surface granting a jump.
+        const contactSkin = this.controller.keepDistance + this.controller.keepContactTolerance;
+        const supportDistance = contactSkin + this.downwardTravel;
+        // Landing hazards take priority over buffered jumps and coyote-time input.
         this.grounded = supported;
+        if (supported && this.onGroundContact(this.position, supportDistance)) return;
+        if (supported && !wasGrounded && oldVelocity.y < -1)
+            this.onLand(-oldVelocity.y);
         this.coyote = supported ? .12 : Math.max(0, this.coyote - dt);
         this.buffer = Math.max(0, this.buffer - dt);
         this.jumpCooldown -= dt;
@@ -84,9 +93,19 @@ export class PlayerController {
             velocity.z += support.averageSurfaceVelocity.z * dt * 3;
         }
         this.controller.setVelocity(velocity);
+        // Save the sweep before Havok clips the landing velocity to zero.
+        this.downwardTravel = Math.max(0, -velocity.y) * dt;
         this.controller.integrate(dt, support, this.gravity);
         // Mantle only an adjacent ledge with clear headroom and a nearly reachable top.
         if (!supported && input.keys.has('Space') && this.moving && velocity.y < 4) {
+            // Integration may have landed this frame. Do not mantle off lava before
+            // next frame's support check has a chance to report the contact.
+            const landing = this.controller.checkSupport(dt, this.down);
+            if (landing.supportedState === CharacterSupportedState.SUPPORTED && this.onGroundContact(this.position, contactSkin + this.downwardTravel)) {
+                this.root.position.copyFrom(this.position);
+                this.root.position.y -= PLAYER_HEIGHT / 2;
+                return;
+            }
             const probe = this.position.add(this.forward.scale(.64));
             const hit = this.scene.pickWithRay(new Ray(new Vector3(probe.x, this.feet + 1.1, probe.z), Vector3.Down(), 1.05), m => Boolean(m.metadata?.solid) && !m.metadata?.forbidden);
             if (hit?.hit && hit.pickedPoint && hit.getNormal(true)!.y > .75 && hit.pickedPoint.y > this.feet + .12 && hit.pickedPoint.y < this.feet + .95) {

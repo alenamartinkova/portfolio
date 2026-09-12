@@ -5,7 +5,6 @@ import { renderBudget, renderScale, renderAntialiasing } from './systems/RenderQ
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
 import { atExit, officeLevels, resolveOfficeLevel } from './world/levels';
 import { Engine } from '@babylonjs/core/Engines/engine';
-import { Ray } from '@babylonjs/core/Culling/ray';
 import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { PlayerController } from './player/PlayerController';
@@ -52,7 +51,6 @@ export class Game {
   private renderFrame = () => this.frame();
   private previousPosition = Vector3.Zero();
   private rollingVelocity = Vector3.Zero();
-  private floorRay = new Ray(Vector3.Zero(), Vector3.Down(), 1.05);
   private appearanceObserver = new MutationObserver(() => {
     this.requestRender();
   });
@@ -141,6 +139,7 @@ export class Game {
       this.physics = new PhysicsInteractionSystem(this.scene);
       this.level = new Level(this.scene, this.physics, this.definition);
       this.player = new PlayerController(this.scene, this.level.f, this.checkpoints.spawn);
+      this.player.onGroundContact = (position, distance) => this.floor.checkContact(this.scene, position, this.player.feet, distance);
       this.camera = new FollowCamera(this.scene, this.player.position, this.startingYaw);
       if (this.definition.architecture !== 'office') {
         const route = this.definition.route;
@@ -311,13 +310,8 @@ export class Game {
           this.ui.toast('cardCollected');
           this.audio.checkpoint();
         }
-        this.floorRay.origin.copyFrom(p);
-        const hit = this.scene.pickWithRay(this.floorRay, (m) =>
-          Boolean(m.metadata?.solid),
-        );
-        const floor = Boolean(hit?.pickedMesh?.metadata?.forbidden) && Boolean(hit?.pickedPoint && Math.abs(this.player.feet - hit.pickedPoint.y) < .13);
         if (securityEvent === 'securityHit') this.recover('securityHit');
-        else if (this.floor.update(dt, floor, p.y < -3)) this.recover();
+        else if (this.floor.update(false, p.y < -3)) this.recover();
         else if (
           this.checkpoints.update(p, this.player.grounded, (checkpoint) =>
             this.level.security.canSaveCheckpoint(checkpoint),

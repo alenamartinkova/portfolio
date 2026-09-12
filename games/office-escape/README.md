@@ -49,7 +49,7 @@ The game uses the same shared fonts, design tokens, navigation and language butt
 
 Stay on furniture and maintenance platforms. Mint markers and arrows point to the next landing, rings mark safe checkpoints, and orange chairs/carts/boxes can move. Routes now include reception loops, dispatch switchbacks, server aisles, a 22-metre shaft climb, descending rooftop maintenance platforms and a multi-storey atrium. Each level defines its own three-dimensional route, architecture, four named checkpoints and exit position.
 
-Floor detection checks the tagged floor directly below the capsule's feet, including forbidden balcony floors on upper storeys. A continuous 85 ms contact fails the run; furniture, side walls, and transient contacts do not. Recovery takes approximately 320 ms, retains time and falls, restores the latest checkpoint at its original height and resets movable furniture without rebuilding the scene. Restoring furniture prevents a lost cart from making the level impossible.
+Floor detection checks the tagged surface beneath the capsule when Havok confirms support, including forbidden balcony floors on upper storeys. Contact with a forbidden floor immediately latches a failure before buffered jumps or mantling can move the player away. The query accounts for Havok's contact skin and the preceding downward sweep; airborne proximity alone does not fail a run, and safe furniture remains valid support. Recovery takes approximately 320 ms, retains time and falls, restores the latest checkpoint at its original height and resets movable furniture without rebuilding the scene. Restoring furniture prevents a lost cart from making the level impossible.
 
 The first evening keeps the introductory office route and its optional whiteboard shortcut. Later levels change direction, climb and descend, and mix wide checkpoint landings with narrow beams. Drag the mouse to look around corners or find the next ledge above you. Hold Space to mantle; release sprint to brake before a small landing below you. Elevated furniture has a local support height, so cabinet bodies never block a lower route through the same coordinates.
 
@@ -88,7 +88,7 @@ Settings pauses the timer, security and movement, traps keyboard focus and close
 - `player/PlayerController.ts`: Havok capsule controller, air steering, coyote time, jump buffering, guarded mantling and procedural employee animation.
 - `player/FollowCamera.ts`: smooth orbit/follow, obstruction ray and landing impulse.
 - `systems/PhysicsInteractionSystem.ts`: Havok initialization, static/dynamic bodies, bounded dragging and furniture reset.
-- `systems/FloorDetectionSystem.ts`: continuous contact grace rule, independent of rendering.
+- `systems/FloorDetectionSystem.ts`: latched forbidden-support detection, independent of frame rate.
 - `systems/CheckpointManager.ts`: landed checkpoint activation and respawn positions.
 - `systems/RunManager.ts`: timer, falls, completion, best-time persistence.
 - `systems/Input.ts`: keyboard/pointer state and focus handling.
@@ -107,7 +107,7 @@ Future levels can reuse the systems with a different route and furniture layout.
 
 ## Validation
 
-Real Havok integration tests traverse all ten full routes at both 60 and 30 FPS using the player controller, sprint jumps, dynamic furniture, card collection and safe crossing windows. They also verify recovery onto the final checkpoint at its original height. Route invariants check meaningful vertical variety, reachable exit jumps and storey-specific exit detection. Unit tests cover security timing, swept beam collision, card/reset rules, per-level records, sustained versus transient floor contact, out-of-world failure, landed checkpoint activation, forward-only progress, timer lifecycle, improved-best persistence and unavailable/corrupt storage. The portfolio's tests also check catalog integration and routing.
+Real Havok integration tests traverse all ten full routes at both 60 and 30 FPS using the player controller, sprint jumps, dynamic furniture, card collection and safe crossing windows. They also verify recovery onto the final checkpoint at its original height. Route invariants check meaningful vertical variety, reachable exit jumps and storey-specific exit detection. Unit tests cover security timing, swept beam collision, card/reset rules, per-level records, immediate forbidden-floor contact, out-of-world failure, landed checkpoint activation, forward-only progress, timer lifecycle, improved-best persistence and unavailable/corrupt storage. Additional real-Havok tests spam buffered jumps at 30, 60 and 144 FPS, protect safe-furniture jumps, reject same-frame lava-to-ledge mantling, and distinguish airborne proximity from support. The production browser regression jumps off the starting desk while repeatedly pressing Space and verifies recovery on desktop and mobile. The portfolio's tests also check catalog integration and routing.
 
 For repeatable browser checks, open `/office-escape/?playtest` on the development server. The visible panel offers:
 

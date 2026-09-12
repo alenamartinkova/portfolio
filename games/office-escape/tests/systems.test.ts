@@ -5,9 +5,16 @@ import { CheckpointManager } from '../src/systems/CheckpointManager';
 import { Vector3 } from '@babylonjs/core';
 import { route } from '../src/world/Level';
 import { PLAYER_HEIGHT } from '../src/player/PlayerController';
-describe('floor grace and recovery', () => {
-    it('ignores isolated contacts and fails sustained floor contact', () => { const f = new FloorDetectionSystem(); expect(f.update(.04, true)).toBe(false); expect(f.update(.04, false)).toBe(false); expect(f.update(.04, true)).toBe(false); expect(f.update(.04, true)).toBe(false); expect(f.update(.01, true)).toBe(true); f.reset(); expect(f.update(.016, true)).toBe(false); });
-    it('recovers immediately below the world', () => { expect(new FloorDetectionSystem().update(.016, false, true)).toBe(true); });
+describe('floor contact and recovery', () => {
+    it('latches even one confirmed contact until recovery, regardless of the next jump', () => {
+        const floor = new FloorDetectionSystem();
+        expect(floor.update(false)).toBe(false);
+        expect(floor.update(true)).toBe(true);
+        expect(floor.update(false)).toBe(true);
+        floor.reset();
+        expect(floor.update(false)).toBe(false);
+    });
+    it('recovers immediately below the world', () => { expect(new FloorDetectionSystem().update(false, true)).toBe(true); });
 });
 describe('run lifecycle', () => {
     it('starts on movement, stops at exit, persists only improved best', () => { const values = new Map<string, string>(); const storage = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } }; const r = new RunManager(storage); r.update(10, false); expect(r.seconds).toBe(0); r.update(5, true); r.finish(); r.update(20, true); expect(r.seconds).toBe(5); r.reset(); r.update(8, true); r.finish(); expect(new RunManager(storage).best).toBe(5); expect(r.falls).toBe(0); });

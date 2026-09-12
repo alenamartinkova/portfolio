@@ -7,6 +7,7 @@ import { Level } from '../src/world/Level';
 import { atExit, officeLevels } from '../src/world/levels';
 import { PhysicsInteractionSystem, settlePhysics } from '../src/systems/PhysicsInteractionSystem';
 import { CheckpointManager } from '../src/systems/CheckpointManager';
+import { FloorDetectionSystem } from '../src/systems/FloorDetectionSystem';
 import { PlayerController } from '../src/player/PlayerController';
 import { gateState } from '../src/systems/SecuritySystem';
 import type { Input } from '../src/systems/Input';
@@ -25,6 +26,8 @@ for (const { definition, fps } of officeLevels.flatMap(definition => [60, 30].ma
       const physics = new PhysicsInteractionSystem(scene), level = new Level(scene, physics, definition);
       const checkpoints = new CheckpointManager(definition.route);
       const player = new PlayerController(scene, level.f, checkpoints.spawn);
+      const floor = new FloorDetectionSystem();
+      player.onGroundContact = (position, distance) => floor.checkContact(scene, position, player.feet, distance);
       const keys = new Set<string>(), pressed = new Set<string>();
       const input = { keys, pressed, axis: (p: string, n: string) => Number(keys.has(p)) - Number(keys.has(n)), consume: (key: string) => { const yes = pressed.has(key); pressed.delete(key); return yes; } } as Input;
       const stepPhysics = () => {
@@ -51,6 +54,7 @@ for (const { definition, fps } of officeLevels.flatMap(definition => [60, 30].ma
           if (launched) keys.add('Space');
         }
         player.update(dt, input, Math.atan2(dx, dz), false);
+        expect(floor.update(false, player.position.y < -3), `${definition.id} lava at stop ${target}`).toBe(false);
         physics.update(dt, player.position, player.forward);
         const event = level.security.update(dt, before, player.position, player.grounded);
         expect(event, `${definition.id} beam at stop ${target}`).not.toBe('securityHit');
