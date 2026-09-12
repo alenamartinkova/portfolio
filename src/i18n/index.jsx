@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import en from './en'
 import sk from './sk'
 import { localizeStructuredData, portfolioUrl } from '../seo'
@@ -7,7 +7,8 @@ const DICTIONARIES = { en, sk }
 
 const STORAGE_KEY = 'locale'
 
-const LocaleContext = createContext({ locale: 'en', t: en, setLocale: () => {} })
+import { LocaleContext } from './context'
+export { useT, useLocale } from './context'
 
 /** '/sk/' (any depth) → 'sk', everything else → null. */
 function localeFromPath(pathname) {
@@ -38,10 +39,15 @@ function initialLocale(page) {
 
 export function LocaleProvider({ children, ssrLocale, page = 'portfolio' }) {
   const [locale, setLocale] = useState(() => ssrLocale || initialLocale(page))
+  const [hydrated, setHydrated] = useState(!ssrLocale || page !== 'games')
+  useEffect(() => {
+    if (!hydrated) { setLocale(initialLocale(page)); setHydrated(true) }
+  }, [hydrated, page])
   const t = DICTIONARIES[locale] || en
   const meta = page === 'games' ? t.games.meta : t.meta
 
   useEffect(() => {
+    if (!hydrated) return
     document.documentElement.lang = locale
     document.title = meta.title
 
@@ -91,22 +97,11 @@ export function LocaleProvider({ children, ssrLocale, page = 'portfolio' }) {
     } catch {
       // Non-persistent choice is still better than none.
     }
-  }, [locale, meta, page])
+  }, [locale, meta, page, hydrated])
 
   return (
     <LocaleContext.Provider value={{ locale, t, setLocale }}>
       {children}
     </LocaleContext.Provider>
   )
-}
-
-/** The dictionary for the active locale. */
-export function useT() {
-  return useContext(LocaleContext).t
-}
-
-/** [locale, setLocale] for the language switcher. */
-export function useLocale() {
-  const { locale, setLocale } = useContext(LocaleContext)
-  return [locale, setLocale]
 }

@@ -1,5 +1,7 @@
 import { renderToString } from 'react-dom/server'
 import App from './App'
+import GamesApp from './games/GamesApp'
+export function renderGames() { return renderToString(<GamesApp ssrLocale="en" />) }
 import en from './i18n/en'
 import sk from './i18n/sk'
 

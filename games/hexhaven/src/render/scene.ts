@@ -1,4 +1,6 @@
+import { retainTextures } from './materials';
 import { createRenderLoop } from '../../../../shared/render-loop.js';
+import { recordRenderedFrame } from '../../../../shared/fps-meter.js';
 import { renderBudget, renderPixelRatio } from '../../../../shared/render-budget.js';
 import {
   ACESFilmicToneMapping,
@@ -7,6 +9,7 @@ import {
   FogExp2,
   HemisphereLight,
   Mesh,
+  InstancedMesh,
   PCFSoftShadowMap,
   PerspectiveCamera,
   SRGBColorSpace,
@@ -178,6 +181,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     renderer.domElement.style.transform = shake ? `translateX(${shake}px)` : '';
     if (dirty || cameraChanged || effectActive || !reducedMotion) {
       renderer.render(scene, camera);
+      recordRenderedFrame();
       frames++;
       frameMs = frameMs * 0.9 + (performance.now() - start) * 0.1;
       dirty = false;
@@ -253,8 +257,11 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     );
     invalidate();
   }
+  const releaseTextures = retainTextures();
   function dispose(): void {
+    if (disposed) return;
     disposed = true;
+    releaseTextures();
     renderLoop.dispose();
     observer.disconnect();
     controls.removeEventListener('change', invalidate);
@@ -266,6 +273,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
       materials = new Set<Material>();
     scene.traverse((object) => {
       if (object instanceof Mesh) {
+        if (object instanceof InstancedMesh) object.dispose();
         geometries.add(object.geometry);
         const material = object.material;
         if (Array.isArray(material)) material.forEach((m) => materials.add(m));
@@ -275,6 +283,7 @@ export function createBoardScene(container: HTMLElement, board: Board): BoardSce
     geometries.forEach((geometry) => geometry.dispose());
     materials.forEach((material) => material.dispose());
     renderer.dispose();
+    renderer.forceContextLoss();
     renderer.domElement.remove();
   }
   let currentAppearance = DEFAULT_APPEARANCE;

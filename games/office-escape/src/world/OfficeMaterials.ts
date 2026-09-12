@@ -24,7 +24,7 @@ export class OfficeMaterials {
         const window = face !== 3 && y > 4 && y < 19 && x > 3 && x < 28 && x % 8 > 1;
         const value = face === 3 ? 42 : window ? 200 : 78;
         const i = (y * size + x) * 4;
-        pixels.set([value, value * .98, value * .93, 255], i);
+        pixels[i] = value; pixels[i + 1] = value * .98; pixels[i + 2] = value * .93; pixels[i + 3] = 255;
       }
       return pixels;
     });
@@ -81,7 +81,8 @@ export class OfficeMaterials {
       const u = x / size * Math.PI * 2, v = y / size * Math.PI * 2;
       const value = kind === 'wood' ? 232 + Math.sin(v * 24 + Math.sin(u) * 1.6) * 9 + Math.cos(v * 7 + u) * 5
         : kind === 'fabric' ? 246 + Math.sin(u * 64) * Math.sin(v * 64) * 5 : 247 + Math.sin(u * 17 + v * 31) * 2;
-      pixels.set([value, value, value, 255], (y * size + x) * 4);
+      const i = (y * size + x) * 4;
+      pixels[i] = value; pixels[i + 1] = value; pixels[i + 2] = value; pixels[i + 3] = 255;
     }
     const texture = RawTexture.CreateRGBATexture(pixels, size, size, this.scene, true, false, Texture.TRILINEAR_SAMPLINGMODE);
     texture.name = `${kind} office surface`; texture.anisotropicFilteringLevel = 8;

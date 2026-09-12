@@ -23,6 +23,11 @@ export class PlayerController {
     private buffer = 0;
     private jumpCooldown = 0;
     private model: EmployeeModel;
+    private oldVelocity = Vector3.Zero();
+    private velocity = Vector3.Zero();
+    private move = Vector3.Zero();
+    private gravity = new Vector3(0, -GRAVITY, 0);
+    private down = Vector3.Down();
     constructor(private scene: Scene, f: Factory, spawn: Vector3) {
         this.controller = new PhysicsCharacterController(spawn, { capsuleHeight: PLAYER_HEIGHT, capsuleRadius: .28 }, scene);
         this.controller.characterMass = 7;
@@ -36,9 +41,9 @@ export class PlayerController {
     get feet() { return this.position.y - PLAYER_HEIGHT / 2; }
     teleport(p: Vector3) { this.controller.setPosition(p); this.controller.setVelocity(Vector3.Zero()); this.root.position.copyFrom(p); this.root.position.y -= PLAYER_HEIGHT / 2; this.coyote = 0; this.buffer = 0; this.jumpCooldown = .15; }
     update(dt: number, input: Input, yaw: number, dragging: boolean) {
-        const support = this.controller.checkSupport(dt, Vector3.Down());
+        const support = this.controller.checkSupport(dt, this.down);
         const supported = support.supportedState === CharacterSupportedState.SUPPORTED;
-        const oldVelocity = this.controller.getVelocity().clone();
+        const oldVelocity = this.oldVelocity.copyFrom(this.controller.getVelocity());
         if (supported && !this.grounded && oldVelocity.y < -1)
             this.onLand(-oldVelocity.y);
         this.grounded = supported;
@@ -49,7 +54,7 @@ export class PlayerController {
             this.buffer = .15;
         const x = input.axis('KeyD', 'KeyA') + input.axis('ArrowRight', 'ArrowLeft');
         const z = input.axis('KeyW', 'KeyS') + input.axis('ArrowUp', 'ArrowDown');
-        const move = new Vector3(x * Math.cos(yaw) + z * Math.sin(yaw), 0, z * Math.cos(yaw) - x * Math.sin(yaw));
+        const move = this.move.set(x * Math.cos(yaw) + z * Math.sin(yaw), 0, z * Math.cos(yaw) - x * Math.sin(yaw));
         this.moving = move.lengthSquared() > 0;
         if (this.moving) {
             move.normalize();
@@ -57,8 +62,8 @@ export class PlayerController {
             this.root.rotation.y = Math.atan2(move.x, move.z);
         }
         const speed = dragging ? 2.2 : input.keys.has('ShiftLeft') || input.keys.has('ShiftRight') ? SPRINT_SPEED : WALK_SPEED;
-        const desired = move.scale(speed);
-        const velocity = oldVelocity.clone();
+        const desired = move.scaleInPlace(speed);
+        const velocity = this.velocity.copyFrom(oldVelocity);
         const blend = 1 - Math.exp(-(supported ? 24 : 13) * dt);
         velocity.x += (desired.x - velocity.x) * blend;
         velocity.z += (desired.z - velocity.z) * blend;
@@ -79,7 +84,7 @@ export class PlayerController {
             velocity.z += support.averageSurfaceVelocity.z * dt * 3;
         }
         this.controller.setVelocity(velocity);
-        this.controller.integrate(dt, support, new Vector3(0, -GRAVITY, 0));
+        this.controller.integrate(dt, support, this.gravity);
         // Mantle only an adjacent ledge with clear headroom and a nearly reachable top.
         if (!supported && input.keys.has('Space') && this.moving && velocity.y < 4) {
             const probe = this.position.add(this.forward.scale(.64));

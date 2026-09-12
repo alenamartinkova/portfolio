@@ -6,8 +6,10 @@ import GameHeader from './components/GameHeader'
 import Collection from './components/Collection'
 import GameDialog from './components/GameDialog'
 import './Game.css'
+import { loadStudio } from './loadStudio.js'
+import { mountFpsMeter } from '../../../shared/fps-meter.js'
 
-const Workspace = lazy(() => import('./components/Workspace'))
+const Workspace = lazy(() => Promise.all([import('./components/Workspace'), loadStudio()]).then(([workspace]) => workspace))
 
 class WorkspaceBoundary extends Component {
   state = { failed: false }
@@ -22,6 +24,7 @@ class WorkspaceBoundary extends Component {
   }
 }
 function Game() {
+  useEffect(mountFpsMeter, [])
   const t = useT()
   const [ready, setReady] = useState(false)
   const { state, dispatch, storageFailed } = useGame(ready)

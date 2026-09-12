@@ -1,4 +1,4 @@
-import { Blocks, MapPin, Server, Users } from 'lucide-react'
+import { ArrowUpRight, Blocks, MapPin, Server, Users } from 'lucide-react'
 import './about.css'
 
 const COPY = {
@@ -38,7 +38,7 @@ export default function AboutSection({ t, locale }) {
             <p className="m-profile-name">Alena Martinková</p>
             <p className="m-profile-location"><MapPin size={15} aria-hidden="true" />Ostrava · remote</p>
           </div>
-          <p className="m-profile-note"><Blocks size={21} aria-hidden="true" /><span>{t.about.funFact}{' '}<a href={`/games/?lang=${locale}`}>{t.about.playLabel}</a></span></p>
+          <p className="m-profile-note"><Blocks size={21} aria-hidden="true" /><span>{t.about.funFact}{' '}<a href={`/games/?lang=${locale}`}>{t.about.playLabel}<ArrowUpRight size={16} aria-hidden="true" /></a></span></p>
         </aside>
   
         <div className="m-about-intro">

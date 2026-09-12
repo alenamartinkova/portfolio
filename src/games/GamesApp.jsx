@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowUpRight, Gamepad2 } from 'lucide-react'
-import { LocaleProvider, useLocale, useT } from '../i18n'
+import { LocaleProvider, useLocale, useT } from './i18n'
 import LanguageLink from '../components/LanguageLink'
 import ThemeToggle from '../components/ThemeToggle'
 import '../../shared/styles/appearance-controls.css'
@@ -16,12 +16,13 @@ function GamesPage() {
   const home = locale === 'sk' ? '/sk/' : '/'
   const [accent, setAccent] = useState(readAccent)
   const root = useRef(null)
-  const [motion, setMotion] = useState(() => typeof window === 'undefined' || !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const [motion, setMotion] = useState(true)
   useMotion(root, motion, locale)
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     const change = () => setMotion(!media.matches)
+    change()
     media.addEventListener('change', change)
     return () => media.removeEventListener('change', change)
   }, [])

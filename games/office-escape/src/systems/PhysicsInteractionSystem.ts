@@ -34,6 +34,8 @@ export interface Movable {
 }
 export class PhysicsInteractionSystem {
     objects: Movable[] = [];
+    private velocity = Vector3.Zero();
+    private force = Vector3.Zero();
     onImpact = (_strength: number) => { };
     grabbed: Movable | null = null;
     constructor(private scene: Scene) { }
@@ -52,7 +54,12 @@ export class PhysicsInteractionSystem {
         return aggregate;
     }
     nearest(p: Vector3) {
-        return this.objects.filter(o => Vector3.Distance(o.mesh.position, p) < 2.5).sort((a, b) => Vector3.DistanceSquared(a.mesh.position, p) - Vector3.DistanceSquared(b.mesh.position, p))[0];
+        let nearest: Movable | undefined, distance = 6.25;
+        for (const object of this.objects) {
+            const squared = Vector3.DistanceSquared(object.mesh.position, p);
+            if (squared < distance) { distance = squared; nearest = object; }
+        }
+        return nearest;
     }
     toggle(p: Vector3) { this.grabbed = this.grabbed ? null : this.nearest(p) ?? null; }
     update(dt: number, p: Vector3, forward: Vector3) {
@@ -63,17 +70,19 @@ export class PhysicsInteractionSystem {
                 return;
             }
             // A horizontal spring only: furniture is never lifted or carried in mid-air.
-            const delta = p.add(forward.scale(1.5)).subtract(o.mesh.position);
+            const delta = this.force.copyFrom(forward).scaleInPlace(1.5).addInPlace(p).subtractInPlace(o.mesh.position);
             delta.y = 0;
-            const velocity = o.aggregate.body.getLinearVelocity();
+            const velocity = this.velocity;
+            o.aggregate.body.getLinearVelocityToRef(velocity);
             velocity.y = 0;
-            const force = delta.scale(35).subtract(velocity.scale(12));
+            const force = delta.scaleInPlace(35).subtractInPlace(velocity.scaleInPlace(12));
             if (force.length() > 50)
                 force.normalize().scaleInPlace(50);
-            o.aggregate.body.applyImpulse(force.scale(dt), o.mesh.position);
+            o.aggregate.body.applyImpulse(force.scaleInPlace(dt), o.mesh.position);
         }
         for (const obj of this.objects) {
-            const v = obj.aggregate.body.getLinearVelocity();
+            const v = this.velocity;
+            obj.aggregate.body.getLinearVelocityToRef(v);
             if (v.length() > 7)
                 obj.aggregate.body.setLinearVelocity(v.normalize().scale(7));
         }

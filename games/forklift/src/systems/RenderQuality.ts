@@ -1,1 +1,1 @@
-export { renderBudget, renderScale } from '../../../../shared/render-budget.js';
+export { renderBudget, renderScale, renderAntialiasing } from '../../../../shared/render-budget.js';

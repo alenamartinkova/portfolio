@@ -69,7 +69,7 @@ export class Factory {
   ) {
     const m = CreateCylinder(
       name,
-      { diameter, height, tessellation: 40 },
+      { diameter, height, tessellation: 20 },
       this.scene,
     );
     m.position.set(pos[0], pos[1], pos[2]);

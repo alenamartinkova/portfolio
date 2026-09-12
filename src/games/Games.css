@@ -122,7 +122,8 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
   margin: 0;
 }
 
-.games-list > li { position: relative; min-width: 0; }
+/* Keep sticky and non-sticky cards in the same stacking order. */
+.games-list > li { position: relative; isolation: isolate; min-width: 0; }
 .games-list > li + li { margin-top: 32px; }
 
 .games-card {
@@ -279,7 +280,8 @@ h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -.0
   transition: box-shadow .35s var(--ease);
 }
 .games-page[data-motion='on'] .games-card:hover { --card-lift: -4px; }
-.games-page[data-motion='on'] .games-list > li:focus-within { z-index: 5; }
+/* Mouse focus can persist after returning from a game; only lift keyboard focus. */
+.games-page[data-motion='on'] .games-list > li:has(.games-card:focus-visible) { z-index: 5; }
 .games-page[data-motion='on'][data-ready='true'] .games-card:focus-visible {
   transform: none;
   opacity: 1;

@@ -59,6 +59,7 @@ function rig(
   const warehouse = warehouseLevel
     ? new Warehouse(scene, f, definition)
     : undefined;
+  warehouse?.batchDecorations();
   if (!warehouse) rigid(f.box("floor", [40, 1, 60], [0, -0.5, 0], "#808080"));
   const truck = new ForkliftController(f, definition.spawn),
     cargo = new Cargo(f, definition);

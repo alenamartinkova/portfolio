@@ -25,7 +25,7 @@ export class Factory {
         return mesh;
     }
     tube(name: string, points: number[][], radius: number, color: string, parent?: TransformNode) {
-        const mesh = CreateTube(name, {path: points.map(p => new Vector3(p[0], p[1], p[2])), radius, tessellation: 40, cap: 3}, this.scene);
+        const mesh = CreateTube(name, {path: points.map(p => new Vector3(p[0], p[1], p[2])), radius, tessellation: 20, cap: 3}, this.scene);
         mesh.parent = parent ?? null; mesh.isPickable = false;
         this.materials.apply(mesh, name, color);
         return mesh;
@@ -43,7 +43,7 @@ export class Factory {
         return mesh;
     }
     cylinder(name: string, diameter: number, height: number, pos: number[], color: string, parent?: TransformNode) {
-        const mesh = CreateCylinder(name, { diameter, height, tessellation: 40 }, this.scene);
+        const mesh = CreateCylinder(name, { diameter, height, tessellation: 20 }, this.scene);
         mesh.position.set(pos[0], pos[1], pos[2]);
         this.materials.apply(mesh, name, color);
         mesh.parent = parent ?? null;

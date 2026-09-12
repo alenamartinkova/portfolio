@@ -1,14 +1,11 @@
 import "./ui/style.css";
 import { Game } from "./Game";
-const game = new Game(document.querySelector<HTMLCanvasElement>("#game")!);
-void game.start();
-let cleanup: (() => void) | undefined;
-if (import.meta.env.DEV && new URLSearchParams(location.search).has("qa"))
-  import("./ui/Playtest").then((m) => {
-    cleanup = m.mountPlaytest(game);
-  });
-if (import.meta.hot)
-  import.meta.hot.dispose(() => {
-    cleanup?.();
-    game.dispose();
-  });
+export async function start() {
+  const game = new Game(document.querySelector<HTMLCanvasElement>('#game')!);
+  try { await game.start(); } catch (error) { game.dispose(); throw error; }
+  let cleanup: (() => void) | undefined, disposed = false;
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('qa')) {
+    void import('./ui/Playtest').then(module => { if (!disposed) cleanup = module.mountPlaytest(game); });
+  }
+  return () => { disposed = true; cleanup?.(); game.dispose(); };
+}

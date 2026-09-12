@@ -23,7 +23,6 @@ import {
   PLAYER_COLORS,
   glyphTexture,
   matte,
-  paintTexture,
   solid,
 } from './materials';
 import type { BoardPositions } from './positions';
@@ -214,10 +213,9 @@ export function createPieceMeshes(board: Board, positions: BoardPositions): Piec
     for (let index = 0; index < players.length; index++) {
       const materials = players[index];
       if (!materials) continue;
-      materials.material.map = paintTexture(
+      materials.material.color.set(
         (value ? ACCESSIBLE_COLORS : PLAYER_COLORS)[index] ?? PLAYER_COLORS[0],
       );
-      materials.material.color.set('#ffffff');
       materials.material.needsUpdate = true;
     }
   }

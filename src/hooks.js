@@ -8,14 +8,15 @@ const THEME_KEY = 'theme'
  * this hook never causes a flash.
  */
 export function useTheme() {
-  const [theme, setTheme] = useState(() =>
-    typeof document !== 'undefined' &&
-    document.documentElement.dataset.theme === 'light'
-      ? 'light'
-      : 'dark',
-  )
+  const [theme, setTheme] = useState('dark')
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    setTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark')
+    setReady(true)
+  }, [])
 
   useEffect(() => {
+    if (!ready) return
     const root = document.documentElement
 
     if (theme === 'light') root.dataset.theme = 'light'
@@ -34,7 +35,7 @@ export function useTheme() {
         getComputedStyle(root).getPropertyValue('--bg').trim(),
       )
     }
-  }, [theme])
+  }, [theme, ready])
 
   const toggle = () =>
     setTheme((current) => (current === 'dark' ? 'light' : 'dark'))

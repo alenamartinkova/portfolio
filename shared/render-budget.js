@@ -2,7 +2,7 @@
 export const renderBudget = Object.freeze({
   fps: 60,
   antialias: true,
-  samples: 4,
+  samples: 2,
   shadows: false,
   pixels: 1_500_000,
   density: 1.25,
@@ -20,4 +20,10 @@ export function renderPixelRatio(width, height, devicePixelRatio) {
 /** @param {number} width @param {number} height @param {number} devicePixelRatio */
 export function renderScale(width, height, devicePixelRatio) {
   return 1 / renderPixelRatio(width, height, devicePixelRatio)
+}
+
+/** One antialiasing path per device; avoid stacked full-screen filters. */
+export function renderAntialiasing(maxSamples) {
+  const msaa = maxSamples >= renderBudget.samples
+  return { samples: msaa ? renderBudget.samples : 1, fxaa: !msaa }
 }

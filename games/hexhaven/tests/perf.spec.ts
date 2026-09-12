@@ -195,7 +195,7 @@ test('1440p occupied-board measurements and production debug isolation', async (
     contentType: 'application/json',
   });
 
-  const assets = new URL('../../../build/hexhaven/assets/', import.meta.url);
+  const assets = new URL('../../../build/assets/', import.meta.url);
   const scripts = (await readdir(assets)).filter((name) => name.endsWith('.js'));
   expect(scripts.length).toBeGreaterThan(0);
   for (const script of scripts)

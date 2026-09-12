@@ -82,6 +82,8 @@ export function createPicking(
     downX = 0,
     downY = 0;
   const worldPosition = new Vector3();
+  const proxyCamera = new Vector3(Infinity, Infinity, Infinity);
+  let proxyHeight = -1, proxyFov = -1, proxiesDirty = true;
   function targetPosition(target: SceneTarget): Vector3 | undefined {
     return positions.all.get(target.id);
   }
@@ -111,6 +113,8 @@ export function createPicking(
   }
   function sizeProxies(): void {
     const height = canvas.clientHeight || 600;
+    if (!proxiesDirty && proxyHeight === height && proxyFov === camera.fov && proxyCamera.equals(camera.position)) return;
+    proxiesDirty = false; proxyHeight = height; proxyFov = camera.fov; proxyCamera.copy(camera.position);
     for (let index = 0; index < targets.length; index++) {
       const target = targets[index];
       if (!target) continue;
@@ -185,6 +189,7 @@ export function createPicking(
   canvas.addEventListener('pointerleave', pointerLeave);
   function setTargets(next: readonly SceneTarget[], callback: (target: SceneTarget) => void): void {
     targets = next;
+    proxiesDirty = true;
     select = callback;
     hovered = -1;
     ghost.visible = false;

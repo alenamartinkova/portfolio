@@ -8,11 +8,13 @@ export function gameConfig(id) {
 
   return {
     base: `/${id}/`,
+    publicDir: fileURLToPath(new URL('../public/', import.meta.url)),
     server: { port: game.port, strictPort: true },
     // Absolute paths also work when a config is loaded from the repository root.
     build: {
       outDir: fileURLToPath(new URL(`../build/${id}/`, import.meta.url)),
       emptyOutDir: true,
+      copyPublicDir: false,
       target: 'es2022',
     },
   }

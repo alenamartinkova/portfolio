@@ -19,7 +19,10 @@ const SK_HTML_PATH = new URL('../build/sk/index.html', import.meta.url)
 const PLACEHOLDER = '<div id="root"></div>'
 const ORIGIN = 'https://martinkova.dev'
 
-const { render, metaFor } = await import(pathToFileURL(SSR_ENTRY.pathname).href)
+const { render, renderGames, metaFor } = await import(pathToFileURL(SSR_ENTRY.pathname).href)
+
+const gamesPath = new URL('../build/games/index.html', import.meta.url)
+writeFileSync(gamesPath, readFileSync(gamesPath, 'utf8').replace(PLACEHOLDER, `<div id="root">${renderGames()}</div>`))
 
 const template = readFileSync(HTML_PATH, 'utf8')
 if (!template.includes(PLACEHOLDER)) {

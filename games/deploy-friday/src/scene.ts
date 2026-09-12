@@ -1,12 +1,16 @@
 import { renderBudget, renderPixelRatio } from '../../../shared/render-budget.js';
 import * as THREE from 'three';
+import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import { DB, HEIGHT, position, REQUESTS, SERVICES, START, WIDTH, type State } from './core/simulation';
 
 export class ClusterScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera = new THREE.OrthographicCamera(-9, 9, 6, -6, .1, 100);
-  private tiles: THREE.Mesh[] = [];
+  private tiles: THREE.InstancedMesh;
+  private state?: State;
+  private tick = -1;
+  private color = new THREE.Color();
   private buildings = new THREE.Group();
   private rays = new THREE.Group();
   private packets: THREE.InstancedMesh;
@@ -16,6 +20,7 @@ export class ClusterScene {
   private pointer = new THREE.Vector2();
   private dummy = new THREE.Object3D();
   private signature = '';
+  private pathField?: number[];
   private observer: ResizeObserver;
   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   private hovered: number | null = null;
@@ -33,11 +38,13 @@ export class ClusterScene {
     const base = new THREE.Mesh(new THREE.BoxGeometry(11.5, .45, 7.5), this.material(0x171925));
     base.position.y = -.4; this.scene.add(base);
     const geometry = new THREE.BoxGeometry(.94, .18, .94);
+    this.tiles = new THREE.InstancedMesh(geometry, this.material(0xffffff), WIDTH * HEIGHT);
     for (let cell = 0; cell < WIDTH * HEIGHT; cell++) {
-      const tile = new THREE.Mesh(geometry, this.material(0x262b3d));
-      tile.position.set(cell % WIDTH - 5, -.08, Math.floor(cell / WIDTH) - 3);
-      tile.userData.cell = cell; this.tiles.push(tile); this.scene.add(tile);
+      this.dummy.position.set(cell % WIDTH - 5, -.08, Math.floor(cell / WIDTH) - 3);
+      this.dummy.updateMatrix(); this.tiles.setMatrixAt(cell, this.dummy.matrix);
+      this.tiles.setColorAt(cell, this.color.setHex(0x262b3d));
     }
+    this.tiles.computeBoundingSphere(); this.scene.add(this.tiles);
     this.scene.add(this.buildings, this.rays);
     this.packets = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshStandardMaterial({ roughness: .25, metalness: .35, emissive: 0xffffff, emissiveIntensity: .35 }), 900);
@@ -54,9 +61,10 @@ export class ClusterScene {
     canvas.addEventListener('pointerleave', this.leave);
     canvas.addEventListener('pointerdown', this.click);
     canvas.addEventListener('keydown', this.key);
-    canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); host.dispatchEvent(new CustomEvent('renderlost')); });
+    canvas.addEventListener('webglcontextlost', this.contextLost);
     this.resize();
   }
+  private contextLost = (event: Event) => { event.preventDefault(); this.host.dispatchEvent(new CustomEvent('renderlost')); };
   private material(color: number) { return new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: .18 }); }
   private resize() {
     const w = this.host.clientWidth, h = this.host.clientHeight;
@@ -71,7 +79,7 @@ export class ClusterScene {
     const r = this.canvas.getBoundingClientRect();
     this.pointer.set((event.clientX - r.left) / r.width * 2 - 1, -(event.clientY - r.top) / r.height * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    return this.raycaster.intersectObjects(this.tiles)[0]?.object.userData.cell as number | undefined;
+    return this.raycaster.intersectObject(this.tiles)[0]?.instanceId;
   }
   private move = (event: PointerEvent) => {
     const next = this.pick(event) ?? null;
@@ -99,6 +107,7 @@ export class ClusterScene {
     for (const child of [...group.children]) {
       child.traverse(object => {
         if (object instanceof THREE.Mesh || object instanceof THREE.Line) {
+          if (object instanceof THREE.InstancedMesh) object.dispose();
           object.geometry.dispose();
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach(m => m.dispose());
@@ -142,13 +151,18 @@ export class ClusterScene {
     }
     this.buildings.add(group);
   }
+  invalidateState() { this.state = undefined; }
   render(s: State, previewRange = 0) {
+    const changed = s !== this.state || s.tick !== this.tick;
+    if (changed) {
     const signature = s.towers.map(t => `${t.cell}:${t.kind}:${t.level}`).join('|');
     if (signature !== this.signature || !this.buildings.children.length) {
       this.signature = signature; this.clear(this.buildings);
       this.building(DB, 0x9b7bff, 'db'); this.building(START, 0x50dec0, 'ingress');
       for (const t of s.towers) this.building(t.cell, SERVICES[t.kind].color, t.kind, t.level);
     }
+    if (this.pathField !== s.fields[DB]) {
+    this.pathField = s.fields[DB];
     const path = new Set<number>(); let cell = START;
     for (let i = 0; i < WIDTH * HEIGHT && cell !== DB; i++) {
       path.add(cell);
@@ -156,10 +170,11 @@ export class ClusterScene {
       cell = [x < 10 ? cell + 1 : -1, y > 0 ? cell - WIDTH : -1, y < 6 ? cell + WIDTH : -1, x > 0 ? cell - 1 : -1]
         .find(c => c >= 0 && s.fields[DB][c] >= 0 && s.fields[DB][c] < s.fields[DB][cell]) ?? DB;
     }
-    for (let i = 0; i < this.tiles.length; i++) {
-      const mat = this.tiles[i].material as THREE.MeshStandardMaterial;
-      mat.color.setHex(path.has(i) ? 0x354456 : [16, 60].includes(i) ? 0x2c354a : (i + Math.floor(i / WIDTH)) % 2 ? 0x242837 : 0x292e40);
-      mat.emissive.setHex(path.has(i) ? 0x132b2b : 0x000000); mat.emissiveIntensity = .3;
+    for (let i = 0; i < WIDTH * HEIGHT; i++) {
+      this.tiles.setColorAt(i, this.color.setHex(path.has(i) ? 0x354456 : [16, 60].includes(i) ? 0x2c354a : (i + Math.floor(i / WIDTH)) % 2 ? 0x242837 : 0x292e40));
+    }
+    this.tiles.instanceColor!.needsUpdate = true;
+    }
     }
     const selected = this.hovered ?? this.selected;
     this.selection.visible = selected !== null;
@@ -172,13 +187,14 @@ export class ClusterScene {
       this.range.position.set(rangeCell % WIDTH - 5, .065, Math.floor(rangeCell / WIDTH) - 3);
       this.range.scale.setScalar(range);
     }
-    this.packets.count = s.packets.length;
+    if (changed) {
+    this.packets.count = Math.min(s.packets.length, 900);
     s.packets.forEach((p, i) => {
       const pos = position(p), size = p.kind === 'upload' ? .43 : p.kind === 'bot' ? .15 : .23;
       this.dummy.position.set(pos.x - 5, .3 + (this.reducedMotion ? 0 : Math.sin(s.tick * .08 + p.id) * .04), pos.y - 3 + ((p.id % 3) - 1) * .12);
       this.dummy.scale.setScalar(size); this.dummy.rotation.set(0, this.reducedMotion ? 0 : s.tick * .02, 0);
       this.dummy.updateMatrix(); this.packets.setMatrixAt(i, this.dummy.matrix);
-      const color = new THREE.Color(REQUESTS[p.kind].color);
+      const color = this.color.setHex(REQUESTS[p.kind].color);
       if (p.kind === 'get') color.offsetHSL((p.color - 1.5) * .022, 0, 0);
       this.packets.setColorAt(i, color);
     });
@@ -194,25 +210,44 @@ export class ClusterScene {
       }
     }
     // One shared line geometry per update, instead of one draw call per target.
-    if (s.tick !== this.rays.userData.tick) {
-      this.rays.userData.tick = s.tick; this.clear(this.rays);
-      const vertices: number[] = [], colors: number[] = [];
-      for (const t of s.towers) for (const id of t.targets) {
-        const p = s.packets.find(p => p.id === id); if (!p) continue;
-        const pos = position(p), color = new THREE.Color(SERVICES[t.kind].color);
-        vertices.push(t.cell % WIDTH - 5, .5, Math.floor(t.cell / WIDTH) - 3, pos.x - 5, .3, pos.y - 3);
-        colors.push(color.r, color.g, color.b, color.r, color.g, color.b);
+    if (changed) {
+      let line = this.rays.children[0] as THREE.LineSegments | undefined;
+      const count = s.towers.reduce((sum, tower) => sum + tower.targets.length, 0) * 2;
+      if (!line || line.geometry.getAttribute('position').count < count) {
+        this.clear(this.rays);
+        const geometry = new THREE.BufferGeometry(), capacity = Math.max(256, count * 2);
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(capacity * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .55 }));
+        line.frustumCulled = false;
+        this.rays.add(line);
       }
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-      this.rays.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .55 })));
+      const vertices = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const colors = line.geometry.getAttribute('color') as THREE.BufferAttribute;
+      let vertex = 0;
+      const packetsById = new Map(s.packets.map(packet => [packet.id, packet]));
+      for (const t of s.towers) for (const id of t.targets) {
+        const p = packetsById.get(id); if (!p) continue;
+        const pos = position(p), color = this.color.setHex(SERVICES[t.kind].color);
+        vertices.setXYZ(vertex, t.cell % WIDTH - 5, .5, Math.floor(t.cell / WIDTH) - 3);
+        colors.setXYZ(vertex++, color.r, color.g, color.b);
+        vertices.setXYZ(vertex, pos.x - 5, .3, pos.y - 3);
+        colors.setXYZ(vertex++, color.r, color.g, color.b);
+      }
+      line.geometry.setDrawRange(0, vertex);
+      vertices.needsUpdate = colors.needsUpdate = true;
     }
+    this.state = s; this.tick = s.tick;
+    }
+
     this.renderer.render(this.scene, this.camera);
+    recordRenderedFrame();
   }
   dispose() {
     this.observer.disconnect(); this.clear(this.scene);
     this.renderer.dispose();
+    this.canvas.removeEventListener('webglcontextlost', this.contextLost);
+    this.renderer.forceContextLoss();
     this.canvas.removeEventListener('pointermove', this.move); this.canvas.removeEventListener('pointerleave', this.leave);
     this.canvas.removeEventListener('pointerdown', this.click); this.canvas.removeEventListener('keydown', this.key);
   }

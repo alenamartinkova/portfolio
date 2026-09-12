@@ -1,3 +1,4 @@
+import { createCachedRaycast } from '../../../../shared/cached-raycast.js';
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
@@ -12,6 +13,12 @@ export class FollowCamera {
   elevation = 0.44;
   shake = 0;
   private initialized = false;
+  private target = Vector3.Zero();
+  private desired = Vector3.Zero();
+  private direction = Vector3.Zero();
+  private ray = new Ray(this.target, this.direction);
+  private pickStatic = createCachedRaycast((ray: Ray) => this.scene.pickWithRay(ray, this.obstacle));
+  private obstacle = (mesh: import('@babylonjs/core/Meshes/abstractMesh').AbstractMesh) => this.walls.has(mesh as Mesh);
   constructor(
     private scene: Scene,
     private truck: ForkliftController,
@@ -42,27 +49,17 @@ export class FollowCamera {
     );
     input.lookX = 0;
     input.lookY = 0;
-    const target = this.truck.root.position
-      .add(new Vector3(0, 0.75, 0))
-      .add(this.truck.forward.scale(mobile ? .6 : 1.35));
-    const yaw =
-      Math.atan2(this.truck.forward.x, this.truck.forward.z) + this.orbit;
-    const desired = target.add(
-      new Vector3(
-        -Math.sin(yaw) * (mobile ? 11 : 9),
-        Math.sin(this.elevation) * 10 + 1.2,
-        -Math.cos(yaw) * (mobile ? 11 : 9),
-      ),
-    );
-    const direction = desired.subtract(target);
-    const hit = this.scene.pickWithRay(
-      new Ray(target, direction.normalizeToNew(), direction.length()),
-      (m) => this.walls.has(m as Mesh),
-    );
-    if (hit?.hit && hit.pickedPoint)
-      desired.copyFrom(
-        hit.pickedPoint.subtract(direction.normalizeToNew().scale(0.5)),
-      );
+    const target = this.target.copyFrom(this.truck.forward).scaleInPlace(mobile ? .6 : 1.35).addInPlace(this.truck.root.position);
+    target.y += .75;
+    const yaw = Math.atan2(this.truck.forward.x, this.truck.forward.z) + this.orbit;
+    const desired = this.desired.set(-Math.sin(yaw) * (mobile ? 11 : 9), Math.sin(this.elevation) * 10 + 1.2, -Math.cos(yaw) * (mobile ? 11 : 9)).addInPlace(target);
+    desired.subtractToRef(target, this.direction);
+    this.ray.length = this.direction.length(); this.direction.normalize();
+    const hit = this.pickStatic(this.ray);
+    if (hit?.hit && hit.pickedPoint) {
+      this.direction.scaleToRef(.5, desired);
+      desired.scaleInPlace(-1).addInPlace(hit.pickedPoint);
+    }
     desired.x = Math.max(-17.2, Math.min(17.2, desired.x));
     desired.z = Math.max(-20, Math.min(20, desired.z));
     desired.y = Math.max(2.3, desired.y);
@@ -74,10 +71,10 @@ export class FollowCamera {
       this.camera.position.copyFrom(desired);
       this.initialized = true;
     } else
-      this.camera.position = Vector3.Lerp(
+      Vector3.LerpToRef(
         this.camera.position,
         desired,
-        1 - Math.exp(-dt * 7),
+        1 - Math.exp(-dt * 7), this.camera.position,
       );
     if (
       Math.hypot(
@@ -87,13 +84,8 @@ export class FollowCamera {
     )
       this.camera.position.y = Math.max(this.camera.position.y, target.y + 3.5);
     this.shake = Math.max(0, this.shake - dt * 1.8);
-    target.addInPlace(
-      new Vector3(
-        Math.sin(performance.now() * 0.07) * this.shake,
-        Math.cos(performance.now() * 0.055) * this.shake * 0.5,
-        0,
-      ),
-    );
+    target.x += Math.sin(performance.now() * .07) * this.shake;
+    target.y += Math.cos(performance.now() * .055) * this.shake * .5;
     this.camera.setTarget(target);
   }
 }

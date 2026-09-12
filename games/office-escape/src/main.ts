@@ -6,6 +6,6 @@ initializeSiteAppearance();
 const dispose = loadGame({
   title: 'Office Escape',
   locale: getLocale(),
-  load: () => import('./start'),
+  load: () => import('./start').then(module => module.start()),
 });
 if (import.meta.hot) import.meta.hot.dispose(dispose);

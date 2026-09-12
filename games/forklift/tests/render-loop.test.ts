@@ -21,6 +21,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 function rig() {
   const game = new Game({ focus: vi.fn() } as unknown as HTMLCanvasElement);
+  // This fixture exercises loop ownership without constructing a mission/HUD.
+  vi.spyOn(game as unknown as { updateHUD(): void }, 'updateHUD').mockImplementation(() => {});
   const engine = {
     performanceMonitor: { reset: vi.fn() },
     runRenderLoop: vi.fn<(callback: () => void) => void>(),

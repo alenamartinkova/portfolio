@@ -2,6 +2,7 @@ import { TouchControls, type TouchGame } from './TouchControls';
 
 /** Shared keyboard, multitouch and camera input for the two physics games. */
 export class GameInput {
+  onChange: () => void = () => {};
   keys = new Set<string>();
   pressed = new Set<string>();
   lookX = 0;
@@ -32,6 +33,7 @@ export class GameInput {
   private press(code: string) {
     if (this.keys.has(code)) return;
     this.keys.add(code);
+    this.onChange();
     this.pressed.add(code);
     if (code === 'Escape') this.pause();
     else this.action(code);
@@ -71,6 +73,7 @@ export class GameInput {
   };
   private move = (event: PointerEvent) => {
     if (!this.lookPointer || event.pointerId !== this.lookPointer.id) return;
+    this.onChange();
     this.lookX += event.clientX - this.lookPointer.x;
     this.lookY += event.clientY - this.lookPointer.y;
     this.lookPointer.x = event.clientX;

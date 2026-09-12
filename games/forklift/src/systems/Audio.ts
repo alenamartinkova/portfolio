@@ -4,6 +4,7 @@ export class GameAudio {
   private motorGain?: GainNode;
   private master?: GainNode;
   private phase = 0;
+  suspend() { if (this.ctx?.state === 'running') void this.ctx.suspend(); }
   private beepAt = 0;
   muted = false;
   async start() {

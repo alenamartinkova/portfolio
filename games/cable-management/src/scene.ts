@@ -1,5 +1,6 @@
 import { renderBudget, renderPixelRatio } from '../../../shared/render-budget.js';
 import * as THREE from 'three';
+import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import type { Cable, Point } from './core/cables';
 import { fits, type Cell, type Drawer, type Piece } from './core/drawer';
 
@@ -19,6 +20,7 @@ function disposeGroup(group: THREE.Group) {
     materials = new Set<THREE.Material>();
   group.traverse((object) => {
     if (object instanceof THREE.Mesh) {
+      if (object instanceof THREE.InstancedMesh) object.dispose();
       geometries.add(object.geometry);
       (Array.isArray(object.material)
         ? object.material
@@ -41,7 +43,17 @@ export class DeskScene {
   private items = new THREE.Group();
   private ghost = new THREE.Group();
   private desk = new THREE.Group();
-  private cables: { sticks: THREE.Mesh[]; joints: THREE.Mesh[] }[] = [];
+  private cables: { sticks: THREE.InstancedMesh; joints: THREE.InstancedMesh }[] = [];
+  private dummy = new THREE.Object3D();
+  private point = new THREE.Vector3();
+  private previous = new THREE.Vector3();
+  private delta = new THREE.Vector3();
+  private up = new THREE.Vector3(0, 1, 0);
+  private pointer = new THREE.Vector2();
+  private itemsKey = '';
+  private ghostKey = '';
+  private projectionWidth = 0;
+  private projectionHeight = 0;
   private ray = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.29);
   private observer: ResizeObserver;
@@ -217,6 +229,7 @@ export class DeskScene {
     this.puzzle.position.set(0, 0, 0);
     this.closure = 0;
     this.cables = [];
+    this.itemsKey = this.ghostKey = '';
   }
   showCables(cables: Cable[]) {
     this.clearPuzzle();
@@ -252,44 +265,43 @@ export class DeskScene {
           0.08,
           '#e9e4d3',
         );
-      const sticks = cable.nodes.slice(1).map(() => {
-        const m = new THREE.Mesh(stickGeometry, material);
-        m.castShadow = true;
-        this.puzzle.add(m);
-        return m;
-      });
-      const joints = cable.nodes.map(() => {
-        const m = new THREE.Mesh(jointGeometry, material);
-        m.castShadow = true;
-        this.puzzle.add(m);
-        return m;
-      });
+      const sticks = new THREE.InstancedMesh(stickGeometry, material, cable.nodes.length - 1);
+      const joints = new THREE.InstancedMesh(jointGeometry, material, cable.nodes.length);
+      for (const mesh of [sticks, joints]) {
+        mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        mesh.castShadow = true;
+        this.puzzle.add(mesh);
+      }
       this.cables.push({ sticks, joints });
     });
     this.updateCables(cables);
     this.resize();
   }
   updateCables(cables: Cable[]) {
-    const up = new THREE.Vector3(0, 1, 0);
+    const { dummy, point, previous, delta, up } = this;
     cables.forEach((cable, c) => {
       const meshes = this.cables[c];
       if (!meshes) return;
       cable.nodes.forEach((node, i) => {
-        const position = new THREE.Vector3(node.x, 0.29, node.y);
-        meshes.joints[i].position.copy(position);
-        meshes.joints[i].scale.setScalar(this.radius);
+        point.set(node.x, 0.29, node.y);
+        dummy.position.copy(point);
+        dummy.quaternion.identity();
+        dummy.scale.setScalar(this.radius);
+        dummy.updateMatrix();
+        meshes.joints.setMatrixAt(i, dummy.matrix);
         if (i === 0) return;
-        const previous = new THREE.Vector3(
-            cable.nodes[i - 1].x,
-            0.29,
-            cable.nodes[i - 1].y,
-          ),
-          delta = position.clone().sub(previous),
-          mesh = meshes.sticks[i - 1];
-        mesh.position.copy(previous.add(position).multiplyScalar(0.5));
-        mesh.scale.set(this.radius, delta.length(), this.radius);
-        mesh.quaternion.setFromUnitVectors(up, delta.normalize());
+        previous.set(cable.nodes[i - 1].x, 0.29, cable.nodes[i - 1].y);
+        delta.subVectors(point, previous);
+        dummy.position.copy(previous).add(point).multiplyScalar(0.5);
+        dummy.scale.set(this.radius, delta.length(), this.radius);
+        dummy.quaternion.setFromUnitVectors(up, delta.normalize());
+        dummy.updateMatrix();
+        meshes.sticks.setMatrixAt(i - 1, dummy.matrix);
       });
+      for (const mesh of [meshes.sticks, meshes.joints]) {
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+      }
     });
   }
   showDrawer(drawer: Drawer) {
@@ -425,18 +437,25 @@ export class DeskScene {
     }
   }
   updateItems(drawer: Drawer, selected?: number) {
-    disposeGroup(this.items);
-    drawer.pieces
+    const key = JSON.stringify(drawer.pieces.map(p => [p.id, p.position, p.cells]));
+    if (key !== this.itemsKey) {
+      this.itemsKey = key;
+      disposeGroup(this.items);
+      drawer.pieces
       .filter((p) => p.position)
       .forEach((p) => {
         this.object(this.items, p, p.position!, drawer);
       });
+    }
     this.items.traverse((o) => {
-      if (o instanceof THREE.Mesh && o.userData.piece === selected)
-        (o.material as THREE.MeshStandardMaterial).emissive.setHex(0x292a14);
+      if (o instanceof THREE.Mesh)
+        (o.material as THREE.MeshStandardMaterial).emissive.setHex(o.userData.piece === selected ? 0x292a14 : 0);
     });
   }
   preview(drawer: Drawer, piece?: Piece, origin?: Cell) {
+    const key = piece && origin ? JSON.stringify([piece.id, piece.cells, origin, fits(drawer, piece, origin)]) : '';
+    if (key === this.ghostKey) return false;
+    this.ghostKey = key;
     disposeGroup(this.ghost);
     if (piece && origin)
       this.object(
@@ -447,6 +466,7 @@ export class DeskScene {
         true,
         fits(drawer, piece, origin),
       );
+    return true;
   }
   hitPiece(clientX: number, clientY: number): number | undefined {
     this.setRay(clientX, clientY);
@@ -456,7 +476,7 @@ export class DeskScene {
   private setRay(x: number, y: number) {
     const r = this.canvas.getBoundingClientRect();
     this.ray.setFromCamera(
-      new THREE.Vector2(
+      this.pointer.set(
         ((x - r.left) / r.width) * 2 - 1,
         1 - ((y - r.top) / r.height) * 2,
       ),
@@ -465,13 +485,12 @@ export class DeskScene {
   }
   world(x: number, y: number): Point | null {
     this.setRay(x, y);
-    const point = this.ray.ray.intersectPlane(this.plane, new THREE.Vector3());
+    const point = this.ray.ray.intersectPlane(this.plane, this.point);
     return point ? { x: point.x, y: point.z } : null;
   }
   screen(p: Point): Point {
-    const v = new THREE.Vector3(p.x, 0.29, p.y).project(this.camera),
-      r = this.canvas.getBoundingClientRect();
-    return { x: ((v.x + 1) * r.width) / 2, y: ((1 - v.y) * r.height) / 2 };
+    const v = this.point.set(p.x, 0.29, p.y).project(this.camera);
+    return { x: ((v.x + 1) * this.projectionWidth) / 2, y: ((1 - v.y) * this.projectionHeight) / 2 };
   }
   cell(drawer: Drawer, clientX: number, clientY: number): Cell | null {
     const p = this.world(clientX, clientY);
@@ -485,6 +504,7 @@ export class DeskScene {
   resize() {
     const { width, height } = this.canvas.getBoundingClientRect();
     if (!width || !height) return;
+    this.projectionWidth = width; this.projectionHeight = height;
     const aspect = width / height,
       halfWidth = Math.max(6.6, 4.8 * aspect),
       halfHeight = halfWidth / aspect;
@@ -508,6 +528,7 @@ export class DeskScene {
     }
     this.lamp.intensity = complete ? 34 : 24;
     this.renderer.render(this.scene, this.camera);
+    recordRenderedFrame();
     return this.mode === 'drawer' && complete && !this.reduce && this.closure < 1;
   }
   dispose() {
@@ -516,5 +537,6 @@ export class DeskScene {
     disposeGroup(this.decor);
     disposeGroup(this.puzzle);
     this.renderer.dispose();
+    this.renderer.forceContextLoss();
   }
 }

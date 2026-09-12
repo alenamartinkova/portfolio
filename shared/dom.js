@@ -3,6 +3,11 @@ export function setText(node, value) {
   if (node.textContent !== value) node.textContent = value
 }
 
+// Only use with application-owned markup, never untrusted input.
+export function setHTML(node, value) {
+  if (node.innerHTML !== value) node.innerHTML = value
+}
+
 // Reassigning an unchanged style/data attribute still triggers mutation observers
 // and style invalidation. Animation values often stay clamped at 0 or 1.
 export function setStyle(element, property, value) {

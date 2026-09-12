@@ -20,6 +20,16 @@ export class ForkliftController {
   readonly workLight: SpotLight;
   readonly model: TruckModel;
   private loadResistance?: LoadResistance;
+  private velocity = Vector3.Zero();
+  private side = Vector3.Zero();
+  private impulse = Vector3.Zero();
+  private angular = Vector3.Zero();
+  private forkPosition = Vector3.Zero();
+  private forkRotation = Quaternion.Identity();
+  private tiltRotation = Quaternion.Identity();
+  private forwardVector = Vector3.Zero();
+  private localForward = Vector3.Forward();
+  private localRight = Vector3.Right();
   get pushingGroundedLoad() { return this.loadResistance?.active ?? false; }
   setCargo(cargo: Cargo) { this.loadResistance = new LoadResistance(cargo, this.body, this.forkBody); }
   lift = 0.16;
@@ -86,11 +96,12 @@ export class ForkliftController {
     this.model.setWorkLight(on);
   }
   get forward() {
-    return this.root.getDirection(Vector3.Forward());
+    this.root.getDirectionToRef(this.localForward, this.forwardVector);
+    return this.forwardVector;
   }
   update(dt: number, input: Input) {
     const forward = this.forward;
-    const vel = this.body.getLinearVelocity();
+    const vel = this.velocity; this.body.getLinearVelocityToRef(vel);
     this.speed = Vector3.Dot(vel, forward);
     const throttle = input.axis("KeyW", "KeyS");
     const brake = input.keys.has("Space");
@@ -99,17 +110,15 @@ export class ForkliftController {
     const target = brake ? 0 : throttle * (throttle > 0 ? 3.2 : 2.4) * traction;
     const response = brake ? 2.4 : traction < 1 ? 10 : throttle ? 1.6 : 1.1;
     const delta = (target - this.speed) * Math.min(1, response * dt);
-    const side = this.root.getDirection(Vector3.Right());
+    const side = this.side; this.root.getDirectionToRef(this.localRight, side);
     const lateral = Vector3.Dot(vel, side);
-    this.body.applyImpulse(
-      forward
-        .scale(delta * 1800)
-        .add(side.scale(-lateral * 1800 * Math.min(1, dt * 9))),
-      this.root.position,
-    );
-    const yaw =
-      (this.steer * this.speed * 0.43) / (1 + Math.abs(this.speed) * 0.1);
-    this.body.setAngularVelocity(new Vector3(0, yaw, 0));
+    forward.scaleToRef(delta * 1800, this.impulse);
+    this.impulse.addInPlace(side.scaleInPlace(-lateral * 1800 * Math.min(1, dt * 9)));
+    if (this.impulse.lengthSquared() > 1e-8) this.body.applyImpulse(this.impulse, this.root.position);
+    const yaw = (this.steer * this.speed * .43) / (1 + Math.abs(this.speed) * .1);
+    this.body.getAngularVelocityToRef(this.angular);
+    if (Math.abs(this.angular.y - yaw) > 1e-6 || Math.abs(this.angular.x) + Math.abs(this.angular.z) > 1e-6)
+      this.body.setAngularVelocity(this.angular.set(0, yaw, 0));
     const liftInput = input.axis("KeyE", "KeyQ");
     const tiltInput = input.axis("KeyG", "KeyT");
     this.hydraulic = Math.abs(liftInput) + Math.abs(tiltInput);
@@ -121,12 +130,13 @@ export class ForkliftController {
       -0.18,
       Math.min(0.24, this.tilt + tiltInput * dt * 0.22),
     );
-    const pos = this.root.position.add(forward.scale(1.4));
-    pos.y = this.root.position.y - 0.68 + this.lift;
-    const rot = this.root.rotationQuaternion!.multiply(
-      Quaternion.RotationAxis(Vector3.Right(), this.tilt),
-    );
-    this.forkBody.setTargetTransform(pos, rot);
+    const pos = this.forkPosition.copyFrom(forward).scaleInPlace(1.4).addInPlace(this.root.position);
+    pos.y = this.root.position.y - .68 + this.lift;
+    Quaternion.RotationAxisToRef(this.localRight, this.tilt, this.tiltRotation);
+    this.root.rotationQuaternion!.multiplyToRef(this.tiltRotation, this.forkRotation);
+    // Havok targets encode velocity for the next step. Re-submit even at rest:
+    // skipping a target can leave the carriage moving with its previous velocity.
+    this.forkBody.setTargetTransform(pos, this.forkRotation);
     this.model.update(dt, this.speed, this.steer, this.lift, this.tilt);
   }
 }

@@ -170,7 +170,7 @@ test('real setup, production, exact resume, and persistent website appearance', 
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   const navigation = page.getByRole('navigation', { name: 'Game navigation', exact: true });
   await expect(navigation.getByRole('link', { name: 'Alena Martinková — portfolio' })).toHaveText(
-    '[AM]',
+    'am.',
   );
   await expect(navigation.getByRole('link', { name: 'Games', exact: true })).toHaveAttribute(
     'href',

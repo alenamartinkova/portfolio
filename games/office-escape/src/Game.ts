@@ -1,5 +1,7 @@
+import { yieldToMain } from '../../../shared/load-game.js';
+import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
-import { renderBudget, renderScale } from './systems/RenderQuality';
+import { renderBudget, renderScale, renderAntialiasing } from './systems/RenderQuality';
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
 import { atExit, officeLevels, resolveOfficeLevel } from './world/levels';
 import { Engine } from '@babylonjs/core/Engines/engine';
@@ -48,6 +50,9 @@ export class Game {
   private disposed = false;
   private idleTime = 0;
   private renderFrame = () => this.frame();
+  private previousPosition = Vector3.Zero();
+  private rollingVelocity = Vector3.Zero();
+  private floorRay = new Ray(Vector3.Zero(), Vector3.Down(), 1.05);
   private appearanceObserver = new MutationObserver(() => {
     this.requestRender();
   });
@@ -127,34 +132,44 @@ export class Game {
     return Math.atan2(next.x - start.x, next.z - start.z) - .2;
   }
   private async createScene() {
+    this.scene.onAfterRenderObservable.add(recordRenderedFrame);
     await enablePhysics(this.scene);
-    this.physics = new PhysicsInteractionSystem(this.scene);
-    this.level = new Level(this.scene, this.physics, this.definition);
-    this.player = new PlayerController(this.scene, this.level.f, this.checkpoints.spawn);
-    this.camera = new FollowCamera(this.scene, this.player.position, this.startingYaw);
-    if (this.definition.architecture !== 'office') {
-      const route = this.definition.route;
-      const low = new Vector3(Math.min(...route.map(s => s.x)), Math.min(...route.map(s => s.y)), Math.min(...route.map(s => s.z)));
-      const high = new Vector3(Math.max(...route.map(s => s.x)), Math.max(...route.map(s => s.y)), Math.max(...route.map(s => s.z)));
-      this.camera.overviewTarget = low.add(high).scale(.5);
-      this.camera.overviewDistance = Math.max(18, Vector3.Distance(low, high) * 1.15);
+    await yieldToMain();
+    const previousMaterialBlocking = this.scene.blockMaterialDirtyMechanism;
+    this.scene.blockMaterialDirtyMechanism = true;
+    try {
+      this.physics = new PhysicsInteractionSystem(this.scene);
+      this.level = new Level(this.scene, this.physics, this.definition);
+      this.player = new PlayerController(this.scene, this.level.f, this.checkpoints.spawn);
+      this.camera = new FollowCamera(this.scene, this.player.position, this.startingYaw);
+      if (this.definition.architecture !== 'office') {
+        const route = this.definition.route;
+        const low = new Vector3(Math.min(...route.map(s => s.x)), Math.min(...route.map(s => s.y)), Math.min(...route.map(s => s.z)));
+        const high = new Vector3(Math.max(...route.map(s => s.x)), Math.max(...route.map(s => s.y)), Math.max(...route.map(s => s.z)));
+        this.camera.overviewTarget = low.add(high).scale(.5);
+        this.camera.overviewDistance = Math.max(18, Vector3.Distance(low, high) * 1.15);
+      }
+      const pipeline = new DefaultRenderingPipeline('office antialiasing', false, this.scene, [this.camera.camera]);
+      pipeline.imageProcessingEnabled = false;
+      const quality = renderAntialiasing(this.engine.getCaps().maxMSAASamples);
+      pipeline.samples = quality.samples;
+      pipeline.fxaaEnabled = quality.fxaa;
+      for (const mesh of this.player.root.getChildMeshes()) this.level.shadows?.addShadowCaster(mesh);
+      this.physics.onImpact = (s) => {
+        if (this.state === 'playing') this.audio.impact(s);
+      };
+      this.player.onJump = () => this.audio.jump();
+      this.player.onLand = (s) => {
+        this.audio.land(s);
+        this.camera.impulse = Math.min(0.2, s * 0.016);
+      };
+      // Settle furniture before exposing controls. No simulation runs while paused.
+      for (let i = 0; i < 7; i++) { settlePhysics(this.scene, 5); await yieldToMain(); }
+      this.idleTime = 0;
+    } finally {
+      // Babylon marks all materials dirty once when this is restored to false.
+      this.scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
     }
-    const pipeline = new DefaultRenderingPipeline('office antialiasing', false, this.scene, [this.camera.camera]);
-    pipeline.imageProcessingEnabled = false;
-    pipeline.samples = renderBudget.samples;
-    pipeline.fxaaEnabled = true;
-    for (const mesh of this.player.root.getChildMeshes()) this.level.shadows?.addShadowCaster(mesh);
-    this.physics.onImpact = (s) => {
-      if (this.state === 'playing') this.audio.impact(s);
-    };
-    this.player.onJump = () => this.audio.jump();
-    this.player.onLand = (s) => {
-      this.audio.land(s);
-      this.camera.impulse = Math.min(0.2, s * 0.016);
-    };
-    // Settle furniture before exposing controls. No simulation runs while paused.
-    settlePhysics(this.scene);
-    this.idleTime = 0;
     this.scene.executeWhenReady(this.requestRender);
   }
   async selectLevel(id: string) {
@@ -287,7 +302,7 @@ export class Game {
           this.camera.snap(this.player.position);
         }
       } else {
-        const previous = this.player.position.clone();
+        const previous = this.previousPosition.copyFrom(this.player.position);
         this.player.update(dt, this.input, this.camera.yaw, Boolean(this.physics.grabbed));
         this.physics.update(dt, this.player.position, this.player.forward);
         const p = this.player.position;
@@ -296,7 +311,8 @@ export class Game {
           this.ui.toast('cardCollected');
           this.audio.checkpoint();
         }
-        const hit = this.scene.pickWithRay(new Ray(p, Vector3.Down(), 1.05), (m) =>
+        this.floorRay.origin.copyFrom(p);
+        const hit = this.scene.pickWithRay(this.floorRay, (m) =>
           Boolean(m.metadata?.solid),
         );
         const floor = Boolean(hit?.pickedMesh?.metadata?.forbidden) && Boolean(hit?.pickedPoint && Math.abs(this.player.feet - hit.pickedPoint.y) < .13);
@@ -342,7 +358,7 @@ export class Game {
         : undefined;
     this.ui.update(this.run, this.checkpoints.current, interaction, dt);
     const rolling = this.physics.objects.reduce(
-      (sum, o) => Math.max(sum, o.aggregate.body.getLinearVelocity().length()),
+      (sum, o) => { o.aggregate.body.getLinearVelocityToRef(this.rollingVelocity); return Math.max(sum, this.rollingVelocity.length()); },
       0,
     );
     this.audio.update(dt, active && this.player.grounded && this.player.moving, rolling, !active);

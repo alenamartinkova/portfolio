@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { levelFor, placementReason, progressFor } from '../state.js'
 import { footprint } from '../bricks.js'
+import { loadStudio } from '../loadStudio.js'
 
 export default function useStudio({
   mainRef,
@@ -29,7 +30,7 @@ export default function useStudio({
     setStudio(null)
     setError(false)
     latest.current.onReady(false)
-    import('../scene/createStudio.js')
+    loadStudio()
       .then(({ createStudio }) => {
         if (cancelled) return
         instance = createStudio({
@@ -119,7 +120,7 @@ export default function useStudio({
     }
     studio.setGuides(guides)
     const hint =
-      !state.result &&
+      !state.dialog && !paused && !state.result &&
       (state.hintBrick ||
         (state.difficulty === 'easy' && state.booklet && progress.missing[0]))
     studio.setHint(hint ? [hint] : [])
@@ -130,6 +131,8 @@ export default function useStudio({
     state.difficulty,
     state.booklet,
     state.hintBrick,
+    state.dialog,
+    paused,
     state.result,
   ])
   useEffect(() => {

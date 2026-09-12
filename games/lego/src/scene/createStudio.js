@@ -1,4 +1,5 @@
 import { createRenderLoop } from '../../../../shared/render-loop.js'
+import { recordRenderedFrame } from '../../../../shared/fps-meter.js'
 import { renderBudget, renderPixelRatio } from '../../../../shared/render-budget.js';
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
@@ -72,28 +73,25 @@ export function createStudio(
   renderer.domElement.tabIndex = 0
   mainEl.prepend(renderer.domElement)
   let referenceRenderer
+  const referenceCanvas = document.createElement('canvas')
+  referenceCanvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;'
+  referenceCanvas.setAttribute('aria-label', options.labels.reference)
+  referenceEl.append(referenceCanvas)
+  function prepareReference() {
+    if (referenceRenderer) return
+    referenceRenderer = new Renderer({ canvas: referenceCanvas, antialias: renderBudget.antialias, alpha: true, powerPreference: 'low-power' })
+    referenceRenderer.setClearColor(0xf0f0e7, 0)
+    referenceRenderer.outputColorSpace = THREE.SRGBColorSpace
+    referenceRenderer.toneMapping = THREE.ACESFilmicToneMapping
+    referenceRenderer.toneMappingExposure = 1.05
+  }
   try {
-    referenceRenderer = new Renderer({
-      antialias: renderBudget.antialias,
-      alpha: true,
-      powerPreference: 'low-power',
-    })
+    const bounds = referenceEl.getBoundingClientRect()
+    if (bounds.width > 0 && bounds.height > 0) prepareReference()
   } catch (error) {
-    renderer.dispose()
-    renderer.domElement.remove()
+    renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); referenceCanvas.remove()
     throw error
   }
-  referenceRenderer.setClearColor(0xf0f0e7, 0)
-  referenceRenderer.outputColorSpace = THREE.SRGBColorSpace
-  referenceRenderer.toneMapping = THREE.ACESFilmicToneMapping
-  referenceRenderer.toneMappingExposure = 1.05
-  referenceRenderer.domElement.style.cssText =
-    'display:block;width:100%;height:100%;touch-action:none;'
-  referenceRenderer.domElement.setAttribute(
-    'aria-label',
-    options.labels.reference
-  )
-  referenceEl.append(referenceRenderer.domElement)
   const controls = new Controls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.09
@@ -109,7 +107,7 @@ export function createStudio(
   controls.touches = { ONE: null, TWO: THREE.TOUCH.DOLLY_ROTATE }
   const referenceControls = new Controls(
     referenceCamera,
-    referenceRenderer.domElement
+    referenceCanvas
   )
   referenceControls.enableDamping = true
   referenceControls.dampingFactor = 0.1
@@ -468,7 +466,7 @@ export function createStudio(
       setRay(
         e.clientX,
         e.clientY,
-        referenceRenderer.domElement,
+        referenceCanvas,
         referenceCamera
       )
     ) {
@@ -489,9 +487,9 @@ export function createStudio(
     if (!touchPointers.size) touchGesture = false
   }
   window.addEventListener('pointercancel', onCancel)
-  referenceRenderer.domElement.addEventListener('contextmenu', contextMenu)
-  referenceRenderer.domElement.addEventListener('pointerdown', onRefDown)
-  referenceRenderer.domElement.addEventListener('pointerup', onRefUp)
+  referenceCanvas.addEventListener('contextmenu', contextMenu)
+  referenceCanvas.addEventListener('pointerdown', onRefDown)
+  referenceCanvas.addEventListener('pointerup', onRefUp)
   function modelBounds(bricks) {
     if (!bricks.length)
       return {
@@ -654,6 +652,7 @@ export function createStudio(
       hh = Math.round(rr.height)
     if (ww > 0 && hh > 0 && (ww !== refWidth || hh !== refHeight)) {
       invalidateReference()
+      prepareReference()
       referenceRenderer.setPixelRatio(renderPixelRatio(ww, hh, window.devicePixelRatio))
       referenceRenderer.setSize(ww, hh, false)
       resizeCamera(referenceCamera, referenceControls, ww / hh, refWidth > 0)
@@ -691,6 +690,7 @@ export function createStudio(
     }
     if (confetti.instanceColor) confetti.instanceColor.needsUpdate = true
   }
+  let hintUntil = 0, hintKey = ''
   function tick(now) {
     if (disposed || !active) return
     if (cameraTween) {
@@ -706,8 +706,9 @@ export function createStudio(
     }
     controls.update()
     referenceControls.update()
+    if (now >= hintUntil) hintUntil = 0
     if (hints.length) {
-      const opacity = motionQuery.matches ? 0.5 : 0.38 + Math.sin(now * 0.006) * 0.2
+      const opacity = motionQuery.matches || now >= hintUntil ? 0.5 : 0.38 + Math.sin(now * 0.006) * 0.2
       for (const m of hintGroup.children) m.material.opacity = opacity
     }
     if (celebrationStart) {
@@ -742,11 +743,12 @@ export function createStudio(
       }
     }
     renderer.render(scene, camera)
+    recordRenderedFrame()
     if (referenceDirty && refWidth > 0 && refHeight > 0 && referenceEl.getClientRects().length) {
-      referenceRenderer.render(referenceScene, referenceCamera)
+      referenceRenderer?.render(referenceScene, referenceCamera)
       referenceDirty = false
     }
-    if (cameraTween || celebrationStart || (hints.length && !motionQuery.matches))
+    if (cameraTween || celebrationStart || (hints.length && !motionQuery.matches && now < hintUntil))
       invalidate()
   }
   function onVisibility() {
@@ -844,6 +846,10 @@ export function createStudio(
       missingGroup.add(mesh)
     },
     setHint(bricks) {
+      const key = JSON.stringify(bricks)
+      if (key === hintKey) return
+      hintKey = key
+      hintUntil = performance.now() + 800
       hints = bricks.slice()
       makeBatches(hintGroup, hints, 'hint')
     },
@@ -901,7 +907,7 @@ export function createStudio(
     refreshHover: updateHover,
     setLabels(labels) {
       renderer.domElement.setAttribute('aria-label', labels.workspace)
-      referenceRenderer.domElement.setAttribute('aria-label', labels.reference)
+      referenceCanvas.setAttribute('aria-label', labels.reference)
     },
     projectBrick(b, top = false) {
       const f = footprint(b)
@@ -957,17 +963,20 @@ export function createStudio(
       renderer.domElement.removeEventListener('pointerdown', onMainDown)
       renderer.domElement.removeEventListener('pointermove', onMainMove)
       renderer.domElement.removeEventListener('pointerleave', onLeave)
-      referenceRenderer.domElement.removeEventListener(
+      referenceCanvas.removeEventListener(
         'contextmenu',
         contextMenu
       )
-      referenceRenderer.domElement.removeEventListener('pointerdown', onRefDown)
-      referenceRenderer.domElement.removeEventListener('pointerup', onRefUp)
+      referenceCanvas.removeEventListener('pointerdown', onRefDown)
+      referenceCanvas.removeEventListener('pointerup', onRefUp)
       ;[plateGroup, referencePlate, celebrationGroup].forEach(clearGroup)
       renderer.dispose()
-      referenceRenderer.dispose()
+      referenceRenderer?.dispose()
+      // Release driver-owned default resources even before detached canvases are collected.
+      renderer.forceContextLoss()
+      referenceRenderer?.forceContextLoss()
       renderer.domElement.remove()
-      referenceRenderer.domElement.remove()
+      referenceCanvas.remove()
     },
   }
 }

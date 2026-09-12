@@ -13,7 +13,7 @@ for (const locale of ['en', 'sk'] as const) {
     if (locale === 'sk') {
       await page
         .getByRole('navigation')
-        .getByRole('button', { name: 'Slovenčina', exact: true })
+        .getByRole('link', { name: 'Prepnúť do slovenčiny', exact: true })
         .click();
     }
 

@@ -2,7 +2,8 @@ import '@babylonjs/core/Physics/physicsEngineComponent';
 import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent';
 import './ui/style.css';
 import { Game } from './Game';
-const game = new Game(document.querySelector<HTMLCanvasElement>('#game')!);
-void game.start();
-if (import.meta.hot)
-    import.meta.hot.dispose(() => game.dispose());
+export async function start() {
+  const game = new Game(document.querySelector<HTMLCanvasElement>('#game')!);
+  try { await game.start(); } catch (error) { game.dispose(); throw error; }
+  return () => game.dispose();
+}

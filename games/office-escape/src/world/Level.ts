@@ -1,8 +1,8 @@
+import { batchStaticDecorations } from '../../../../shared/static-batches.js';
 import { renderBudget } from '../systems/RenderQuality';
 import { t, areaNames } from '../i18n';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
-import { GlowLayer } from '@babylonjs/core/Layers/glowLayer';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { CreateTorus } from '@babylonjs/core/Meshes/Builders/torusBuilder';
@@ -50,8 +50,7 @@ export class Level {
             sun.intensity = .9;
             sun.diffuse = Color3.FromHexString('#a5c9ff');
         }
-        const glow = new GlowLayer('exit and route glow', scene);
-        glow.intensity = .3;
+        // Emissive route materials remain legible without a full-scene glow pass.
         if (definition.architecture === 'office') {
             const floor = f.box('forbidden office floor', [29, .4, 86], [0, -.2, 32], definition.floor);
             physics.rigid(floor);
@@ -181,18 +180,7 @@ export class Level {
         physics.rigid(landing);
         // Combine only static, decorative meshes. Physics surfaces, movable furniture,
         // checkpoint rings and the sliding exit keep their own transforms.
-        const batches = new Map<string, Mesh[]>();
-        for (const mesh of [...scene.meshes]) {
-            if (!(mesh instanceof Mesh) || mesh.parent || mesh.metadata?.solid || mesh === this.exitDoor || mesh.name.startsWith('checkpoint ') || !mesh.material || mesh.material.alpha < 1) continue;
-            const noShadow = /city|distant|seam|grid|diffuser|skyline/.test(mesh.name);
-            mesh.metadata = { ...mesh.metadata, noShadow };
-            const key = `${mesh.material.uniqueId}:${noShadow}`;
-            const group = batches.get(key) ?? []; group.push(mesh); batches.set(key, group);
-        }
-        for (const meshes of batches.values()) if (meshes.length > 1) {
-            const merged = Mesh.MergeMeshes(meshes, true, true, undefined, false, false);
-            if (merged) { merged.name = 'office decoration batch'; merged.metadata = { noShadow: meshes[0].metadata?.noShadow }; merged.isPickable = false; merged.receiveShadows = true; }
-        }
+        batchStaticDecorations(scene, Mesh, new Set([this.exitDoor, ...this.checkpointMeshes]));
         this.security = new SecuritySystem(this.f, definition);
         if (this.shadows) for (const m of scene.meshes)
             if (m instanceof Mesh && m.getTotalVertices() > 0 && !m.name.includes('glass') && !m.name.includes('city') && !m.metadata?.forbidden && !m.metadata?.noShadow && (m.material?.alpha ?? 1) === 1)

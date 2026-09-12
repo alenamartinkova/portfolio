@@ -1,3 +1,4 @@
+import { batchStaticDecorations } from '../../../../shared/static-batches.js';
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 import { firstMission, type MissionDefinition } from "../missions/levels";
 import { t } from "../i18n";
@@ -436,6 +437,9 @@ export class Warehouse {
       m,
     );
     return m;
+  }
+  batchDecorations() {
+    batchStaticDecorations(this.scene, Mesh, new Set(this.property.map(object => object.mesh)));
   }
   finishShadows() {
     if (!this.shadow) return;

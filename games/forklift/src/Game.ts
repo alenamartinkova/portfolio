@@ -1,8 +1,11 @@
+import { yieldToMain } from '../../../shared/load-game.js';
+import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
 import { levels, resolveLevel, type MissionDefinition } from './missions/levels';
 import type { AbstractEngine } from '@babylonjs/core/Engines/abstractEngine';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
+import type { PhysicsEngine } from '@babylonjs/core/Physics/v2/physicsEngine';
 import { enablePhysics } from './systems/Physics';
 import { Factory } from './world/Factory';
 import { Warehouse } from './world/Warehouse';
@@ -20,7 +23,7 @@ import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
-import { renderBudget, renderScale } from './systems/RenderQuality';
+import { renderBudget, renderScale, renderAntialiasing } from './systems/RenderQuality';
 import { Viewport } from '@babylonjs/core/Maths/math.viewport';
 export class Game {
   engine!: AbstractEngine;
@@ -49,6 +52,11 @@ export class Game {
   private previewAngle = -.8;
   private disposed = false;
   private renderDirty = true;
+  private settledFor = 0;
+  private sleepingAt = 0;
+  private idleTimer = 0;
+  private velocity = Vector3.Zero();
+  private angularVelocity = Vector3.Zero();
   private rendering = false;
   private renderFrame = () => this.frame();
   private appearanceObserver = new MutationObserver(() => {
@@ -98,8 +106,10 @@ export class Game {
         attributeFilter: ['lang', 'data-theme', 'data-accent'],
       });
       this.requestRender();
+      this.updateHUD();
       this.ui.ready();
       this.input.setActive(true);
+      this.input.onChange = this.requestRender;
       this.canvas.focus();
     } catch (error) {
       console.error(error);
@@ -107,6 +117,12 @@ export class Game {
     }
   }
   private requestRender = () => {
+    if (this.sleepingAt) {
+      this.accountIdleTime();
+      this.sleepingAt = 0;
+      clearInterval(this.idleTimer);
+    }
+    this.settledFor = 0;
     this.renderDirty = true;
     if (!this.engine || !this.scene || this.disposed || this.restarting || document.hidden || this.rendering) return;
     // A paused interval must not become physics catch-up time on resume.
@@ -134,59 +150,78 @@ export class Game {
   };
   private async createScene() {
     this.scene = new Scene(this.engine);
+    this.scene.onAfterRenderObservable.add(recordRenderedFrame);
     const plugin = await enablePhysics(this.scene);
-    const f = new Factory(this.scene);
-    const warehouse = new Warehouse(this.scene, f, this.level);
-    this.truck = new ForkliftController(f, this.level.spawn, this.truckStyle);
-    this.truck.workLight.intensity = this.level.atmosphere === 'night' ? 1.35 : .45;
-    this.truck.setWorkLight(this.lightOn);
-    this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
-    this.cargo = new Cargo(f, this.level);
-    this.truck.setCargo(this.cargo);
-    this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
-    const antialias = new DefaultRenderingPipeline('warehouse antialiasing', false, this.scene, [this.camera.camera]);
-    antialias.imageProcessingEnabled = false;
-    // Multisampling smooths geometry; FXAA also covers devices without MSAA support.
-    antialias.samples = renderBudget.samples;
-    antialias.fxaaEnabled = true;
-    this.effects = new Effects(f, this.scene);
-    this.damage = new DamageSystem(
-      plugin,
-      this.cargo,
-      warehouse.property,
-      this.truck.body,
-      (strength, p) => {
-        this.audio.impact(strength);
-        this.effects.impact(strength, p);
-        this.camera.shake = Math.min(0.3, strength * 0.035);
-      },
-    );
-    this.mission = new MissionManager(this.cargo, this.truck, this.level);
-    warehouse.finishShadows();
-    if (renderBudget.shadows && this.level.atmosphere === 'night') {
-      const lampShadow = new ShadowGenerator(renderBudget.lampShadowSize, this.truck.workLight);
-      lampShadow.usePercentageCloserFiltering = true;
-      lampShadow.bias = .002;
-      lampShadow.normalBias = .04;
-      this.truck.workLight.shadowMinZ = .3;
-      this.truck.workLight.shadowMaxZ = 40;
-      lampShadow.filteringQuality = ShadowGenerator.QUALITY_LOW;
-      for (const mesh of this.scene.meshes)
-        if (mesh.getTotalVertices() > 6 && mesh.getBoundingInfo().boundingBox.extendSize.y > .04 && mesh.name !== 'concrete floor' && !mesh.isDescendantOf(this.truck.root))
-          lampShadow.addShadowCaster(mesh);
-    }
-    this.garageLight = new HemisphericLight('garage fill', new Vector3(-1, 1, -1), this.scene);
-    this.garageLight.intensity = this.level.atmosphere === 'night' ? 1.2 : .3;
-    this.garageLight.includedOnlyMeshes = [...this.truck.root.getChildMeshes(), ...this.truck.forkRoot.getChildMeshes()];
-    this.garageLight.setEnabled(false);
-    // Render-independent commands can later be recorded for replay/ghost inputs.
-    this.scene.onBeforePhysicsObservable.add(() => {
-      if (!this.paused && !this.resultShown) {
-        this.truck.update(1 / 120, this.input);
-        this.damage.beforeStep([this.truck.body, this.truck.forkBody, this.cargo.body]);
+    await yieldToMain();
+    const previousMaterialBlocking = this.scene.blockMaterialDirtyMechanism;
+    this.scene.blockMaterialDirtyMechanism = true;
+    try {
+      const f = new Factory(this.scene);
+      const warehouse = new Warehouse(this.scene, f, this.level);
+      warehouse.batchDecorations();
+      await yieldToMain();
+      this.truck = new ForkliftController(f, this.level.spawn, this.truckStyle);
+      this.truck.workLight.intensity = this.level.atmosphere === 'night' ? 1.35 : .45;
+      this.truck.setWorkLight(this.lightOn);
+      this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
+      this.cargo = new Cargo(f, this.level);
+      this.truck.setCargo(this.cargo);
+      this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
+      // Scene.render advances Havok before this observer. Follow the same pose that
+      // is drawn, instead of aiming at the preceding physics frame while driving.
+      this.scene.onBeforeRenderObservable.add(() => {
+        if (!this.paused && !this.resultShown)
+          this.camera.update(Math.min(.05, this.engine.getDeltaTime() / 1000), this.input, document.body.hasAttribute('data-touch-game'));
+      });
+      const antialias = new DefaultRenderingPipeline('warehouse antialiasing', false, this.scene, [this.camera.camera]);
+      antialias.imageProcessingEnabled = false;
+      // Multisampling smooths geometry; FXAA also covers devices without MSAA support.
+      const quality = renderAntialiasing(this.engine.getCaps().maxMSAASamples);
+      antialias.samples = quality.samples;
+      antialias.fxaaEnabled = quality.fxaa;
+      this.effects = new Effects(f, this.scene);
+      this.damage = new DamageSystem(
+        plugin,
+        this.cargo,
+        warehouse.property,
+        this.truck.body,
+        (strength, p) => {
+          this.audio.impact(strength);
+          this.effects.impact(strength, p);
+          this.camera.shake = Math.min(0.3, strength * 0.035);
+        },
+      );
+      this.mission = new MissionManager(this.cargo, this.truck, this.level);
+      warehouse.finishShadows();
+      if (renderBudget.shadows && this.level.atmosphere === 'night') {
+        const lampShadow = new ShadowGenerator(renderBudget.lampShadowSize, this.truck.workLight);
+        lampShadow.usePercentageCloserFiltering = true;
+        lampShadow.bias = .002;
+        lampShadow.normalBias = .04;
+        this.truck.workLight.shadowMinZ = .3;
+        this.truck.workLight.shadowMaxZ = 40;
+        lampShadow.filteringQuality = ShadowGenerator.QUALITY_LOW;
+        for (const mesh of this.scene.meshes)
+          if (mesh.getTotalVertices() > 6 && mesh.getBoundingInfo().boundingBox.extendSize.y > .04 && mesh.name !== 'concrete floor' && !mesh.isDescendantOf(this.truck.root))
+            lampShadow.addShadowCaster(mesh);
       }
-    });
-    this.camera.update(1 / 60, this.input, document.body.hasAttribute('data-touch-game'));
+      this.garageLight = new HemisphericLight('garage fill', new Vector3(-1, 1, -1), this.scene);
+      this.garageLight.intensity = this.level.atmosphere === 'night' ? 1.2 : .3;
+      this.garageLight.includedOnlyMeshes = [...this.truck.root.getChildMeshes(), ...this.truck.forkRoot.getChildMeshes()];
+      this.garageLight.setEnabled(false);
+      // Render-independent commands can later be recorded for replay/ghost inputs.
+      const damageBodies = [this.truck.body, this.truck.forkBody, this.cargo.body];
+      this.scene.onBeforePhysicsObservable.add(() => {
+        if (!this.paused && !this.resultShown) {
+          this.truck.update(1 / 120, this.input);
+          this.damage.beforeStep(damageBodies);
+        }
+      });
+      this.camera.update(1 / 60, this.input, document.body.hasAttribute('data-touch-game'));
+    } finally {
+      // Babylon marks all materials dirty once when this is restored to false.
+      this.scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
+    }
     this.scene.executeWhenReady(this.requestRender);
   }
   private frame() {
@@ -206,7 +241,6 @@ export class Game {
       dt,
       ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyE', 'KeyQ'].some((k) => this.input.keys.has(k)),
     );
-    this.camera.update(dt, this.input, document.body.hasAttribute('data-touch-game'));
     this.effects.update(
       dt,
       this.truck.root.position,
@@ -216,6 +250,25 @@ export class Game {
     this.audio.update(dt, this.truck.speed, this.truck.hydraulic, halted);
     this.scene.render();
     this.renderDirty = false;
+    this.updateHUD();
+    if (this.mission.delivered && !this.resultShown) {
+      this.resultShown = true;
+      this.input.setActive(false);
+      this.progress.complete(this.level.id, this.mission.seconds, this.stats.stars);
+      this.ui.results(this.stats);
+      this.audio.success();
+    }
+    this.settledFor = this.isSettled() ? this.settledFor + dt : 0;
+    if (this.settledFor > 2 && !this.resultShown) {
+      this.scene.physicsEnabled = false;
+      this.audio.update(0, 0, 0, true);
+      this.audio.suspend();
+      this.sleepingAt = performance.now();
+      this.stopRendering();
+      this.idleTimer = window.setInterval(() => { this.accountIdleTime(); if (this.mission.started) this.updateHUD(); }, 1000);
+    }
+  }
+  private updateHUD() {
     this.ui.update(
       this.stats,
       this.mission.hint,
@@ -232,16 +285,25 @@ export class Game {
       this.mission.inspections.current,
       this.mission.inspections.hold,
     );
-    if (this.mission.delivered && !this.resultShown) {
-      this.resultShown = true;
-      this.input.setActive(false);
-      this.progress.complete(this.level.id, this.mission.seconds, this.stats.stars);
-      this.ui.results(this.stats);
-      this.audio.success();
+  }
+  private accountIdleTime() {
+    const now = performance.now();
+    if (this.mission.started && !this.paused && !document.hidden) this.mission.seconds += (now - this.sleepingAt) / 1000;
+    this.sleepingAt = now;
+  }
+  private isSettled() {
+    if (this.input.keys.size || this.input.dragging || this.mission.hold > 0 || this.mission.inspections.hold > 0) return false;
+    const bodies = (this.scene.getPhysicsEngine() as PhysicsEngine).getBodies();
+    for (const body of bodies) {
+      if (body.getMotionType() === 0) continue;
+      body.getLinearVelocityToRef(this.velocity); body.getAngularVelocityToRef(this.angularVelocity);
+      if (this.velocity.lengthSquared() > .0004 || this.angularVelocity.lengthSquared() > .0004) return false;
     }
+    return true;
   }
   async playtestInput(keys: string[], seconds: number) {
     if (!import.meta.env.DEV) return;
+    this.requestRender();
     this.input.clear();
     for (const key of keys)
       if (key !== 'Wait') this.input.keys.add(key.length === 1 ? 'Key' + key : key);
@@ -267,6 +329,7 @@ export class Game {
   togglePause(force = false) {
     if (force && this.paused) return;
     if (!this.scene || this.resultShown || this.restarting) return;
+    if (this.sleepingAt) this.accountIdleTime();
     this.paused = !this.paused;
     if (this.garageOpen) {
       this.garageOpen = false;
@@ -282,8 +345,10 @@ export class Game {
       this.input.setActive(false);
       this.ui.paused();
     } else {
+      this.updateHUD();
       this.ui.ready();
       this.input.setActive(true);
+      this.input.onChange = this.requestRender;
       this.canvas.focus();
     }
   }
@@ -296,6 +361,7 @@ export class Game {
   }
   private openSettings() {
     if (!this.scene || this.restarting || this.resultShown) return;
+    if (this.sleepingAt) this.accountIdleTime();
     this.paused = true;
     this.input.setActive(false);
     if (this.garageOpen) {
@@ -310,6 +376,7 @@ export class Game {
   }
   private openGarage() {
     if (!this.scene || this.restarting || this.resultShown) return;
+    if (this.sleepingAt) this.accountIdleTime();
     this.paused = true;
     this.garageOpen = true;
     this.input.setActive(false);
@@ -348,6 +415,7 @@ export class Game {
     if (!this.scene || this.restarting) return;
     this.restarting = true;
     this.stopRendering();
+    clearInterval(this.idleTimer); this.sleepingAt = 0; this.settledFor = 0;
     this.level = level;
     this.garageOpen = false;
     const url = new URL(location.href);
@@ -360,8 +428,10 @@ export class Game {
       await this.createScene();
       this.paused = false;
       this.resultShown = false;
+      this.updateHUD();
       this.ui.ready();
       this.input.setActive(true);
+      this.input.onChange = this.requestRender;
       this.canvas.focus();
       this.restarting = false;
       this.requestRender();
@@ -374,6 +444,7 @@ export class Game {
   }
   dispose() {
     this.disposed = true;
+    clearInterval(this.idleTimer);
     this.stopRendering();
     this.appearanceObserver.disconnect();
     this.input.dispose();

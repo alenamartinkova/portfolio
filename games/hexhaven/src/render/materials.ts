@@ -53,6 +53,12 @@ export function createCanvasTextureCache(): CanvasTextureCache {
 }
 
 const textureCache = createCanvasTextureCache();
+let owners = 0;
+export function retainTextures() {
+  owners++;
+  let released = false;
+  return () => { if (!released) { released = true; if (--owners === 0) textureCache.dispose(); } };
+}
 
 export function canvasTexture(
   key: string,
@@ -69,26 +75,17 @@ function randomSequence(seed: number): () => number {
     return cursor / 4294967296;
   };
 }
-export function paintTexture(color: string): CanvasTexture {
-  return canvasTexture(`paint-${color}`, 512, 512, (context) => {
-    context.fillStyle = color;
-    context.fillRect(0, 0, 512, 512);
+export function paintTexture(): CanvasTexture {
+  return canvasTexture('paint-grain', 128, 128, context => {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, 128, 128);
     const random = randomSequence(349);
-    for (let index = 0; index < 12500; index++) {
-      context.fillStyle = random() > 0.5 ? 'rgba(245,246,255,.045)' : 'rgba(18,18,26,.045)';
-      const x = random() * 512,
-        y = random() * 512;
-      context.fillRect(x, y, 2 + random() * 18, 1 + random() * 2);
-    }
+    context.fillStyle = 'rgba(18,18,26,.025)';
+    for (let i = 0; i < 780; i++) context.fillRect(random() * 128, random() * 128, 1 + random() * 4, 1);
   });
 }
 export function matte(color: string): MeshStandardMaterial {
-  return new MeshStandardMaterial({
-    color: 0xffffff,
-    map: paintTexture(color),
-    roughness: 0.96,
-    metalness: 0,
-  });
+  return new MeshStandardMaterial({ color, map: paintTexture(), roughness: .96, metalness: 0 });
 }
 export function solid(color: string): MeshStandardMaterial {
   return new MeshStandardMaterial({ color: new Color(color), roughness: 0.95, metalness: 0 });

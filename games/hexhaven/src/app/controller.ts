@@ -8,7 +8,7 @@ import { reduce } from '../core/reducer';
 import { createGame, getPlayer, RESOURCES } from '../core/state';
 import type { GameOptions, GameState } from '../core/state';
 import { localize, logText, resourceName, translateMessage } from '../i18n';
-import { createBoardScene } from '../render/scene';
+import { afterPaint } from '../../../../shared/load-game.js';
 import type { BoardScene, SceneTarget } from '../render/scene';
 import { createHUD } from '../ui/hud';
 import type { BuildMode, ViewState } from '../ui/hud';
@@ -89,6 +89,8 @@ export function startApplication(root: HTMLElement): () => void {
   let storedGame: GameState | null = null;
   let scene: BoardScene | null = null;
   let sceneBoard: GameState['board'] | null = null;
+  let sceneRequest = 0, sceneLoading = false;
+  let pendingSceneState: GameState;
   let mode: BuildMode = null;
   let selected: Action | null = null;
   let thinking = false;
@@ -161,33 +163,36 @@ export function startApplication(root: HTMLElement): () => void {
   }
 
   function updateScene(state: GameState): void {
+    pendingSceneState = state;
+    if (sceneLoading && sceneBoard === state.board) return;
     if (sceneBoard !== state.board || scene === null) {
-      scene?.dispose();
-      boardHost.replaceChildren();
-      try {
+      const request = ++sceneRequest;
+      sceneLoading = true;
+      scene?.dispose(); scene = null;
+      sceneBoard = state.board;
+      boardHost.textContent = localize('Preparing the board…', 'Pripravujem hernú dosku…');
+      void afterPaint().then(() => import('../render/scene')).then(({ createBoardScene }) => {
+        if (disposed || request !== sceneRequest) return;
+        boardHost.replaceChildren();
         scene = createBoardScene(boardHost, state.board);
-        sceneBoard = state.board;
-      } catch (error: unknown) {
-        scene = null;
-        sceneBoard = state.board;
+        sceneLoading = false;
+        updateScene(pendingSceneState);
+        paint();
+      }).catch((error: unknown) => {
+        if (disposed || request !== sceneRequest) return;
+        sceneLoading = false;
         const panel = document.createElement('div');
         panel.className = 'renderer-error';
         const text = document.createElement('p');
-        text.textContent = localize(
-          'The 3D view could not start. Enable hardware acceleration in your browser and try again. You can still choose locations with the keyboard.',
-          '3D zobrazenie sa nespustilo. Zapni hardvérovú akceleráciu prehliadača a skús to znova. Miesta môžeš vyberať aj klávesnicou.',
-        );
+        text.textContent = localize('The 3D view could not start. You can still choose locations with the keyboard.', '3D zobrazenie sa nespustilo. Miesta môžeš vyberať aj klávesnicou.');
         const retry = document.createElement('button');
         retry.textContent = localize('Retry 3D view', 'Znova spustiť 3D zobrazenie');
-        retry.addEventListener('click', () => {
-          updateScene(visibleState() ?? preview);
-          paint();
-        });
-        panel.append(text, retry);
-        boardHost.append(panel);
-        message =
-          error instanceof Error ? `3D view: ${error.message}` : 'The 3D view is unavailable.';
-      }
+        retry.onclick = () => updateScene(visibleState() ?? preview);
+        panel.append(text, retry); boardHost.replaceChildren(panel);
+        message = error instanceof Error ? `3D view: ${error.message}` : 'The 3D view is unavailable.';
+        paint();
+      });
+      return;
     }
     scene?.setSettings({
       reducedMotion: motion.matches,

@@ -51,7 +51,8 @@ class Surface extends Events {
 }
 class Renderer {
   static instances = []
-  constructor() {
+  constructor({ canvas } = {}) {
+    if (canvas) this.domElement = canvas
     Renderer.instances.push(this)
   }
   domElement = new Surface()
@@ -82,6 +83,9 @@ class Renderer {
   dispose() {
     this.disposed = true
   }
+  forceContextLoss() {
+    this.contextLost = true
+  }
 }
 class Controls extends Events {
   static instances = []
@@ -107,6 +111,7 @@ function environment(t) {
   const window = new Events(),
     document = new Events()
   window.devicePixelRatio = 1
+  document.createElement = () => new Surface()
   document.hidden = false
   const motion = new Events()
   motion.matches = true
@@ -186,6 +191,7 @@ test('Three.js scene builds all models and disposes resources/listeners on unmou
   assert.equal(env.document.listenerCount, 0)
   for (const renderer of Renderer.instances) {
     assert.equal(renderer.disposed, true)
+    assert.equal(renderer.contextLost, true)
     assert.equal(renderer.domElement.removed, true)
     assert.equal(renderer.domElement.listenerCount, 0)
   }
@@ -255,12 +261,15 @@ test('hints and camera animations render until settled and respect reduced motio
   const referenceFrames = reference.info.render.calls
   const hintStart = performance.now()
   for (let i = 0; i < 60; i++) env.frame(hintStart + i * 1000 / 60)
-  assert.equal(main.info.render.calls - mainFrames, 60, 'hint animation stays smooth at 60 FPS')
+  assert.ok(main.info.render.calls - mainFrames >= 40 && main.info.render.calls - mainFrames <= 50, 'hint animates briefly and then sleeps')
+  assert.equal(env.frames.size, 0, 'normal-motion hint has no perpetual RAF')
+  studio.setHint([LEVELS[0].bricks[0]])
+  assert.equal(env.frames.size, 0, 'unchanged hint does not restart its animation')
   assert.equal(reference.info.render.calls, referenceFrames, 'a pulsing hint never redraws the unchanged blueprint')
   studio.setPeel(2)
   env.frame()
   assert.equal(reference.info.render.calls, referenceFrames + 1, 'peeling the blueprint redraws it')
-  assert.equal(env.frames.size, 1, 'animated hints keep drawing')
+  assert.equal(env.frames.size, 0, 'finished hint remains static')
   studio.setHint([])
   env.frame()
   assert.equal(env.frames.size, 0)
@@ -424,4 +433,18 @@ test('the board remains framed after resizing an existing workspace into portrai
       }
   }
   studio.dispose()
+})
+
+
+test('hidden reference does not allocate a second WebGL context', t => {
+  const env = environment(t), reference = new Surface()
+  reference.width = reference.height = 0
+  const studio = createStudio({ mainEl: new Surface(), referenceEl: reference, labels: {} }, { Renderer, Controls })
+  env.frame()
+  assert.equal(Renderer.instances.length, 1)
+  reference.width = 300; reference.height = 200
+  studio.resize(); env.frame()
+  assert.equal(Renderer.instances.length, 2)
+  studio.dispose()
+  assert.ok(Renderer.instances.every(renderer => renderer.disposed))
 })

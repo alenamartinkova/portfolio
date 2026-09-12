@@ -6,6 +6,7 @@ export class Effects {
   private sparks: { mesh: Mesh; v: Vector3; life: number }[] = [];
   private marks: Mesh[] = [];
   private skidAt = 0;
+  private displacement = Vector3.Zero();
   constructor(
     private f: Factory,
     private scene: Scene,
@@ -36,16 +37,16 @@ export class Effects {
     for (const s of this.sparks) {
       s.life -= dt;
       s.v.y -= dt * 8;
-      s.mesh.position.addInPlace(s.v.scale(dt));
+      s.v.scaleToRef(dt, this.displacement);
+      s.mesh.position.addInPlace(this.displacement);
       s.mesh.scaling.scaleInPlace(0.97);
     }
-    this.sparks = this.sparks.filter((s) => {
-      if (s.life <= 0) {
-        s.mesh.dispose();
-        return false;
-      }
-      return true;
-    });
+    for (let i = this.sparks.length - 1; i >= 0; i--) {
+      if (this.sparks[i].life > 0) continue;
+      this.sparks[i].mesh.dispose();
+      this.sparks[i] = this.sparks[this.sparks.length - 1];
+      this.sparks.pop();
+    }
     this.skidAt -= dt;
     if (skid && this.skidAt <= 0) {
       this.skidAt = 0.09;

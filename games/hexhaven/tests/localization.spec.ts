@@ -125,7 +125,7 @@ test('Slovak follows the website, translates an existing game, and resumes witho
     await expect(hand.getByText(name, { exact: true })).toBeVisible();
   const navigation = page.locator('.game-nav nav');
   await expect(navigation).toHaveAttribute('aria-label', 'Navigácia hry');
-  await expect(navigation.getByRole('link', { name: 'Games', exact: true })).toHaveAttribute(
+  await expect(navigation.getByRole('link', { name: 'Hry', exact: true })).toHaveAttribute(
     'href',
     '/games/?lang=sk',
   );
