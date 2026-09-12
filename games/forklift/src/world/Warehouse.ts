@@ -1,4 +1,5 @@
-import { batchStaticDecorations } from '../../../../shared/static-batches.js';
+import { constructScene, finishConstruction } from '../../../../shared/scene-construction.js';
+import { batchStaticDecorations, staticDecorationSteps } from '../../../../shared/static-batches.js';
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 import { firstMission, type MissionDefinition } from "../missions/levels";
 import { t } from "../i18n";
@@ -27,7 +28,18 @@ export class Warehouse {
     public scene: Scene,
     public f: Factory,
     public definition: MissionDefinition = firstMission,
+    deferred = false,
   ) {
+    if (!deferred) finishConstruction(this.build());
+  }
+  static async create(scene: Scene, f: Factory, definition: MissionDefinition) {
+    const warehouse = new Warehouse(scene, f, definition, true);
+    await constructScene(warehouse.build(), { isCancelled: () => scene.isDisposed });
+    await constructScene(staticDecorationSteps(scene, Mesh, new Set(warehouse.property.map(object => object.mesh))), { isCancelled: () => scene.isDisposed });
+    return warehouse;
+  }
+  private *build() {
+    const { scene, f, definition } = this;
     const night = definition.atmosphere === "night";
     const cold = definition.atmosphere === "cold";
     const sunset = definition.atmosphere === "sunset";
@@ -82,20 +94,26 @@ export class Warehouse {
       sun.shadowMaxZ = 65;
     }
     this.solid("concrete floor", [36, 1, 42], [0, -0.5, 0], "#8e9b9c");
-    for (let x = -16; x <= 16; x += 4)
-      f.box("concrete joint", [0.014, 0.003, 42], [x, 0.006, 0], "#899395");
-    for (let z = -18; z <= 18; z += 4)
-      f.box("concrete joint", [36, 0.003, 0.014], [0, 0.006, z], "#899395");
+    yield;
+    for (let x = -16; x <= 16; x += 4) { yield; f.box("concrete joint", [0.014, 0.003, 42], [x, 0.006, 0], "#899395"); }
+    for (let z = -18; z <= 18; z += 4) { yield; f.box("concrete joint", [36, 0.003, 0.014], [0, 0.006, z], "#899395"); }
     this.solid("back wall", [36, 8, 0.5], [0, 4, 21], "#bac4c5", true);
+    yield;
     this.solid("left wall", [0.5, 8, 42], [-18, 4, 0], "#a2b5bd", true);
+    yield;
     this.solid("right wall", [0.5, 8, 42], [18, 4, 0], "#a2b5bd", true);
+    yield;
     this.solid("front wall", [36, 4, 0.5], [0, 2, -21], "#a2b5bd", true);
+    yield;
     for (let z = -18; z < 21; z += 6) {
       for (const x of [-17.5, 17.5]) {
         f.box("steel column", [0.36, 8, 0.42], [x, 4, z], "#334d5e");
+        yield;
         f.box("wall rail", [0.3, 0.12, 6], [x, 3, z + 3], "#6b8590");
+        yield;
       }
       f.box("roof truss", [35, 0.32, 0.24], [0, 8, z], "#506a76");
+      yield;
       for (const x of [-11, 0, 11]) {
         const light = f.box(
           "strip light",
@@ -103,28 +121,33 @@ export class Warehouse {
           [x, 7.8, z],
           "#edffff",
         );
+        yield;
         light.material = f.mat(night ? "#263849" : cold ? "#b6e9ff" : "#edffff", !night);
       }
     }
     for (let i = 0; i < 2; i++) {
       const x = -8 + i * 16;
       f.box("bay shutter", [7, 5, 0.12], [x, 2.5, 20.68], "#516a76");
-      for (let y = 0.3; y < 5; y += 0.35)
-        f.box("shutter slat", [6.8, 0.025, 0.06], [x, y, 20.56], "#789099");
+      yield;
+      for (let y = 0.3; y < 5; y += 0.35) { yield; f.box("shutter slat", [6.8, 0.025, 0.06], [x, y, 20.56], "#789099"); }
       f.label(
         () => `${t("loadingBay")} ${String.fromCharCode(65 + i)}`,
         7,
         0.75,
         [x, 5.65, 20.4],
       );
-      for (const bx of [x - 3.8, x + 3.8]) this.bollard(bx, 19.4);
+      yield;
+      for (const bx of [x - 3.8, x + 3.8]) { yield; this.bollard(bx, 19.4); }
       for (const dx of [-3.3, 3.3]) {
         f.box("dock rubber buffer", [.3, 1.5, .3], [x + dx, .75, 20.35], "#26313b");
+        yield;
         const marker = f.box("dock guide light", [.12, 3, .08], [x + dx, 3.7, 20.3], definition.tint);
+        yield;
         marker.material = f.mat(definition.tint, true);
       }
     }
     f.label("NORTHLINE  /  LOGISTICS", 12, 1.1, [-7, 6.7, 20.4]);
+    yield;
     f.label(
       definition.target.rack ?? definition.bay,
       2,
@@ -133,7 +156,9 @@ export class Warehouse {
       "#94efd2",
       "#264d4d",
     );
+    yield;
     this.zone(...definition.pickup, 5, 4, "#579ac6", () => t("pickupSign"));
+    yield;
     this.zone(
       definition.target.x,
       definition.target.z,
@@ -143,24 +168,30 @@ export class Warehouse {
       () => definition.target.rack ? `${definition.target.rack} / ${t("shelf")}` : `${definition.bay} / ${t("deliveryZone")}`,
       definition.target.height ?? 0,
     );
-    if (definition.target.rack) this.deliveryRack();
-    this.atmosphereDetails();
-    this.architecturalDetails();
-    definition.inspections.forEach(([x, z], i) => {
+    yield;
+    if (definition.target.rack) yield* this.deliveryRack();
+    yield* this.atmosphereDetails();
+    yield* this.architecturalDetails();
+    for (const [i, [x, z]] of definition.inspections.entries()) {
       this.zone(x, z, 5, 5, "#c49a51", () => `${i + 1} / ${t("inspection")}`);
+      yield;
       f.label(() => `${t("inspection")} ${i + 1}`, 3, .5, [x, 3.4, z], "#fff0be", "#625030");
-    });
+      yield;
+    }
     // A broad center aisle with an offset gate makes the load worth steering carefully.
-    for (const [x, z] of definition.racks) this.rack(x, z);
-    for (let z = -15; z < 18; z += 3)
-      for (const x of [-8, 8])
-        f.box(
+    for (const [x, z] of definition.racks) { yield; yield* this.rack(x, z); }
+    for (let z = -15; z < 18; z += 3) {
+      yield; for (const x of [-8, 8]) {
+        yield; f.box(
           "aisle dashed line",
           [0.1, 0.008, 1.45],
           [x, 0.011, z],
           "#e9d9a2",
         );
+      }
+    }
     f.label("02", 2.5, 1.5, [-8, 0.018, -13], "#d5dfd9", "#8e9b9c", true);
+    yield;
     f.label(
       `${definition.target.rack ?? definition.bay}  ↑`,
       2.2,
@@ -170,8 +201,9 @@ export class Warehouse {
       "#6c9e97",
       true,
     );
-    for (const [x, z] of definition.barriers) this.barrier(x, z);
-    for (const [x, z] of definition.crates) this.crate(x, 0.5, z, 1);
+    yield;
+    for (const [x, z] of definition.barriers) { yield; this.barrier(x, z); }
+    for (const [x, z] of definition.crates) { yield; this.crate(x, 0.5, z, 1); }
     for (const [x, z] of definition.pallets) {
       const p = f.box(
         "loose pallet",
@@ -179,16 +211,18 @@ export class Warehouse {
         [x, 0.12, z],
         "#b58f5d",
       );
+      yield;
       rigid(p, 25);
       this.property.push({ mesh: p, value: 70, start: p.position.clone() });
-      for (let i = 0; i < 6; i++)
-        f.box(
+      for (let i = 0; i < 6; i++) {
+        yield; f.box(
           "pallet seam",
           [0.025, 0.006, 1.6],
           [-0.92 + i * 0.36, 0.119, 0],
           "#6f5639",
           p,
         );
+      }
     }
     for (const [x, z] of definition.cones) {
       const base = f.box(
@@ -197,6 +231,7 @@ export class Warehouse {
         [x, 0.045, z],
         "#26353e",
       );
+      yield;
       rigid(base, 3);
       const cone = f.cylinder(
         "safety cone",
@@ -206,6 +241,7 @@ export class Warehouse {
         "#e98f44",
         base,
       );
+      yield;
       cone.scaling.x = 0.85;
       this.property.push({
         mesh: base,
@@ -267,86 +303,115 @@ export class Warehouse {
       true,
     );
   }
-  private deliveryRack() {
+  private *deliveryRack() {
     const { x, z, width, depth, height = 0, rack } = this.definition.target;
     const f = this.f;
     // A real deck supports the pallet. The front stays open for the tines.
     this.solid("delivery shelf deck", [width, .18, depth], [x, height - .09, z], "#587883");
+    yield;
     this.solid("delivery shelf upper deck", [width + .25, .16, depth], [x, 5.4, z], "#587883");
+    yield;
     for (const dx of [-width / 2 - .12, width / 2 + .12]) {
       for (const dz of [-depth / 2, depth / 2]) {
         this.solid("delivery shelf post", [.16, 5.65, .16], [x + dx, 2.825, z + dz], "#33586a", true);
+        yield;
         f.box("shelf foot guard", [.24, .5, .24], [x + dx, .25, z + dz], "#eeb45c");
+        yield;
       }
     }
     this.solid("delivery shelf backstop", [width, .4, .12], [x, height + .2, z + depth / 2], "#cf894e");
-    for (const y of [height - .1, 5.4])
-      f.box("delivery beam", [width, .16, .12], [x, y, z - depth / 2 - .05], "#df9b50");
+    yield;
+    for (const y of [height - .1, 5.4]) { yield; f.box("delivery beam", [width, .16, .12], [x, y, z - depth / 2 - .05], "#df9b50"); }
     f.label(() => `${rack} / ${t("shelf")} / ${height.toFixed(2)} m`, width, .65, [x, 4.85, z - depth / 2 - .1], "#c6ffe9", "#214e4c");
+    yield;
     for (const dx of [-1.7, 0, 1.7]) {
       const carton = f.box("reserve stock", [1.2, .9, 1.1], [x + dx, 5.93, z], "#bb9269");
+      yield;
       f.box("reserve tape", [.15, .91, 1.12], [0, 0, 0], "#e2c898", carton);
+      yield;
     }
     for (const dx of [-1.85, 1.85]) {
       const guide = f.box("shelf approach guide", [.08, .014, 4], [x + dx, .02, z - depth / 2 - 2.1], "#a4ead0");
+      yield;
       guide.material = f.mat("#a4ead0", true);
     }
   }
-  private atmosphereDetails() {
+  private *atmosphereDetails() {
     const f = this.f;
     const mode = this.definition.atmosphere ?? "day";
     f.label(() => t(({ day: "dayTag", night: "nightTag", cold: "coldTag", sunset: "sunsetTag" } as const)[mode]), 7, .6, [7, 6.7, 20.35], mode === "night" ? "#a6d6ff" : "#f0dfb8");
+    yield;
     if (mode === "night") {
-      for (const x of [-17.3, 17.3]) for (const z of [-16, -4, 8, 18]) {
-        const lamp = f.box("emergency wall marker", [.22, .22, .5], [x, 1.2, z], "#76d7af");
-        lamp.material = f.mat("#76d7af", true);
+      for (const x of [-17.3, 17.3]) {
+        yield; for (const z of [-16, -4, 8, 18]) {
+          const lamp = f.box("emergency wall marker", [.22, .22, .5], [x, 1.2, z], "#76d7af");
+          yield;
+          lamp.material = f.mat("#76d7af", true);
+        }
       }
       f.label("23:40 / NIGHT OPERATIONS", 5, .55, [0, 3, 20.35], "#8ccdf3");
+      yield;
     }
     if (mode === "cold") {
-      for (const x of [-17.65, 17.65]) for (let z = -18; z < 20; z += 2)
-        f.box("insulated wall panel", [.12, 6, 1.94], [x, 3.1, z], "#d3e0e4");
+      for (const x of [-17.65, 17.65]) {
+        yield; for (let z = -18; z < 20; z += 2) { yield; f.box("insulated wall panel", [.12, 6, 1.94], [x, 3.1, z], "#d3e0e4"); }
+      }
       for (const x of [-12, 0, 12]) {
         f.box("evaporator housing", [3.4, 1.25, .75], [x, 6.25, 20.1], "#d5e6e9");
+        yield;
         for (const dx of [-.85, .85]) {
           const fan = f.cylinder("cold room fan", .88, .08, [x + dx, 6.25, 19.68], "#4c6b80");
+          yield;
           fan.rotation.x = Math.PI / 2;
           f.box("fan grille", [.06, .76, .1], [x + dx, 6.25, 19.61], "#b5cfdc");
+          yield;
           f.box("fan grille", [.76, .06, .1], [x + dx, 6.25, 19.61], "#b5cfdc");
+          yield;
         }
       }
       f.label("−18 °C", 2.5, .75, [0, 4.5, 20.35], "#a9eaff");
+      yield;
     }
     if (mode === "sunset") {
       for (const z of [-12, -4, 4, 12]) {
         f.box("high window frame", [.12, 2.5, 4.5], [17.65, 5.6, z], "#344857");
+        yield;
         const glass = f.box("sunset window", [.14, 2.2, 4.2], [17.55, 5.6, z], "#ffc891");
+        yield;
         glass.material = f.mat("#ffc891", true);
-        for (const dz of [-1.4, 0, 1.4]) f.box("window mullion", [.16, 2.2, .07], [17.45, 5.6, z + dz], "#344857");
+        for (const dz of [-1.4, 0, 1.4]) { yield; f.box("window mullion", [.16, 2.2, .07], [17.45, 5.6, z + dz], "#344857"); }
         const pool = f.box("evening light pool", [9, .006, 2.8], [11, .014, z], "#d1b686");
+        yield;
         pool.rotation.y = -.18;
       }
     }
   }
-  private architecturalDetails() {
+  private *architecturalDetails() {
     const f = this.f;
     // Layered wall cladding, concrete skirting and upper glazing give the shell depth.
     for (const x of [-17.68, 17.68]) {
       f.box("wall plinth", [.16, .85, 41], [x, .425, 0], "#8b9290");
+      yield;
       for (let z = -18; z <= 18; z += 3) {
         f.box("wall panel joint", [.045, 6.4, .035], [x, 4.2, z], "#87999e");
+        yield;
         if (this.definition.atmosphere !== 'cold' && this.definition.atmosphere !== 'sunset') {
           f.beveledBox("clerestory window frame", [.12, 1.25, 2.5], [x, 6.55, z], "#52656c");
+          yield;
           const glass = f.box("clerestory glazing", [.13, 1.06, 2.29], [x - Math.sign(x) * .05, 6.55, z], "#b5cbd0");
+          yield;
           glass.material = f.mat(this.definition.atmosphere === 'night' ? "#253d55" : "#c4dcdf", this.definition.atmosphere !== 'night');
           f.box("window center mullion", [.15, 1.12, .035], [x - Math.sign(x) * .09, 6.55, z], "#64767c");
+          yield;
         }
       }
     }
     f.box("back wall plinth", [35.4, .85, .15], [0, .425, 20.67], "#8b9290");
+    yield;
     for (const x of [-15, -3, 3, 15]) {
       const pipe = f.cylinder("wall service pipe", .08, 6.8, [x, 3.4, 20.6], "#77888c");
-      for (const y of [-2, 0, 2]) f.box("pipe bracket", [.19, .06, .12], [0, y, .03], "#52636c", pipe);
+      yield;
+      for (const y of [-2, 0, 2]) { yield; f.box("pipe bracket", [.19, .06, .12], [0, y, .03], "#52636c", pipe); }
     }
   }
   private bollard(x: number, z: number) {
@@ -360,11 +425,11 @@ export class Warehouse {
     this.solid("safety rail", [2.6, 0.18, 0.18], [x, 0.85, z], "#f0b848");
     for (const dx of [-1.15, 1.15]) this.bollard(x + dx, z);
   }
-  private rack(x: number, z: number) {
+  private *rack(x: number, z: number) {
     const f = this.f;
     const firstPart = this.property.length;
-    for (const dx of [-2.15, 2.15])
-      for (const dz of [-0.9, 0.9]) {
+    for (const dx of [-2.15, 2.15]) {
+      yield; for (const dz of [-0.9, 0.9]) {
         const upright = this.solid(
           "rack upright",
           [0.14, 4.8, 0.14],
@@ -372,11 +437,14 @@ export class Warehouse {
           "#345469",
           true,
         );
+        yield;
         f.beveledBox("rack foot plate", [.34, .06, .32], [0, -2.37, 0], "#60757c", upright);
+        yield;
         f.beveledBox("rack foot protector", [.21, .45, .21], [0, -2.14, 0], "#d8a849", upright);
-        for (const h of [-1.45, -.75, -.05, .65, 1.35, 2.05])
-          f.box("rack mounting slot", [.032, .065, .006], [0, h, -.072], "#1e343c", upright);
+        yield;
+        for (const h of [-1.45, -.75, -.05, .65, 1.35, 2.05]) { yield; f.box("rack mounting slot", [.032, .065, .006], [0, h, -.072], "#1e343c", upright); }
       }
+    }
     for (const y of [0.2, 2.15, 4.1]) {
       const deck = this.solid(
         "rack deck",
@@ -384,24 +452,30 @@ export class Warehouse {
         [x, y, z],
         "#6b8993",
       );
-      for (const dz of [-1, 1])
-        f.box(
+      yield;
+      for (const dz of [-1, 1]) {
+        yield; f.box(
           "orange rack beam",
           [4.5, 0.23, 0.1],
           [0, 0, dz],
           "#cf7c3e",
           deck,
         );
+      }
     }
     const braceParent = this.property[firstPart].mesh;
-    for (const dx of [-2.15, 2.15]) for (const y of [1.2, 3.15]) for (const sign of [-1, 1]) {
-      const brace = f.cylinder("rack diagonal brace", .045, Math.hypot(1.8, 1.65), [x + dx - braceParent.position.x, y - braceParent.position.y, z - braceParent.position.z], "#71868b", braceParent);
-      brace.rotation.x = sign * Math.atan2(1.8, 1.65);
+    for (const dx of [-2.15, 2.15]) {
+      yield; for (const y of [1.2, 3.15]) {
+        yield; for (const sign of [-1, 1]) {
+          const brace = f.cylinder("rack diagonal brace", .045, Math.hypot(1.8, 1.65), [x + dx - braceParent.position.x, y - braceParent.position.y, z - braceParent.position.z], "#71868b", braceParent);
+          yield;
+          brace.rotation.x = sign * Math.atan2(1.8, 1.65);
+        }
+      }
     }
-    for (const y of [0.8, 2.8])
-      for (const dx of [-1.35, 0, 1.35]) this.crate(x + dx, y, z, 1.05);
+    for (const y of [0.8, 2.8]) { yield; for (const dx of [-1.35, 0, 1.35]) { yield; this.crate(x + dx, y, z, 1.05); } }
     const parts = this.property.slice(firstPart).filter((p) => p.breakMass);
-    for (const part of parts) part.breakGroup = `rack-${x}-${z}`;
+    for (const part of parts) { yield; part.breakGroup = `rack-${x}-${z}`; }
     f.label(
       `${x < 0 ? "A" : "C"}-${Math.abs(z) + 1}`,
       1,
@@ -412,6 +486,7 @@ export class Warehouse {
       false,
       parts[parts.length - 1].mesh,
     );
+    yield;
   }
   private crate(x: number, y: number, z: number, size: number) {
     const m = this.f.box("carton", [size, size, size], [x, y, z], "#bc966c");

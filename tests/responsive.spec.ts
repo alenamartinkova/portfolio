@@ -318,6 +318,9 @@ test('Forklift leaves the mobile driving view clear and keeps settings in pause'
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/forklift/?lang=en');
   await expect(page.locator('#overlay')).toBeHidden({ timeout: 60000 });
+  // The pause overlay can already be hidden while staged initialization is
+  // running. Wait for enabled touch input before measuring control rectangles.
+  await expect(page.getByRole('region', { name: 'Touch controls' })).toBeVisible();
   for (const selector of ['.mission', '.stats', '.context-hint', '.dashboard', '.game-settings'])
     await expect(page.locator(selector)).toBeHidden();
   await expect(page.locator('.mobile-goal')).toContainText('Target: B');

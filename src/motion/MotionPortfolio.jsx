@@ -14,7 +14,7 @@ import '../../shared/styles/appearance-controls.css'
 import './motion.css'
 import './choreography.css'
 
-const EMAIL = 'martinkova.a@gmail.com'
+const EMAIL = 'hello@martinkova.dev'
 const LINKEDIN = 'https://www.linkedin.com/in/alena-martinkova/'
 const LABELS = {
   sk: { scroll: 'Scrollujte a spoznajte ma', first: 'Od nápadu.', second: 'Po produkciu.', expertise: 'Premyslené do poslednej vrstvy.', selected: 'Práca, ktorá žije.', journey: 'Každý krok sa počíta.', contact: 'Poďme niečo', contactEnd: 'postaviť.', motion: 'Animácie', on: 'zapnuté', off: 'vypnuté', portrait: 'Za kódom som ja.', layers: ['01 / PRODUKT', '02 / BACKEND', '03 / DÁTA', '04 / INFRAŠTRUKTÚRA'], stack: 'Jeden celok. Od rozhrania až po infraštruktúru.' },

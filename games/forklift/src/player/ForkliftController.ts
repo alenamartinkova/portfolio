@@ -18,7 +18,7 @@ export class ForkliftController {
   forkBody: PhysicsBody;
   wheels: Mesh[] = [];
   readonly workLight: SpotLight;
-  readonly model: TruckModel;
+  model!: TruckModel;
   private loadResistance?: LoadResistance;
   private velocity = Vector3.Zero();
   private side = Vector3.Zero();
@@ -37,7 +37,7 @@ export class ForkliftController {
   speed = 0;
   hydraulic = 0;
   steer = 0;
-  constructor(f: Factory, spawn: readonly [number, number] = [0, -11], style: TruckStyle = defaultStyle) {
+  constructor(f: Factory, spawn: readonly [number, number] = [0, -11], style: TruckStyle = defaultStyle, deferred = false) {
     this.root = new TransformNode("forklift chassis", f.scene);
     this.root.position.set(spawn[0], 0.68, spawn[1]);
     this.root.rotationQuaternion = Quaternion.Identity();
@@ -82,7 +82,15 @@ export class ForkliftController {
     );
     this.forkBody.shape!.filterMembershipMask = 4;
     this.forkBody.shape!.filterCollideMask = ~2;
-    this.model = new TruckModel(f, this.root, this.forkRoot);
+    if (!deferred) this.finishModel(new TruckModel(f, this.root, this.forkRoot), style);
+  }
+  static async create(f: Factory, spawn: readonly [number, number], style: TruckStyle) {
+    const truck = new ForkliftController(f, spawn, style, true);
+    truck.finishModel(await TruckModel.create(f, truck.root, truck.forkRoot), style);
+    return truck;
+  }
+  private finishModel(model: TruckModel, style: TruckStyle) {
+    this.model = model;
     this.wheels = this.model.wheels;
     this.model.update(0, 0, 0, this.lift, this.tilt);
     this.applyStyle(style);

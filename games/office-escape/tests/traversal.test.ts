@@ -17,13 +17,16 @@ beforeAll(async () => {
 });
 for (const { definition, fps } of officeLevels.flatMap(definition => [60, 30].map(fps => ({ definition, fps })))) {
   const dt = 1 / fps;
-  it(`traverses ${definition.id} at ${fps} fps using actual jumps, furniture and security timing`, () => {
+  it(`traverses ${definition.id} at ${fps} fps using actual jumps, furniture and security timing`, async () => {
     const engine = new NullEngine(); const scene = new Scene(engine);
     const label = vi.spyOn(Factory.prototype, 'label').mockImplementation(function(this: Factory) { return MeshBuilder.CreatePlane('label', { size: .01 }, this.scene); });
     try {
       scene.enablePhysics(new Vector3(0, -18, 0), new HavokPlugin(true, havok));
       new FreeCamera('test camera', new Vector3(0, 8, -10), scene);
-      const physics = new PhysicsInteractionSystem(scene), level = new Level(scene, physics, definition);
+      const physics = new PhysicsInteractionSystem(scene);
+      // Exercise the production staged builder on every route as well as the
+      // synchronous test/tool path; both must preserve the real Havok traversal.
+      const level = fps === 60 ? await Level.create(scene, physics, definition) : new Level(scene, physics, definition);
       const checkpoints = new CheckpointManager(definition.route);
       const player = new PlayerController(scene, level.f, checkpoints.spawn);
       const floor = new FloorDetectionSystem();

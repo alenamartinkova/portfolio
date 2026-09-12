@@ -1,6 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { roundedSolidData } from '../shared/rounded-solid-data.js'
+import { buildRoundedSolid } from '../scripts/lib/rounded-solid-reference.mjs'
+
+test('offline templates reproduce the original geometry across dimensions and clamped radii', () => {
+  const scene = { onDisposeObservable: { addOnce() {} } }
+  for (const size of [[2, 1, 3], [.025, 8, .05], [35, .32, .24], [.004, .008, .016]]) {
+    for (const radius of [.001, .008, .012, .0121, .04, 1]) {
+      const expected = buildRoundedSolid(size, radius), actual = roundedSolidData(scene, size, radius)
+      assert.deepEqual(actual.indices, expected.indices)
+      assert.deepEqual(actual.uvs, expected.uvs)
+      for (const key of ['positions', 'normals'])
+        for (let i = 0; i < expected[key].length; i++)
+          assert.ok(Math.abs(actual[key][i] - expected[key][i]) < 1e-10, `${size}/${radius}/${key}/${i}`)
+    }
+  }
+})
 
 test('cached solids preserve dimensions, normals and winding for small and large bevels', () => {
   const scene = { onDisposeObservable: { addOnce() {} } }

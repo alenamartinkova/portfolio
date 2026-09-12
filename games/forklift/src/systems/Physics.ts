@@ -1,3 +1,4 @@
+import { assertConstructionActive } from '../../../../shared/scene-construction.js';
 import "@babylonjs/core/Physics/physicsEngineComponent";
 import HavokPhysics from "@babylonjs/havok";
 import wasmUrl from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
@@ -13,7 +14,9 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 let havok: ReturnType<typeof HavokPhysics> | undefined;
 export async function enablePhysics(scene: Scene) {
   havok ??= HavokPhysics({ locateFile: () => wasmUrl }).catch(error => { havok = undefined; throw error; });
-  const plugin = new HavokPlugin(true, await havok);
+  const module = await havok;
+  assertConstructionActive(() => scene.isDisposed);
+  const plugin = new HavokPlugin(true, module);
   scene.enablePhysics(new Vector3(0, -9.81, 0), plugin);
   scene.getPhysicsEngine()!.setTimeStep(1 / 60);
   scene.getPhysicsEngine()!.setSubTimeStep(1000 / 120);

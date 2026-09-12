@@ -1,4 +1,4 @@
-import { yieldToMain } from '../../../shared/load-game.js';
+import { assertConstructionActive, constructScene, prepareSceneMaterials, yieldConstruction } from '../../../shared/scene-construction.js';
 import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
 import { renderBudget, renderScale, renderAntialiasing } from './systems/RenderQuality';
@@ -90,8 +90,10 @@ export class Game {
   async start() {
     try {
       await this.createScene();
+      if (this.disposed) return;
       if (import.meta.env.DEV && new URLSearchParams(location.search).has('playtest')) {
         const { Playtest } = await import('./ui/Playtest');
+        if (this.disposed) return;
         this.playtest = new Playtest(this);
       }
       this.ready = true;
@@ -106,6 +108,7 @@ export class Game {
       });
       this.requestRender();
     } catch (e) {
+      if (this.disposed) return;
       console.error(e);
       this.ui.error();
     }
@@ -130,14 +133,18 @@ export class Game {
     return Math.atan2(next.x - start.x, next.z - start.z) - .2;
   }
   private async createScene() {
+    const scene = this.scene;
+    const cancelled = () => this.disposed || scene.isDisposed;
     this.scene.onAfterRenderObservable.add(recordRenderedFrame);
     await enablePhysics(this.scene);
-    await yieldToMain();
+    await yieldConstruction();
+    assertConstructionActive(cancelled);
     const previousMaterialBlocking = this.scene.blockMaterialDirtyMechanism;
     this.scene.blockMaterialDirtyMechanism = true;
     try {
       this.physics = new PhysicsInteractionSystem(this.scene);
-      this.level = new Level(this.scene, this.physics, this.definition);
+      this.level = await Level.create(scene, this.physics, this.definition);
+      assertConstructionActive(cancelled);
       this.player = new PlayerController(this.scene, this.level.f, this.checkpoints.spawn);
       this.player.onGroundContact = (position, distance) => this.floor.checkContact(this.scene, position, this.player.feet, distance);
       this.camera = new FollowCamera(this.scene, this.player.position, this.startingYaw);
@@ -163,13 +170,19 @@ export class Game {
         this.camera.impulse = Math.min(0.2, s * 0.016);
       };
       // Settle furniture before exposing controls. No simulation runs while paused.
-      for (let i = 0; i < 7; i++) { settlePhysics(this.scene, 5); await yieldToMain(); }
+      for (let i = 0; i < 7; i++) { settlePhysics(scene, 5); await yieldConstruction(); assertConstructionActive(cancelled); }
       this.idleTime = 0;
+    } catch (error) {
+      scene.dispose();
+      throw error;
     } finally {
       // Babylon marks all materials dirty once when this is restored to false.
-      this.scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
+      if (!scene.isDisposed) scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
     }
-    this.scene.executeWhenReady(this.requestRender);
+    try {
+      await constructScene(prepareSceneMaterials(scene), { isCancelled: cancelled });
+      scene.executeWhenReady(this.requestRender);
+    } catch (error) { scene.dispose(); throw error; }
   }
   async selectLevel(id: string) {
     if (!this.ready) return;
@@ -190,11 +203,13 @@ export class Game {
     this.scene = new Scene(this.engine);
     try {
       await this.createScene();
+      if (this.disposed) return;
       this.ready = true;
       this.state = 'intro';
       this.ui.ready();
       this.requestRender();
     } catch (error) {
+      if (this.disposed) return;
       console.error(error);
       this.ui.error();
     }
@@ -362,6 +377,7 @@ export class Game {
     if (!active && this.idleTime >= 2) this.stopRendering();
   }
   dispose() {
+    if (this.disposed) return;
     this.disposed = true;
     this.stopRendering();
     this.appearanceObserver.disconnect();

@@ -1,4 +1,4 @@
-import { yieldToMain } from '../../../shared/load-game.js';
+import { assertConstructionActive, constructScene, prepareSceneMaterials, yieldConstruction } from '../../../shared/scene-construction.js';
 import { recordRenderedFrame } from '../../../shared/fps-meter.js';
 import { CampaignProgress, browserStorage, campaignStars } from '../../../shared/CampaignProgress';
 import { levels, resolveLevel, type MissionDefinition } from './missions/levels';
@@ -99,6 +99,7 @@ export class Game {
       this.engine.maxFPS = renderBudget.fps;
       this.updateRenderResolution();
       await this.createScene();
+      if (this.disposed) return;
       window.addEventListener('resize', this.resize);
       document.addEventListener('visibilitychange', this.visibility);
       this.appearanceObserver.observe(document.documentElement, {
@@ -112,6 +113,7 @@ export class Game {
       this.input.onChange = this.requestRender;
       this.canvas.focus();
     } catch (error) {
+      if (this.disposed) return;
       console.error(error);
       this.ui.error('loadError');
     }
@@ -150,22 +152,28 @@ export class Game {
   };
   private async createScene() {
     this.scene = new Scene(this.engine);
+    const scene = this.scene;
+    const cancelled = () => this.disposed || scene.isDisposed;
     this.scene.onAfterRenderObservable.add(recordRenderedFrame);
     const plugin = await enablePhysics(this.scene);
-    await yieldToMain();
+    await yieldConstruction();
+    assertConstructionActive(cancelled);
     const previousMaterialBlocking = this.scene.blockMaterialDirtyMechanism;
     this.scene.blockMaterialDirtyMechanism = true;
     try {
       const f = new Factory(this.scene);
-      const warehouse = new Warehouse(this.scene, f, this.level);
-      warehouse.batchDecorations();
-      await yieldToMain();
-      this.truck = new ForkliftController(f, this.level.spawn, this.truckStyle);
+      const warehouse = await Warehouse.create(scene, f, this.level);
+      await yieldConstruction();
+      assertConstructionActive(cancelled);
+      this.truck = await ForkliftController.create(f, this.level.spawn, this.truckStyle);
+      assertConstructionActive(cancelled);
       this.truck.workLight.intensity = this.level.atmosphere === 'night' ? 1.35 : .45;
       this.truck.setWorkLight(this.lightOn);
       this.truck.model.setEnvironmentIntensity(this.level.atmosphere === 'night' ? .06 : .55);
       this.cargo = new Cargo(f, this.level);
       this.truck.setCargo(this.cargo);
+      await yieldConstruction();
+      assertConstructionActive(cancelled);
       this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
       // Scene.render advances Havok before this observer. Follow the same pose that
       // is drawn, instead of aiming at the preceding physics frame while driving.
@@ -218,11 +226,17 @@ export class Game {
         }
       });
       this.camera.update(1 / 60, this.input, document.body.hasAttribute('data-touch-game'));
+    } catch (error) {
+      scene.dispose();
+      throw error;
     } finally {
       // Babylon marks all materials dirty once when this is restored to false.
-      this.scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
+      if (!scene.isDisposed) scene.blockMaterialDirtyMechanism = previousMaterialBlocking;
     }
-    this.scene.executeWhenReady(this.requestRender);
+    try {
+      await constructScene(prepareSceneMaterials(scene), { isCancelled: cancelled });
+      scene.executeWhenReady(this.requestRender);
+    } catch (error) { scene.dispose(); throw error; }
   }
   private frame() {
     if (this.restarting || this.disposed) return;
@@ -426,6 +440,7 @@ export class Game {
     this.scene.dispose();
     try {
       await this.createScene();
+      if (this.disposed) return;
       this.paused = false;
       this.resultShown = false;
       this.updateHUD();
@@ -436,6 +451,7 @@ export class Game {
       this.restarting = false;
       this.requestRender();
     } catch (error) {
+      if (this.disposed) return;
       console.error(error);
       this.ui.error('restartError');
     } finally {
@@ -443,6 +459,7 @@ export class Game {
     }
   }
   dispose() {
+    if (this.disposed) return;
     this.disposed = true;
     clearInterval(this.idleTimer);
     this.stopRendering();

@@ -10,7 +10,7 @@
     "dev": "pnpm --recursive --parallel --include-workspace-root run dev:server",
     "dev:server": "vite",
     "start": "pnpm dev",
-    "build": "pnpm typecheck && pnpm build:portfolio && pnpm check:game-performance",
+    "build": "pnpm check:game-geometry && pnpm typecheck && pnpm build:portfolio && pnpm check:game-performance",
     "build:portfolio": "vite build && vite build --ssr src/entry-server.jsx --outDir build-ssr && node scripts/prerender.mjs && pnpm check:seo",
     "check:seo": "node scripts/check-seo.mjs",
     "preview": "vite preview",
@@ -24,7 +24,9 @@
     "e2e": "pnpm --filter \"./games/*\" --workspace-concurrency=1 --recursive run e2e",
     "e2e:responsive": "playwright test",
     "check:game-performance": "node scripts/check-game-performance.mjs",
-    "e2e:games": "playwright test --config config/games.playwright.js"
+    "e2e:games": "playwright test --config config/games.playwright.js",
+    "generate:game-geometry": "node scripts/generate-rounded-templates.mjs",
+    "check:game-geometry": "node scripts/generate-rounded-templates.mjs --check"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

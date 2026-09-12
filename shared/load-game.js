@@ -20,10 +20,11 @@ export function loadGame({ title, locale, load }) {
   notice.querySelector('h1').textContent = title
   document.body.append(notice)
   let disposed = false
+  const controller = new AbortController()
   let cleanup
   void afterPaint().then(async () => {
     if (disposed) return
-    cleanup = await load()
+    cleanup = await load(controller.signal)
     if (disposed && typeof cleanup === 'function') cleanup()
     notice.remove()
   }).catch(error => {
@@ -37,6 +38,7 @@ export function loadGame({ title, locale, load }) {
   function dispose() {
     if (disposed) return
     disposed = true
+    controller.abort()
     disposeFps()
     if (typeof cleanup === 'function') cleanup()
     notice.remove()

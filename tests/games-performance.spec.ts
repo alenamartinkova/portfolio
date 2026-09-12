@@ -71,6 +71,27 @@ test('office-escape: rapid jump input cannot avoid lava recovery', async ({ page
   expect(errors).toEqual([])
 })
 
+for (const id of ['office-escape', 'forklift']) test(`${id}: leaving during physics initialization cancels construction`, async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await instrument(page)
+  let release!: () => void, requested!: () => void
+  const waiting = new Promise<void>(resolve => { requested = resolve })
+  const barrier = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/*.wasm', async route => { requested(); await barrier; await route.continue() })
+  await page.goto(`/${id}/?lang=en`, { waitUntil: 'domcontentloaded' })
+  await waiting
+  // Keep the document inspectable while exercising the real permanent-pagehide path.
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })))
+  const draws = await page.evaluate(() => window.gameDraws)
+  release()
+  await page.waitForLoadState('networkidle')
+  await expect(page.locator('.game-fps')).toHaveCount(0)
+  await expect(page.locator('.desktop-game')).toHaveCount(0)
+  expect(await page.evaluate(() => window.gameDraws)).toBe(draws)
+  expect(errors).toEqual([])
+})
+
 for (const game of GAMES) test(`${game.id}: production rendering, idle and interaction`, async ({ page }, info) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))

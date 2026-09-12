@@ -173,3 +173,7 @@ First draw ranges: Office 626.3–658.7 → 579.2–599.8 ms; Forklift 623.6–6
 Unit/integration tests, type checks, production build and lint passed. New geometry tests verify bounds, normals, winding and isolation of mutable arrays; existing real Havok tests continue to cover cargo and collisions.
 
 All 14 production desktop/mobile game checks also passed after the initialization changes. The [before/after measurements](/Users/alenamartinkova/.codex/visualizations/2026/09/12/01a0973c-ce8a-7b20-bbb7-bfd14b7fcbe2/games-initialization-followup/summary.json), raw samples and validation logs are retained alongside the measurement script in that local artifact directory.
+
+## Staged initialization and precomputed topology
+
+The subsequent [initialization report](./INITIALIZATION-PERFORMANCE.md) records offline rounded-solid templates, incremental level/truck construction, staged material readiness and cancellation. In three matched final starts per Babylon game, no task over 50 ms was reported; baseline longest-task medians were 317 ms for Office and 186 ms for Forklift. Overall loading-shell duration increased by about 70–90 ms, so this demonstrates improved responsiveness rather than a shorter complete load. The report includes a fresh all-six-game production comparison and the validation details.

@@ -21,6 +21,7 @@ import { MissionManager } from "../src/systems/MissionManager";
 import { DamageSystem } from "../src/systems/DamageSystem";
 import { FollowCamera } from "../src/player/FollowCamera";
 import { ForkliftController } from "../src/player/ForkliftController";
+import { defaultStyle } from "../src/player/Customization";
 import { rigid } from "../src/systems/Physics";
 import type { Input } from "../src/systems/Input";
 let havok: Awaited<ReturnType<typeof HavokPhysics>>;
@@ -109,6 +110,67 @@ function rig(
     },
   };
 }
+for (const definition of levels) it(`staged ${definition.id} preserves geometry, camera obstacles and breakable bodies`, async () => {
+  const engine = new NullEngine();
+  const syncScene = new Scene(engine), stagedScene = new Scene(engine);
+  const snapshot = (scene: Scene, warehouse: Warehouse) => ({
+    meshes: scene.meshes.map(mesh => ({
+      name: mesh.name, vertices: mesh.getTotalVertices(), indices: mesh.getTotalIndices(),
+      world: [...mesh.computeWorldMatrix(true).asArray()],
+      bounds: [mesh.getBoundingInfo().boundingBox.minimum.asArray(), mesh.getBoundingInfo().boundingBox.maximum.asArray()],
+      material: mesh.material?.name, parent: mesh.parent?.name,
+      motion: mesh.physicsBody?.getMotionType(),
+    })),
+    obstacles: [...warehouse.cameraObstacles].map(mesh => mesh.name),
+    property: warehouse.property.map(item => ({ name: item.mesh.name, value: item.value, start: item.start.asArray(), mass: item.breakMass, group: item.breakGroup })),
+  });
+  try {
+    for (const scene of [syncScene, stagedScene]) scene.enablePhysics(new Vector3(0, -9.81, 0), new HavokPlugin(true, havok));
+    const sync = new Warehouse(syncScene, new HeadlessFactory(syncScene), definition);
+    sync.batchDecorations();
+    const staged = await Warehouse.create(stagedScene, new HeadlessFactory(stagedScene), definition);
+    expect(snapshot(stagedScene, staged)).toEqual(snapshot(syncScene, sync));
+  } finally { syncScene.dispose(); stagedScene.dispose(); engine.dispose(); }
+});
+
+it('cancels a partly built warehouse when its scene is disposed', async () => {
+  const engine = new NullEngine(), scene = new Scene(engine);
+  scene.enablePhysics(new Vector3(0, -9.81, 0), new HavokPlugin(true, havok));
+  try {
+    const building = Warehouse.create(scene, new HeadlessFactory(scene), firstMission);
+    scene.dispose();
+    await expect(building).rejects.toMatchObject({ name: 'AbortError' });
+    expect(scene.meshes).toHaveLength(0);
+  } finally { scene.dispose(); engine.dispose(); }
+});
+
+it('staged truck assembly preserves its geometry, moving groups and real physics', async () => {
+  const engine = new NullEngine(), syncScene = new Scene(engine), stagedScene = new Scene(engine);
+  try {
+    for (const scene of [syncScene, stagedScene]) {
+      scene.enablePhysics(new Vector3(0, -9.81, 0), new HavokPlugin(true, havok));
+      const factory = new HeadlessFactory(scene);
+      rigid(factory.box('floor', [40, 1, 60], [0, -.5, 0], '#808080'));
+    }
+    const sync = new ForkliftController(new HeadlessFactory(syncScene), firstMission.spawn, defaultStyle);
+    const staged = await ForkliftController.create(new HeadlessFactory(stagedScene), firstMission.spawn, defaultStyle);
+    const snapshot = (scene: Scene) => scene.meshes.map(mesh => ({
+      name: mesh.name, parent: mesh.parent?.name, vertices: mesh.getTotalVertices(), indices: mesh.getTotalIndices(),
+      world: [...mesh.computeWorldMatrix(true).asArray()], material: mesh.material?.name,
+    }));
+    expect(snapshot(stagedScene)).toEqual(snapshot(syncScene));
+    const keys = new Set(['KeyW', 'KeyE']);
+    const input = { keys, lookX: 0, lookY: 0, axis: (positive: string, negative: string) => Number(keys.has(positive)) - Number(keys.has(negative)) } as Input;
+    for (let i = 0; i < 120; i++) for (const [scene, truck] of [[syncScene, sync], [stagedScene, staged]] as const) {
+      scene.incrementRenderId();
+      truck.update(1 / 120, input);
+      scene.getPhysicsEngine()!._step(1 / 120);
+    }
+    expect(staged.root.position.asArray()).toEqual(sync.root.position.asArray());
+    expect(staged.forkRoot.position.asArray()).toEqual(sync.forkRoot.position.asArray());
+  } finally { syncScene.dispose(); stagedScene.dispose(); engine.dispose(); }
+});
+
 describe("real Havok forklift mechanics", () => {
   it("starts at rest without self-collision and can reverse", () => {
     const r = rig();
