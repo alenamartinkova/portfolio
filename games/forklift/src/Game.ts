@@ -15,6 +15,10 @@ import { MissionManager } from './systems/MissionManager';
 import { GameAudio } from './systems/Audio';
 import { Effects } from './systems/Effects';
 import { UI } from './ui/UI';
+import { readStyle, saveStyle, type TruckStyle } from './player/Customization';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 export class Game {
   engine!: AbstractEngine;
   scene!: Scene;
@@ -35,6 +39,11 @@ export class Game {
   private paused = false;
   private restarting = false;
   private resultShown = false;
+  private truckStyle = readStyle();
+  private lightOn = true;
+  private garageOpen = false;
+  private garageLight!: HemisphericLight;
+  private previewAngle = -.8;
   private disposed = false;
   private renderDirty = true;
   private appearanceObserver = new MutationObserver(() => {
@@ -49,12 +58,19 @@ export class Game {
       nextLevel: () => void this.restart(levels[(levels.indexOf(this.level) + 1) % levels.length]),
       pause: () => this.togglePause(),
       mute: () => this.audio.toggle(),
+      garage: () => this.openGarage(),
+      style: () => this.truckStyle,
+      customize: (style) => this.customize(style),
+      rotatePreview: (direction) => { this.previewAngle += direction * .5; this.previewTruck(); },
+      light: () => this.lightOn,
+      toggleLight: () => this.toggleLight(),
     });
     this.input = new Input(
       canvas,
       (force) => this.togglePause(force),
       () => void this.restart(),
       () => void this.audio.start().catch(() => {}),
+      () => this.toggleLight(),
     );
   }
   async start() {
@@ -100,7 +116,9 @@ export class Game {
     const plugin = await enablePhysics(this.scene);
     const f = new Factory(this.scene);
     const warehouse = new Warehouse(this.scene, f, this.level);
-    this.truck = new ForkliftController(f, this.level.spawn);
+    this.truck = new ForkliftController(f, this.level.spawn, this.truckStyle);
+    this.truck.workLight.intensity = this.level.atmosphere === 'night' ? 1.35 : .45;
+    this.truck.setWorkLight(this.lightOn);
     this.cargo = new Cargo(f, this.level);
     this.camera = new FollowCamera(this.scene, this.truck, warehouse.cameraObstacles);
     this.effects = new Effects(f, this.scene);
@@ -117,6 +135,22 @@ export class Game {
     );
     this.mission = new MissionManager(this.cargo, this.truck, this.level);
     warehouse.finishShadows();
+    if (this.level.atmosphere === 'night') {
+      const lampShadow = new ShadowGenerator(1024, this.truck.workLight);
+      lampShadow.usePercentageCloserFiltering = true;
+      lampShadow.bias = .002;
+      lampShadow.normalBias = .04;
+      this.truck.workLight.shadowMinZ = .3;
+      this.truck.workLight.shadowMaxZ = 40;
+      lampShadow.filteringQuality = ShadowGenerator.QUALITY_LOW;
+      for (const mesh of this.scene.meshes)
+        if (mesh.getTotalVertices() > 6 && mesh.getBoundingInfo().boundingBox.extendSize.y > .04 && mesh.name !== 'concrete floor' && !mesh.isDescendantOf(this.truck.root))
+          lampShadow.addShadowCaster(mesh);
+    }
+    this.garageLight = new HemisphericLight('garage fill', new Vector3(-1, 1, -1), this.scene);
+    this.garageLight.intensity = this.level.atmosphere === 'night' ? 1.2 : .3;
+    this.garageLight.includedOnlyMeshes = [...this.truck.root.getChildMeshes(), ...this.truck.forkRoot.getChildMeshes()];
+    this.garageLight.setEnabled(false);
     // Render-independent commands can later be recorded for replay/ghost inputs.
     this.scene.onBeforePhysicsObservable.add(() => {
       if (!this.paused && !this.resultShown) {
@@ -203,6 +237,12 @@ export class Game {
     if (force && this.paused) return;
     if (!this.scene || this.resultShown || this.restarting) return;
     this.paused = !this.paused;
+    if (this.garageOpen) {
+      this.garageOpen = false;
+      this.garageLight.setEnabled(false);
+      this.truck.setWorkLight(this.lightOn);
+      this.renderDirty = true;
+    }
     this.input.keys.clear();
     if (this.paused) this.ui.paused();
     else {
@@ -210,10 +250,49 @@ export class Game {
       this.canvas.focus();
     }
   }
+  private toggleLight() {
+    this.lightOn = !this.lightOn;
+    this.truck?.setWorkLight(this.lightOn);
+    this.ui.refreshLight();
+    this.renderDirty = true;
+    this.scene?.executeWhenReady(() => { this.renderDirty = true; });
+  }
+  private openGarage() {
+    if (!this.scene || this.restarting || this.resultShown) return;
+    this.paused = true;
+    this.garageOpen = true;
+    this.input.keys.clear();
+    this.garageLight.setEnabled(true);
+    this.truck.workLight.setEnabled(false);
+    this.previewAngle = -.8;
+    this.previewTruck();
+    this.scene.executeWhenReady(() => { this.renderDirty = true; });
+    this.ui.garage();
+  }
+  private previewTruck() {
+    const root = this.truck.root.position;
+    const yaw = Math.atan2(this.truck.forward.x, this.truck.forward.z) + this.previewAngle;
+    this.camera.camera.position.set(
+      Math.max(-17, Math.min(17, root.x - Math.sin(yaw) * 8.5)),
+      root.y + 4.2,
+      Math.max(-20, Math.min(20, root.z - Math.cos(yaw) * 8.5)),
+    );
+    // Leave visual space for the garage controls on the right.
+    this.camera.camera.setTarget(root.add(new Vector3(Math.cos(yaw) * 1.5, 1, -Math.sin(yaw) * 1.5)));
+    this.renderDirty = true;
+  }
+  private customize(style: TruckStyle) {
+    this.truckStyle = style;
+    saveStyle(style);
+    this.truck.applyStyle(style);
+    this.renderDirty = true;
+    this.scene.executeWhenReady(() => { this.renderDirty = true; });
+  }
   async restart(level: MissionDefinition = this.level) {
     if (!this.scene || this.restarting) return;
     this.restarting = true;
     this.level = level;
+    this.garageOpen = false;
     const url = new URL(location.href);
     url.searchParams.set('level', level.id);
     history.replaceState(null, '', url);

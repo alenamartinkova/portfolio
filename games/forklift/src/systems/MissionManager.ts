@@ -3,21 +3,21 @@ import type { TextKey } from "../i18n";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Cargo } from "../world/Cargo";
 import { ForkliftController } from "../player/ForkliftController";
-import { firstMission } from "../missions/levels";
+import { firstMission, type DeliveryTarget } from "../missions/levels";
 export { firstMission, type MissionDefinition } from "../missions/levels";
 export function deliveryEligible(
   position: { x: number; y: number; z: number },
   speed: number,
   upright: number,
   forksClear: boolean,
-  target = firstMission.target,
+  target: DeliveryTarget = firstMission.target,
 ) {
   return (
     Math.abs(position.x - target.x) < target.width / 2 - 1.65 &&
     Math.abs(position.z - target.z) < target.depth / 2 - 1.65 &&
-    position.y < 0.16 &&
-    position.y > -0.1 &&
-    speed < 0.22 &&
+    position.y < (target.height ?? 0) + 0.16 &&
+    position.y > (target.height ?? 0) - 0.1 &&
+    speed >= 0 && speed < 0.22 &&
     upright > 0.93 &&
     forksClear
   );
@@ -85,14 +85,17 @@ export class MissionManager {
         Math.abs(p.z - this.definition.target.z) >=
           this.definition.target.depth / 2 - 1.65
           ? "hintCenter"
-          : p.y > 0.16
-            ? "hintLower"
+          : p.y < (this.definition.target.height ?? 0) - 0.1
+            ? "hintShelfRaise"
+          : p.y > (this.definition.target.height ?? 0) + 0.16
+            ? (this.definition.target.rack ? "hintShelfLower" : "hintLower")
             : clear
               ? "hintSettle"
               : "hintWithdraw";
     } else if (this.pickedUp && p.y > 0.2 && distance < 4.8) {
       this.stage = 1;
-      this.hint = this.truck.lift > 1.3 ? "hintLow" : (this.definition.inspections.length ? "routeReady" : this.definition.routeHint);
+      const nearShelf = this.definition.target.rack && Math.abs(p.x - this.definition.target.x) < 3.5 && Math.abs(p.z - this.definition.target.z) < 7;
+      this.hint = nearShelf ? "hintShelfRaise" : this.truck.lift > 1.3 ? "hintLow" : (this.definition.inspections.length && !this.definition.target.rack ? "routeReady" : this.definition.routeHint);
     } else if (distance < 4.6) {
       this.stage = 0;
       this.hint = this.truck.lift > 0.5 ? "hintFit" : "hintLift";
