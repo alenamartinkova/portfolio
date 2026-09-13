@@ -175,7 +175,7 @@ export class AirportWorld {
         )
           return;
         const vehicle = Object.values(world.vehicles).find(
-          (v) => v.body === e.collider || v.body === e.collidedAgainst || v.trailers.some(cart => cart.body === e.collider || cart.body === e.collidedAgainst),
+          (v) => v.body === e.collider || v.body === e.collidedAgainst || v.trailers.some(cart => cart.body === e.collider || cart.body === e.collidedAgainst || cart.axleBody === e.collider || cart.axleBody === e.collidedAgainst),
         );
         if (
           vehicle &&
@@ -835,10 +835,12 @@ export class AirportWorld {
         for (const trailer of vehicle.trailers) {
           const cart = trailer.root;
           this.box("cart deck", [1.7, 0.18, 2.2], [0, -0.25, 0], colors.violet, cart);
-          this.box("cart drawbar", [0.15, 0.15, 0.55], [0, -0.2, -1.375], colors.dark, cart);
+          this.box("cart rear hitch", [0.15, 0.15, 0.55], [0, -0.2, 1.375], colors.dark, cart);
+          this.box("cart drawbar", [0.15, 0.15, 0.95], [0, -0.2, -0.475], colors.dark, trailer.frontAxle);
+          this.box("steering axle", [1.55, 0.12, 0.15], [0, -0.325, 0], colors.dark, trailer.frontAxle);
           for (const side of [-1, 1]) {
             for (const z of [-0.7, 0.7]) {
-              const wheel = this.cylinder("cart wheel", 0.55, 0.22, [side * 0.82, -0.325, z], colors.dark, cart);
+              const wheel = this.cylinder("cart wheel", 0.55, 0.22, [side * 0.82, -0.325, z < 0 ? 0 : z], colors.dark, z < 0 ? trailer.frontAxle : cart);
               wheel.rotation.z = Math.PI / 2;
             }
             this.box("cart side", [0.06, 0.6, 2.2], [side * 0.82, 0.08, 0], colors.white, cart);
@@ -846,6 +848,7 @@ export class AirportWorld {
           for (let i = 0; i < 3; i++)
             this.box("suitcase", [0.63, 0.5 + (i % 2) * 0.15, 0.55], [i % 2 ? -0.34 : 0.34, 0.12, -0.65 + i * 0.65], i % 2 ? colors.violet : colors.orange, cart);
           this.batchParent(cart);
+          this.batchParent(trailer.frontAxle);
           yield;
         }
       }

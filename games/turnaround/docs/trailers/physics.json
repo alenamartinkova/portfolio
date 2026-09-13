@@ -1,0 +1,28 @@
+[
+  {
+    "wet": false,
+    "maxAxleSlip": 0.889691277226502,
+    "maxSteering": 0.8301123211042727,
+    "maxHitchGap": 0.0022917074929279984,
+    "maxSpeed": 4.458200597777731,
+    "finalAlignment": [
+      0.0001013760317817164,
+      0.00034855107160754184
+    ],
+    "reverseSpeed": 1.0685590194458572,
+    "settled": true
+  },
+  {
+    "wet": true,
+    "maxAxleSlip": 1.0538520852653495,
+    "maxSteering": 0.8655579241075857,
+    "maxHitchGap": 0.0016447990776020751,
+    "maxSpeed": 4.458528952137769,
+    "finalAlignment": [
+      0.00006089203311998581,
+      0.0005576647751934645
+    ],
+    "reverseSpeed": 1.0685537851565403,
+    "settled": true
+  }
+]

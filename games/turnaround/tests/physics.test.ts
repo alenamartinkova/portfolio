@@ -1,7 +1,8 @@
 import { beforeAll, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import HavokPhysics from "@babylonjs/havok";
 import {
+  TransformNode,
   NullEngine,
   Scene,
   HavokPlugin,
@@ -76,7 +77,7 @@ it("right steering turns the moving chassis toward its right side", () => {
     camera.setTarget(new Vector3(x, 0, z));
     const transform = camera.getViewMatrix().multiply(camera.getProjectionMatrix());
     const project = (px: number, pz: number) => Vector3.Project(new Vector3(px, 0, pz), Matrix.Identity(), transform, new Viewport(0, 0, 1280, 900)).x;
-    r.step(1, 1, 1);
+    r.step(1.8, 1, 1);
     expect(project(r.vehicle.pose.x, r.vehicle.pose.z)).toBeGreaterThan(project(x, z) + 8);
   } finally { r.dispose(); }
 });
@@ -190,9 +191,9 @@ it("baggage trailers stay hitched through turns and reverse, and cannot cross a 
     const gap = () => {
       let parent = r.vehicle.root;
       for (const cart of carts) {
-        parent.computeWorldMatrix(true); cart.root.computeWorldMatrix(true);
+        parent.computeWorldMatrix(true); cart.root.computeWorldMatrix(true); cart.frontAxle.computeWorldMatrix(true);
         const a = Vector3.TransformCoordinates(new Vector3(0, -0.2, 1.65), parent.getWorldMatrix());
-        const b = Vector3.TransformCoordinates(new Vector3(0, -0.2, -1.65), cart.root.getWorldMatrix());
+        const b = Vector3.TransformCoordinates(new Vector3(0, -0.2, -0.95), cart.frontAxle.getWorldMatrix());
         expect(Vector3.Distance(a, b)).toBeLessThan(0.12);
         parent = cart.root;
       }
@@ -232,4 +233,72 @@ it("settlement includes lateral, vertical and rotational motion and driving wake
   } finally {
     r.dispose();
   }
+});
+
+const trailerMeasurements: unknown[] = [];
+it("loaded baggage train tracks through an S-turn and reverses at walking speed", () => {
+  for (const wet of [false, true]) {
+    const r = rig("tug", wet);
+    try {
+      const metrics = { maxAxleSlip: 0, maxSteering: 0, maxHitchGap: 0, maxSpeed: 0, finalAlignment: [] as number[], reverseSpeed: 0 };
+      const side = new Vector3(1, 0, 0), velocity = Vector3.Zero(), angular = Vector3.Zero();
+      const signedAngle = (a: TransformNode, b: TransformNode) => {
+        const x = a.rotationQuaternion!.toEulerAngles().y - b.rotationQuaternion!.toEulerAngles().y;
+        return Math.atan2(Math.sin(x), Math.cos(x));
+      };
+      for (const [duration, steer] of [[3, 0], [2, 1], [2, -1], [5, 0]]) {
+        for (let tick = 0; tick < duration * 120; tick++) {
+          r.step(1 / 120, 1, steer);
+          let parent = r.vehicle.root;
+          for (const cart of r.vehicle.trailers) {
+            cart.root.computeWorldMatrix(true); cart.frontAxle.computeWorldMatrix(true); parent.computeWorldMatrix(true);
+            metrics.maxSteering = Math.max(metrics.maxSteering, Math.abs(signedAngle(cart.root, cart.frontAxle)));
+            const hitch = Vector3.TransformCoordinates(new Vector3(0, -0.2, 1.65), parent.getWorldMatrix());
+            const eye = Vector3.TransformCoordinates(new Vector3(0, -0.2, -0.95), cart.frontAxle.getWorldMatrix());
+            metrics.maxHitchGap = Math.max(metrics.maxHitchGap, Vector3.Distance(hitch, eye));
+            cart.body.getLinearVelocityToRef(velocity); cart.body.getAngularVelocityToRef(angular);
+            const axleOffset = Vector3.TransformNormal(new Vector3(0, 0, 0.7), cart.root.getWorldMatrix());
+            const tireVelocity = velocity.add(Vector3.Cross(angular, axleOffset));
+            metrics.maxAxleSlip = Math.max(metrics.maxAxleSlip, Math.abs(Vector3.Dot(tireVelocity, cart.root.getDirection(side))));
+            metrics.maxSpeed = Math.max(metrics.maxSpeed, velocity.length());
+            parent = cart.root;
+          }
+        }
+      }
+      metrics.finalAlignment = r.vehicle.trailers.map(cart => Math.abs(signedAngle(r.vehicle.root, cart.root)));
+      r.step(2, 0, 0, true);
+      r.step(3, -1);
+      metrics.reverseSpeed = Math.abs(r.vehicle.pose.speed);
+      r.step(7, 0, 0, true);
+      expect(metrics.maxAxleSlip).toBeLessThan(1.3);
+      expect(metrics.maxSteering).toBeLessThan(Math.PI / 3 + 0.02);
+      expect(metrics.maxHitchGap).toBeLessThan(0.03);
+      expect(metrics.maxSpeed).toBeLessThan(6);
+      for (const angle of metrics.finalAlignment) expect(angle).toBeLessThan(0.04);
+      expect(metrics.reverseSpeed).toBeGreaterThan(0.6);
+      expect(metrics.reverseSpeed).toBeLessThan(1.8);
+      expect(r.vehicle.settled).toBe(true);
+      trailerMeasurements.push({ wet, ...metrics, settled: r.vehicle.settled });
+      if (process.env.TRAILER_REPORT === "1") {
+        const directory = new URL("../docs/trailers/", import.meta.url);
+        mkdirSync(directory, { recursive: true });
+        writeFileSync(new URL("physics.json", directory), JSON.stringify(trailerMeasurements, null, 2) + "\n");
+      }
+    } finally { r.dispose(); }
+  }
+});
+it("rear tire force opposes slip and rotates the cart about its upright axle", () => {
+  const r = rig("tug");
+  try {
+    const cart = r.vehicle.trailers[0];
+    cart.body.setLinearVelocity(new Vector3(2, 0, -3));
+    cart.body.setAngularVelocity(new Vector3(0, 1, 0));
+    cart.beforeStep(1 / 120, false);
+    expect(cart.body.getLinearVelocity().x).toBeLessThan(2);
+    // A mass-scaled inertia or tilted principal frame effectively locks yaw.
+    const angular = cart.body.getAngularVelocity();
+    expect(angular.y).toBeLessThan(0.98);
+    expect(angular.y).toBeGreaterThan(0.9);
+    expect(Math.abs(angular.x) + Math.abs(angular.z)).toBeLessThan(0.0001);
+  } finally { r.dispose(); }
 });

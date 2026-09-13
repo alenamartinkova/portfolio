@@ -112,6 +112,31 @@ test("A/D walk screen-left/right and steer the baggage tractor from its nose", a
   }
   await page.screenshot({ path: info.outputPath("baggage-train-turn.png") });
 });
+test("baggage train steers its front axles through a bend and reverse, then sleeps", async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("./?lang=en&qa=service&theme=light&flight=2");
+  await page.getByRole("button", { name: "Start shift ↗", exact: true }).click();
+  await expect(page.locator("#phase")).toBeVisible();
+  await page.locator('[data-vehicle="tug"]').click();
+  await page.keyboard.down("w");
+  await page.waitForTimeout(2500);
+  await hold(page, "d", 2000);
+  await page.keyboard.up("w");
+  await brake(page);
+  await page.screenshot({ path: info.outputPath("train-right-turn.png") });
+  await page.keyboard.down("s");
+  await hold(page, "a", 1800);
+  await page.keyboard.up("s");
+  await brake(page);
+  await page.screenshot({ path: info.outputPath("train-reversing.png") });
+  await hold(page, "w", 4000);
+  await brake(page);
+  await expect(page.locator(".game-fps")).toHaveText("0 FPS");
+  await page.screenshot({ path: info.outputPath("train-stopped.png") });
+  expect(errors).toEqual([]);
+});
+
 async function driveToDock(page: Page, vehicle: string, height = 0) {
   await page.locator(`[data-vehicle="${vehicle}"]`).click();
   if (height) await hold(page, "e", (height * 1000) / 0.7);
