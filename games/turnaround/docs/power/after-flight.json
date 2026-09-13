@@ -1,0 +1,79 @@
+{
+  "host": {
+    "cpu": "Apple M1 Max",
+    "memory": 34359738368,
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "dpr": 1
+  },
+  "scenario": "Local development build with real UI controls; no CPU/network throttling. Callback CPU excludes layout, asynchronous browser/GPU work and unwrapped callbacks. Not a wattmeter.",
+  "samples": [
+    {
+      "name": "menu",
+      "seconds": 3.0107000000476836,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 0,
+      "callbackCpuMs": 0,
+      "callbackCpuMsPerSecond": 0,
+      "domMutations": 0,
+      "clockBefore": "00:00",
+      "clockAfter": "00:00"
+    },
+    {
+      "name": "approach",
+      "seconds": 5.005899999976158,
+      "frames": 300,
+      "draws": 33000,
+      "renderedFps": 59.9292834458197,
+      "drawsPerFrame": 110,
+      "rafCallbacks": 300,
+      "timerCallbacks": 10,
+      "callbackCpuMs": 306.2999999523163,
+      "callbackCpuMsPerSecond": 61.18779838865641,
+      "domMutations": 70,
+      "clockBefore": "00:01",
+      "clockAfter": "00:06"
+    },
+    {
+      "name": "paused",
+      "seconds": 3.010099999964237,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 0,
+      "callbackCpuMs": 0,
+      "callbackCpuMsPerSecond": 0,
+      "domMutations": 0,
+      "clockBefore": "00:06",
+      "clockAfter": "00:06"
+    },
+    {
+      "name": "hidden",
+      "seconds": 3.0093000000119208,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 0,
+      "callbackCpuMs": 0,
+      "callbackCpuMsPerSecond": 0,
+      "domMutations": 0,
+      "clockBefore": "00:06",
+      "clockAfter": "00:06"
+    }
+  ]
+}

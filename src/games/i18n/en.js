@@ -7,7 +7,7 @@ export default {
     "heading": "Games",
     "meta": {
       "title": "Games · Alena Martinková",
-      "description": "Browser games for a little break: Office Escape, Forklift Certified, Brick Break, Hexhaven, Deploy Friday and Cable Management. Pick your next adventure."
+      "description": "Browser games for a little break: Office Escape, Forklift Certified, Brick Break, Hexhaven, Deploy Friday, Cable Management and Turnaround. Pick your next adventure."
     },
     "eyebrow": "a little off the beaten path",
     "intro": "You found my little corner for play. Pick a game and take a break.",
@@ -16,6 +16,11 @@ export default {
     "play": "Play",
     "desktopOnly": "Play on desktop · keyboard & mouse",
     "more": "More games coming soon.",
+    "turnaround": {
+      "category": "3D physics · airport ops",
+      "caption": "wheels down. clock's running.",
+      "description": "One runway. Three gates. You are the entire ground crew. Land, turn the aircraft around and send it back into the sky. Early access · two flights, more coming soon."
+    },
     "cable-management": {
       "category": "3D puzzle · desk zen",
       "caption": "untangle, unplug, unwind.",

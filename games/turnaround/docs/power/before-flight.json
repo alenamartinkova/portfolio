@@ -1,0 +1,64 @@
+{
+  "host": {
+    "cpu": "Apple M1 Max",
+    "memory": 34359738368,
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "dpr": 1
+  },
+  "scenario": "Local development build with real UI controls; no CPU/network throttling. Callback CPU excludes layout, asynchronous browser/GPU work and unwrapped callbacks. Not a wattmeter.",
+  "samples": [
+    {
+      "name": "menu",
+      "seconds": 3.013799999952316,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 3,
+      "callbackCpuMs": 0,
+      "callbackCpuMsPerSecond": 0,
+      "domMutations": 0,
+      "clockBefore": "00:00",
+      "clockAfter": "00:00"
+    },
+    {
+      "name": "approach",
+      "seconds": 5.0055,
+      "frames": 300,
+      "draws": 86303,
+      "renderedFps": 59.93407252022775,
+      "drawsPerFrame": 287.6766666666667,
+      "rafCallbacks": 300,
+      "timerCallbacks": 10,
+      "callbackCpuMs": 395.59999972581863,
+      "callbackCpuMsPerSecond": 79.03306357523098,
+      "domMutations": 658,
+      "clockBefore": "00:01",
+      "clockAfter": "00:06"
+    },
+    {
+      "name": "paused",
+      "seconds": 3.007300000011921,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 4,
+      "callbackCpuMs": 0.10000002384185791,
+      "callbackCpuMsPerSecond": 0.03325242704135321,
+      "domMutations": 1,
+      "clockBefore": "00:06",
+      "clockAfter": "00:06"
+    }
+  ]
+}

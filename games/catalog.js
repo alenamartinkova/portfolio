@@ -7,4 +7,5 @@ export const GAMES = [
   { id: 'hexhaven', title: 'Hexhaven', icon: 'hexagon', port: 4174 },
   { id: 'deploy-friday', title: 'Deploy Friday', icon: 'server', port: 4180 },
   { id: 'cable-management', title: 'Cable Management', icon: 'cable', port: 4181 },
+  { id: 'turnaround', title: 'Turnaround', icon: 'plane', port: 4182, desktopOnly: true, number: '07' },
 ]

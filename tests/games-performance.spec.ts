@@ -1,12 +1,22 @@
 import { test, expect, type Page } from '@playwright/test'
 import { GAMES } from '../games/catalog.js'
+import { writeFile } from 'node:fs/promises'
 
-declare global { interface Window { gameDraws: number; gameContexts: number } }
+declare global { interface Window { gameDraws: number; gameContexts: number; gameSamples: { draws: number; cpu: number; at: number }[]; gameLcp: number; gameTbt: number } }
 
 async function instrument(page: Page) {
   await page.addInitScript(() => {
     window.gameDraws = 0
     window.gameContexts = 0
+    window.gameSamples = []; window.gameLcp = 0; window.gameTbt = 0
+    new PerformanceObserver(list => { for (const entry of list.getEntries()) window.gameLcp = entry.startTime }).observe({ type: 'largest-contentful-paint', buffered: true })
+    new PerformanceObserver(list => { for (const entry of list.getEntries()) window.gameTbt += Math.max(0, entry.duration - 50) }).observe({ type: 'longtask', buffered: true })
+    const raf = window.requestAnimationFrame
+    window.requestAnimationFrame = callback => raf(at => {
+      const before = window.gameDraws, start = performance.now()
+      callback(at)
+      if (window.gameDraws > before && window.gameSamples.length < 3000) window.gameSamples.push({ draws: window.gameDraws - before, cpu: performance.now() - start, at })
+    })
     const getContext = HTMLCanvasElement.prototype.getContext, seen = new WeakSet()
     HTMLCanvasElement.prototype.getContext = function (...args) {
       const context = getContext.apply(this, args)
@@ -71,7 +81,8 @@ test('office-escape: rapid jump input cannot avoid lava recovery', async ({ page
   expect(errors).toEqual([])
 })
 
-for (const id of ['office-escape', 'forklift']) test(`${id}: leaving during physics initialization cancels construction`, async ({ page }) => {
+for (const id of ['office-escape', 'forklift', 'turnaround']) test(`${id}: leaving during physics initialization cancels construction`, async ({ page }, info) => {
+  test.skip(id === 'turnaround' && info.project.name === 'mobile', 'Desktop notice deliberately never downloads physics');
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await instrument(page)
@@ -100,6 +111,12 @@ for (const game of GAMES) test(`${game.id}: production rendering, idle and inter
   await expect(page.locator('.game-fps')).toHaveCount(1)
   await expect(page.locator('.game-fps')).toBeVisible()
   await expect(page.locator('.desktop-game')).toHaveCount(0)
+  if (game.desktopOnly && info.project.name === 'mobile') {
+    await expect(page.getByRole('heading', { name: 'This shift needs a keyboard.' })).toBeVisible()
+    expect(await page.evaluate(() => window.gameContexts)).toBe(0)
+    expect(errors).toEqual([])
+    return
+  }
   if (game.id === 'lego') {
     await page.locator('.game-model-card').first().click()
     await page.getByRole('button', { name: 'Close', exact: true }).click()
@@ -124,6 +141,25 @@ for (const game of GAMES) test(`${game.id}: production rendering, idle and inter
     await page.keyboard.up('w')
     expect(await page.evaluate(() => window.gameDraws)).toBeGreaterThan(before)
     await page.keyboard.press('Escape')
+    await idle(page)
+  } else if (game.id === 'turnaround') {
+    await page.getByRole('button', { name: 'Start shift ↗', exact: true }).click()
+    await expect(page.locator('#phase')).toHaveText('01 / Final approach')
+    await expect(page.locator('.game-fps')).not.toHaveText('0 FPS')
+    await page.waitForTimeout(2200)
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('heading', { name: 'Your flight can wait.' })).toBeVisible()
+    const time = await page.locator('#clock').textContent()
+    await idle(page)
+    await expect(page.locator('#clock')).toHaveText(time!)
+    for (let i = 0; i < 2; i++) {
+      await page.getByRole('button', { name: 'Restart flight', exact: true }).click()
+      await expect(page.locator('#phase')).toBeVisible()
+      await expect(page.locator('#phase')).toHaveText('01 / Final approach')
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('heading', { name: 'Your flight can wait.' })).toBeVisible()
+    }
+    expect(await page.evaluate(() => window.gameContexts)).toBe(1)
     await idle(page)
   } else if (game.id === 'deploy-friday') {
     await page.locator('#campaign-back').click()
@@ -159,5 +195,40 @@ for (const game of GAMES) test(`${game.id}: production rendering, idle and inter
     await idle(page)
     expect(await page.evaluate(() => window.gameContexts)).toBe(0)
   }
+  const metrics = await page.evaluate(() => {
+    const samples = window.gameSamples.filter(s => s.at > 1000), resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+    return { userAgent: navigator.userAgent, viewport: [innerWidth, innerHeight], dpr: devicePixelRatio, lcpMs: window.gameLcp, longTaskBlockingMs: window.gameTbt,
+      jsEncodedBytes: resources.filter(r => /\.js(?:\?|$)/.test(r.name)).reduce((sum, r) => sum + r.encodedBodySize, 0),
+      wasmEncodedBytes: resources.filter(r => r.name.endsWith('.wasm')).reduce((sum, r) => sum + r.encodedBodySize, 0),
+      renderedSamples: samples.length, meanDraws: samples.reduce((sum, s) => sum + s.draws, 0) / Math.max(1, samples.length),
+      meanCallbackCpuMs: samples.reduce((sum, s) => sum + s.cpu, 0) / Math.max(1, samples.length), maxCallbackCpuMs: Math.max(0, ...samples.map(s => s.cpu)),
+      activeFrameIntervalsMs: samples.slice(1).map((s, i) => s.at - samples[i].at).filter(d => d < 100) }
+  })
+  await info.attach('performance.json', { body: JSON.stringify(metrics, null, 2), contentType: 'application/json' })
+  await writeFile(info.outputPath('performance.json'), JSON.stringify(metrics, null, 2))
   expect(errors).toEqual([])
+})
+
+test('turnaround: hidden tabs pause a reduced-motion flight and preserve the clock', async ({ page }, info) => {
+  test.skip(info.project.name === 'mobile', 'Desktop-only flight controls')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await instrument(page)
+  await page.goto('/turnaround/?flight=2&lang=en')
+  await page.getByRole('button', { name: 'Start shift ↗', exact: true }).click()
+  await expect(page.locator('#phase')).toBeVisible()
+  await expect(page.locator('#phase')).toHaveText('01 / Final approach')
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await expect(page.getByRole('heading', { name: 'Your flight can wait.' })).toBeVisible()
+  const clock = await page.locator('#clock').textContent()
+  await idle(page)
+  await expect(page.locator('#clock')).toHaveText(clock!)
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.getByRole('button', { name: 'Resume shift →', exact: true }).click()
+  await expect(page.locator('.game-fps')).not.toHaveText('0 FPS')
 })

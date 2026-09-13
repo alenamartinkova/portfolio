@@ -69,6 +69,7 @@ games/
   forklift/                Forklift Certified: Babylon.js + Havok warehouse game
   office-escape/           Babylon.js + Havok office escape game
   cable-management/        Three.js desk puzzle: cables, drawer and daily levels
+  turnaround/              Babylon.js + Havok airport game: two early-access flights
 config/
   game.js                  common game URLs, development ports and build output
   playwright.js            shared desktop/mobile browser test configuration
@@ -113,6 +114,7 @@ and `lang=sk` in links back to the game list and portfolio.
   building at `/lego/`, with local saves, build sharing and optional sound.
 - [Office Escape](games/office-escape/README.md): a third-person Babylon.js + Havok furniture escape at `/office-escape/`. Run `pnpm --filter office-escape dev`.
 - [Cable Management](games/cable-management/README.md): a relaxed 3D desk puzzle at `/cable-management/`, with cable untangling, drawer packing, three evenings and Daily desk. Supports mouse and touch. Run `pnpm --filter cable-management dev`.
+- [Turnaround](games/turnaround/README.md): a desktop airport operations game at `/turnaround/`. Two early-access flights with landing, precision ramp services, parallel checklists and departure. Run `pnpm --filter turnaround dev`.
 - [Hexhaven](games/hexhaven/README.md): procedural 3D trading and settlement at
   `/hexhaven/`, with local hotseat, bots, IndexedDB saves and deterministic replays.
 
@@ -123,11 +125,11 @@ pnpm exec playwright install chromium
 
 ## Game rendering
 
-All six games share the battery-conscious budget in `shared/render-budget.js`:
+All seven games share the battery-conscious budget in `shared/render-budget.js`:
 60 FPS, at most 1.5 million pixels per canvas and up to 1.25× pixel density.
 Shadows are disabled to leave GPU capacity for smoother motion and antialiasing.
-Renderers request a low-power GPU. Babylon games use 4× MSAA where supported
-and FXAA; Three.js games enable native multisampling. The DOM HUD keeps native
+Renderers request a low-power GPU. Babylon games use 2× MSAA where supported
+with FXAA as a fallback; Three.js games enable native multisampling. The DOM HUD keeps native
 text resolution.
 
 `shared/render-loop.js` caps Three.js animations and stops scheduling frames
@@ -137,7 +139,7 @@ while planning or paused, and Cable Management sleeps after cables settle or
 the drawer closes. The Babylon games stop their loops in paused menus and
 reset the frame clock on resume. Office Escape also settles its intro and
 completion views. Physics and simulation clocks remain independent of the
-render cap. Both Havok games preload their local WASM alongside JavaScript.
+render cap. The three Havok games use one shared local WASM asset.
 
 ## Portfolio rendering
 

@@ -1,0 +1,17 @@
+{
+  "entry": {
+    "files": 4,
+    "rawBytes": 7788,
+    "gzipBytes": 4040
+  },
+  "allReachableJsUpperBound": {
+    "files": 125,
+    "rawBytes": 1861322,
+    "gzipBytes": 478825
+  },
+  "sharedWasm": {
+    "files": 1,
+    "rawBytes": 2094563,
+    "gzipBytes": 661689
+  }
+}

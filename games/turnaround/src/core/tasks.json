@@ -1,0 +1,175 @@
+[
+  {
+    "id": "secure",
+    "vehicle": "crew",
+    "at": [2.8, -6],
+    "duration": 3,
+    "requires": [],
+    "group": "secure"
+  },
+  {
+    "id": "stairs",
+    "vehicle": "stairs",
+    "at": [-3.5, -4.8],
+    "heading": 1.5708,
+    "height": 2.7,
+    "duration": 2,
+    "requires": ["secure"],
+    "group": "passengers"
+  },
+  {
+    "id": "deplane",
+    "vehicle": "auto",
+    "at": [-3.5, -4.8],
+    "duration": 30,
+    "requires": ["stairs"],
+    "group": "passengers"
+  },
+  {
+    "id": "unload",
+    "vehicle": "belt",
+    "at": [-3.7, 5],
+    "heading": 1.5708,
+    "height": 2.1,
+    "duration": 24,
+    "requires": ["secure"],
+    "group": "baggage"
+  },
+  {
+    "id": "pickup",
+    "vehicle": "tug",
+    "at": [-9, 5],
+    "duration": 4,
+    "requires": ["unload"],
+    "group": "baggage"
+  },
+  {
+    "id": "deliver",
+    "vehicle": "tug",
+    "at": [-24, -18],
+    "duration": 5,
+    "requires": ["pickup"],
+    "group": "baggage"
+  },
+  {
+    "id": "collect",
+    "vehicle": "tug",
+    "at": [-24, -18],
+    "duration": 5,
+    "requires": ["deliver"],
+    "group": "baggage"
+  },
+  {
+    "id": "load",
+    "vehicle": "tug",
+    "at": [-9, 5],
+    "duration": 24,
+    "requires": ["collect"],
+    "group": "baggage"
+  },
+  {
+    "id": "fuel",
+    "vehicle": "fuel",
+    "at": [9, 0],
+    "heading": -1.5708,
+    "duration": 32,
+    "requires": ["secure"],
+    "blockers": ["board"],
+    "flight": 2,
+    "group": "fuel"
+  },
+  {
+    "id": "catering",
+    "vehicle": "catering",
+    "at": [4.8, -4.8],
+    "heading": -1.5708,
+    "height": 2.7,
+    "duration": 22,
+    "requires": ["deplane"],
+    "flight": 2,
+    "group": "catering"
+  },
+  {
+    "id": "water",
+    "vehicle": "water",
+    "at": [4.8, 6],
+    "heading": -1.5708,
+    "duration": 18,
+    "requires": ["secure"],
+    "flight": 2,
+    "group": "catering"
+  },
+  {
+    "id": "board",
+    "vehicle": "stairs",
+    "at": [-3.5, -4.8],
+    "duration": 35,
+    "requires": ["deplane", "load", "fuel", "catering", "water"],
+    "blockers": ["fuel"],
+    "group": "passengers"
+  },
+  {
+    "id": "apu",
+    "vehicle": "crew",
+    "at": [2.8, -6],
+    "duration": 6,
+    "requires": ["board"],
+    "group": "clear"
+  },
+  {
+    "id": "removeStairs",
+    "vehicle": "stairs",
+    "at": [-3.5, -4.8],
+    "duration": 1,
+    "requires": ["board"],
+    "group": "clear"
+  },
+  {
+    "id": "removeGpu",
+    "vehicle": "crew",
+    "at": [2.8, -6],
+    "duration": 2,
+    "requires": ["apu"],
+    "group": "clear"
+  },
+  {
+    "id": "removeChocks",
+    "vehicle": "crew",
+    "at": [2.8, -6],
+    "duration": 2,
+    "requires": ["removeGpu", "removeStairs"],
+    "group": "clear"
+  },
+  {
+    "id": "walkNose",
+    "vehicle": "crew",
+    "at": [0, -10],
+    "duration": 1,
+    "requires": ["removeChocks"],
+    "group": "clear"
+  },
+  {
+    "id": "walkLeft",
+    "vehicle": "crew",
+    "at": [-10, 0],
+    "duration": 1,
+    "requires": ["removeChocks"],
+    "group": "clear"
+  },
+  {
+    "id": "walkTail",
+    "vehicle": "crew",
+    "at": [0, 11],
+    "duration": 1,
+    "requires": ["removeChocks"],
+    "group": "clear"
+  },
+  {
+    "id": "walkRight",
+    "vehicle": "crew",
+    "at": [10, 0],
+    "duration": 1,
+    "requires": ["removeChocks"],
+    "group": "clear"
+  }
+]

@@ -1,0 +1,94 @@
+{
+  "host": {
+    "cpu": "Apple M1 Max",
+    "memory": 34359738368,
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "dpr": 1
+  },
+  "scenario": "Local development build with real UI controls; no CPU/network throttling. Callback CPU excludes layout, asynchronous browser/GPU work and unwrapped callbacks. Not a wattmeter.",
+  "samples": [
+    {
+      "name": "settled-ramp",
+      "seconds": 3.007300000011921,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 4,
+      "callbackCpuMs": 1.699999988079071,
+      "callbackCpuMsPerSecond": 0.5652911209631005,
+      "domMutations": 4,
+      "clockBefore": "00:02",
+      "clockAfter": "00:05"
+    },
+    {
+      "name": "refuelling-only",
+      "seconds": 5.006700000047684,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 5,
+      "callbackCpuMs": 1.800000011920929,
+      "callbackCpuMsPerSecond": 0.35951824792853293,
+      "domMutations": 21,
+      "clockBefore": "00:18",
+      "clockAfter": "00:23"
+    },
+    {
+      "name": "parallel-services",
+      "seconds": 5.008800000011921,
+      "frames": 301,
+      "draws": 40033,
+      "renderedFps": 60.09423414775667,
+      "drawsPerFrame": 133,
+      "rafCallbacks": 301,
+      "timerCallbacks": 10,
+      "callbackCpuMs": 285.49999982118607,
+      "callbackCpuMsPerSecond": 56.999680526374895,
+      "domMutations": 76,
+      "clockBefore": "00:35",
+      "clockAfter": "00:40"
+    },
+    {
+      "name": "paused-services",
+      "seconds": 3.006800000011921,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 0,
+      "callbackCpuMs": 0,
+      "callbackCpuMsPerSecond": 0,
+      "domMutations": 0,
+      "clockBefore": "00:40",
+      "clockAfter": "00:40"
+    },
+    {
+      "name": "services-finished",
+      "seconds": 3.006800000011921,
+      "frames": 0,
+      "draws": 0,
+      "renderedFps": 0,
+      "drawsPerFrame": 0,
+      "rafCallbacks": 0,
+      "timerCallbacks": 4,
+      "callbackCpuMs": 0.800000011920929,
+      "callbackCpuMsPerSecond": 0.26606359316141986,
+      "domMutations": 4,
+      "clockBefore": "01:01",
+      "clockAfter": "01:04"
+    }
+  ]
+}
