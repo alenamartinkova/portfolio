@@ -3,6 +3,7 @@ import { GAMES } from '../games/catalog.js'
 import { writeFile } from 'node:fs/promises'
 
 declare global { interface Window { gameDraws: number; gameContexts: number; gameSamples: { draws: number; cpu: number; at: number }[]; gameLcp: number; gameTbt: number } }
+declare global { interface Window { rackBuffers: { live: Set<WebGLBuffer>; textures: Set<WebGLTexture>; deleted: number } } }
 
 async function instrument(page: Page) {
   await page.addInitScript(() => {
@@ -208,6 +209,80 @@ for (const game of GAMES) test(`${game.id}: production rendering, idle and inter
   await writeFile(info.outputPath('performance.json'), JSON.stringify(metrics, null, 2))
   expect(errors).toEqual([])
 })
+
+for (const [game, level] of [['forklift', 'shelf-service'], ['office-escape', 'rolling-stock'], ['office-escape', 'first-evening']]) test(`${game} ${level}: shared models and textures survive scene replacement and disposal`, async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await instrument(page);
+  await page.addInitScript(() => {
+    const buffers = window.rackBuffers = { live: new Set<WebGLBuffer>(), textures: new Set<WebGLTexture>(), deleted: 0 };
+    for (const prototype of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype]) {
+      const create = prototype.createBuffer, dispose = prototype.deleteBuffer;
+      prototype.createBuffer = function () {
+        const buffer = create.call(this);
+        if (buffer) buffers.live.add(buffer);
+        return buffer;
+      };
+      prototype.deleteBuffer = function (buffer) {
+        if (buffer && buffers.live.delete(buffer)) buffers.deleted++;
+        return dispose.call(this, buffer);
+      };
+      const createTexture = prototype.createTexture, deleteTexture = prototype.deleteTexture;
+      prototype.createTexture = function () {
+        const texture = createTexture.call(this);
+        if (texture) buffers.textures.add(texture);
+        return texture;
+      };
+      prototype.deleteTexture = function (texture) {
+        if (texture) buffers.textures.delete(texture);
+        return deleteTexture.call(this, texture);
+      };
+    }
+  });
+  await page.goto(`/${game}/?lang=en&level=${level}`);
+  await expect(page.locator('#settings-toggle')).toBeEnabled();
+  await expect(page.locator('.desktop-game')).toHaveCount(0);
+  await idle(page);
+  const baseline = await page.evaluate(() => window.rackBuffers.live.size);
+  const baselineTextures = await page.evaluate(() => window.rackBuffers.textures.size);
+  expect(baseline).toBeGreaterThan(0);
+  for (let i = 0; i < 3; i++) {
+    const deleted = await page.evaluate(() => window.rackBuffers.deleted);
+    if (game === 'forklift') await page.keyboard.press('r');
+    else {
+      await page.locator('#settings-toggle').click();
+      await page.locator('#choose-level').click();
+      await page.locator(`[data-level="${level}"]`).click();
+    }
+    await expect.poll(() => page.evaluate(() => window.rackBuffers.deleted)).toBeGreaterThan(deleted);
+    await expect(page.locator('#settings-toggle')).toBeEnabled();
+    await idle(page);
+    expect(await page.evaluate(() => window.rackBuffers.live.size)).toBe(baseline);
+    expect(await page.evaluate(() => window.rackBuffers.textures.size)).toBe(baselineTextures);
+  }
+  if (game === 'office-escape') await page.locator('#play').click();
+  // Reduced-motion/visibility handling must still wake the newly created scene.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('#resume')).toBeVisible();
+  await idle(page);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.locator('#resume').click();
+  const draws = await page.evaluate(() => window.gameDraws);
+  await page.keyboard.down('w');
+  await expect.poll(() => page.evaluate(() => window.gameDraws)).toBeGreaterThan(draws);
+  await page.keyboard.up('w');
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
+  expect(await page.evaluate(() => window.rackBuffers.live.size)).toBe(0);
+  expect(await page.evaluate(() => window.rackBuffers.textures.size)).toBe(0);
+  expect(errors).toEqual([]);
+});
 
 test('turnaround: hidden tabs pause a reduced-motion flight and preserve the clock', async ({ page }, info) => {
   test.skip(info.project.name === 'mobile', 'Desktop-only flight controls')

@@ -11,6 +11,8 @@ import { Scene } from "@babylonjs/core/scene";
 import { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Factory } from "./Factory";
+import { RackModels } from "./RackModels";
+import { CrateModels } from "./CrateModels";
 import { rigid } from "../systems/Physics";
 import { renderBudget } from "../systems/RenderQuality";
 export interface PropertyObject {
@@ -24,12 +26,16 @@ export class Warehouse {
   property: PropertyObject[] = [];
   cameraObstacles = new Set<Mesh>();
   shadow?: ShadowGenerator;
+  private rackModels: RackModels;
+  private crateModels: CrateModels;
   constructor(
     public scene: Scene,
     public f: Factory,
     public definition: MissionDefinition = firstMission,
     deferred = false,
   ) {
+    this.rackModels = new RackModels(f);
+    this.crateModels = new CrateModels(f);
     if (!deferred) finishConstruction(this.build());
   }
   static async create(scene: Scene, f: Factory, definition: MissionDefinition) {
@@ -438,11 +444,11 @@ export class Warehouse {
           true,
         );
         yield;
-        f.beveledBox("rack foot plate", [.34, .06, .32], [0, -2.37, 0], "#60757c", upright);
+        this.rackModels.place("rack foot plate", [0, -2.37, 0], upright);
         yield;
-        f.beveledBox("rack foot protector", [.21, .45, .21], [0, -2.14, 0], "#d8a849", upright);
+        this.rackModels.place("rack foot protector", [0, -2.14, 0], upright);
         yield;
-        for (const h of [-1.45, -.75, -.05, .65, 1.35, 2.05]) { yield; f.box("rack mounting slot", [.032, .065, .006], [0, h, -.072], "#1e343c", upright); }
+        for (const h of [-1.45, -.75, -.05, .65, 1.35, 2.05]) { yield; this.rackModels.place("rack mounting slot", [0, h, -.072], upright); }
       }
     }
     for (const y of [0.2, 2.15, 4.1]) {
@@ -454,11 +460,9 @@ export class Warehouse {
       );
       yield;
       for (const dz of [-1, 1]) {
-        yield; f.box(
+        yield; this.rackModels.place(
           "orange rack beam",
-          [4.5, 0.23, 0.1],
           [0, 0, dz],
-          "#cf7c3e",
           deck,
         );
       }
@@ -467,7 +471,7 @@ export class Warehouse {
     for (const dx of [-2.15, 2.15]) {
       yield; for (const y of [1.2, 3.15]) {
         yield; for (const sign of [-1, 1]) {
-          const brace = f.cylinder("rack diagonal brace", .045, Math.hypot(1.8, 1.65), [x + dx - braceParent.position.x, y - braceParent.position.y, z - braceParent.position.z], "#71868b", braceParent);
+          const brace = this.rackModels.place("rack diagonal brace", [x + dx - braceParent.position.x, y - braceParent.position.y, z - braceParent.position.z], braceParent);
           yield;
           brace.rotation.x = sign * Math.atan2(1.8, 1.65);
         }
@@ -489,28 +493,9 @@ export class Warehouse {
     yield;
   }
   private crate(x: number, y: number, z: number, size: number) {
-    const m = this.f.box("carton", [size, size, size], [x, y, z], "#bc966c");
-    this.f.box("carton top seam", [size * .93, .004, .012], [0, size / 2 + .003, 0], "#8b6c49", m);
-    this.f.box("carton folded flap", [size * .46, .006, size * .93], [-size * .24, size / 2 - .001, 0], "#c49e72", m);
+    const m = this.crateModels.create(size, [x, y, z]);
     rigid(m, 12);
     this.property.push({ mesh: m, value: 85, start: m.position.clone() });
-    this.f.box(
-      "packing tape",
-      [0.18, size + 0.008, size + 0.008],
-      [0, 0, 0],
-      "#e0c7a0",
-      m,
-    );
-    this.f.label(
-      "↑ ↑",
-      0.38,
-      0.24,
-      [0.18, 0, -size / 2 - 0.006],
-      "#594b3d",
-      "#bc966c",
-      false,
-      m,
-    );
     return m;
   }
   batchDecorations() {

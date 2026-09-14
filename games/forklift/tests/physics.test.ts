@@ -10,6 +10,9 @@ import {
   HavokPlugin,
   MeshBuilder,
   Matrix,
+  InstancedMesh,
+  Mesh,
+  PhysicsMotionType,
   NullEngine,
   Scene,
   Vector3,
@@ -40,11 +43,13 @@ beforeAll(async () => {
 // Skip only canvas text rendering. All real collision shapes and control code are exercised.
 class HeadlessFactory extends Factory {
   override label(text: string | (() => string)) {
-    return MeshBuilder.CreatePlane(
+    const mesh = MeshBuilder.CreatePlane(
       typeof text === "function" ? text() : text,
       { size: 0.01 },
       this.scene,
     );
+    mesh.isPickable = false;
+    return mesh;
   }
 }
 function rig(
@@ -142,6 +147,82 @@ it('cancels a partly built warehouse when its scene is disposed', async () => {
     await expect(building).rejects.toMatchObject({ name: 'AbortError' });
     expect(scene.meshes).toHaveLength(0);
   } finally { scene.dispose(); engine.dispose(); }
+});
+
+it('shared rack details follow independently collapsing bodies and retain per-copy bounds', () => {
+  const r = rig(true);
+  try {
+    const slots = r.scene.meshes.filter(mesh => mesh.name === 'rack mounting slot');
+    const source = slots.find(mesh => mesh instanceof Mesh) as Mesh;
+    const attached = slots.find(mesh => mesh instanceof InstancedMesh && mesh.parent === source.parent) as InstancedMesh;
+    const independent = slots.find(mesh => mesh instanceof InstancedMesh && mesh.parent !== source.parent) as InstancedMesh;
+    const parent = source.parent as Mesh;
+    expect(source.instances).toHaveLength(firstMission.racks.length * 4 * 6 - 1);
+    expect(attached.sourceMesh).toBe(source);
+    expect(independent.sourceMesh).toBe(source);
+    expect(parent.physicsBody!.getMotionType()).toBe(PhysicsMotionType.STATIC);
+    expect(r.warehouse!.cameraObstacles.has(parent)).toBe(true);
+    expect(source.physicsBody).toBeFalsy();
+    expect(attached.physicsBody).toBeFalsy();
+    const stationary = independent.computeWorldMatrix(true).clone();
+    const original = attached.computeWorldMatrix(true).clone();
+    // Exercise real Havok motion on the source's parent. Other instances must
+    // neither inherit that motion nor lose their geometry when it falls.
+    parent.physicsBody!.setMotionType(PhysicsMotionType.DYNAMIC);
+    parent.physicsBody!.setMassProperties({ mass: 45 });
+    parent.physicsBody!.setAngularVelocity(new Vector3(0, 0, 2));
+    r.step(.5);
+    expect(attached.computeWorldMatrix(true).equalsWithEpsilon(original)).toBe(false);
+    expect(independent.computeWorldMatrix(true).equalsWithEpsilon(stationary)).toBe(true);
+    const local = Matrix.Translation(attached.position.x, attached.position.y, attached.position.z);
+    expect(attached.getWorldMatrix().equalsWithEpsilon(local.multiply(parent.computeWorldMatrix(true)))).toBe(true);
+    const bounds = attached.getBoundingInfo().boundingBox;
+    expect(Vector3.Distance(bounds.minimumWorld, independent.getBoundingInfo().boundingBox.minimumWorld)).toBeGreaterThan(.1);
+    expect(bounds.maximum.x - bounds.minimum.x).toBeCloseTo(.032);
+    expect(bounds.maximum.y - bounds.minimum.y).toBeCloseTo(.065);
+    expect(bounds.maximum.z - bounds.minimum.z).toBeCloseTo(.006);
+    expect(source.isDisposed()).toBe(false);
+    r.dispose();
+    expect(source.instances).toHaveLength(0);
+    expect(attached.isDisposed()).toBe(true);
+    expect(independent.isDisposed()).toBe(true);
+    expect(r.scene.geometries).toHaveLength(0);
+  } finally { r.dispose(); }
+});
+
+it('instanced crate visuals retain independent dynamic bodies, collision bounds and damage ownership', () => {
+  const r = rig(true);
+  try {
+    const crates = r.warehouse!.property.filter(item => item.mesh.name === 'carton');
+    expect(crates).toHaveLength(firstMission.racks.length * 6 + firstMission.crates.length);
+    const source = crates.find(item => item.mesh.isVisible)!.mesh;
+    const copy = crates.find(item => !item.mesh.isVisible && item.mesh.geometry === source.geometry)!.mesh;
+    const visual = copy.getChildMeshes().find(mesh => mesh.name === 'carton visual') as InstancedMesh;
+    expect(visual.sourceMesh).toBe(source);
+    expect(copy.physicsBody).not.toBe(source.physicsBody);
+    for (const item of crates) {
+      expect(item.mesh.physicsBody!.getMotionType()).toBe(PhysicsMotionType.DYNAMIC);
+      expect(item.mesh.physicsBody!.getMassProperties().mass).toBe(12);
+      expect(item.value).toBe(85);
+    }
+    const bounds = copy.getBoundingInfo().boundingBox;
+    expect(bounds.minimum.asArray()).toEqual(source.getBoundingInfo().boundingBox.minimum.asArray());
+    expect(bounds.maximum.asArray()).toEqual(source.getBoundingInfo().boundingBox.maximum.asArray());
+    const positions = source.getVerticesData('position')!.slice();
+    source.physicsBody!.setLinearVelocity(new Vector3(-2, 3, 0));
+    copy.physicsBody!.setLinearVelocity(new Vector3(2, 3, 0));
+    r.step(.4);
+    const world = visual.computeWorldMatrix(true);
+    expect(world.equalsWithEpsilon(copy.computeWorldMatrix(true))).toBe(true);
+    expect(world.equalsWithEpsilon(source.computeWorldMatrix(true))).toBe(false);
+    expect(source.getVerticesData('position')).toEqual(positions);
+    expect(copy.getChildMeshes().find(mesh => mesh.name === '↑ ↑')!.isPickable).toBe(false);
+    expect(r.damage.propertyDamage).toBe(0); // Existing warm-up interval remains in force.
+    r.dispose();
+    expect(source.instances).toHaveLength(0);
+    expect(visual.isDisposed()).toBe(true);
+    expect(r.scene.geometries).toHaveLength(0);
+  } finally { r.dispose(); }
 });
 
 it('staged truck assembly preserves its geometry, moving groups and real physics', async () => {

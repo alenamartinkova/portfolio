@@ -13,8 +13,9 @@ import { Scene } from '@babylonjs/core/scene';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 export class Factory {
+    private labelMaterials = new Map<string, StandardMaterial>();
     private materials: OfficeMaterials;
-    constructor(public scene: Scene) { this.materials = new OfficeMaterials(scene); }
+    constructor(public scene: Scene) { this.materials = new OfficeMaterials(scene); scene.onDisposeObservable.addOnce(() => this.labelMaterials.clear()); }
     mat(color: string, glow = false) { return this.materials.mat(color, glow); }
     sphere(name: string, size: number[], pos: number[], color: string, parent?: TransformNode) {
         const mesh = CreateSphere(name, {diameter: 1, segments: 20}, this.scene);
@@ -51,6 +52,25 @@ export class Factory {
         return mesh;
     }
     label(text: string | (() => string), width: number, height: number, pos: number[], color = '#f2edda', background = '#203d3d', floor = false) {
+        const mat = this.labelMaterial(text, width, height, color, background);
+        const name = mat.name;
+        const mesh = CreatePlane(name, { width, height }, this.scene);
+        mesh.material = mat;
+        mesh.position.set(...pos as [
+            number,
+            number,
+            number
+        ]);
+        mesh.isPickable = false;
+        if (floor)
+            mesh.rotation.x = Math.PI / 2;
+        return mesh;
+    }
+    private labelMaterial(text: string | (() => string), width: number, height: number, color: string, background: string) {
+        // Only literal labels are immutable. Callbacks retain their own locale listener.
+        const key = typeof text === 'string' ? JSON.stringify([text, width, height, color, background]) : undefined;
+        const cached = key === undefined ? undefined : this.labelMaterials.get(key);
+        if (cached) return cached;
         const name = typeof text === 'function' ? text() : text;
         const tex = new DynamicTexture(name, { width: 1024, height: Math.round(1024 * height / width) }, this.scene, true);
         tex.anisotropicFilteringLevel = 16;
@@ -75,16 +95,8 @@ export class Factory {
         mat.emissiveColor = new Color3(.22, .22, .22);
         mat.specularColor = Color3.Black();
         mat.backFaceCulling = false;
-        const mesh = CreatePlane(name, { width, height }, this.scene);
-        mesh.material = mat;
-        mesh.position.set(...pos as [
-            number,
-            number,
-            number
-        ]);
-        mesh.isPickable = false;
-        if (floor)
-            mesh.rotation.x = Math.PI / 2;
-        return mesh;
+        if (key !== undefined && this.labelMaterials.size < 128) this.labelMaterials.set(key, mat);
+        return mat;
     }
+
 }

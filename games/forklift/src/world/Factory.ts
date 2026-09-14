@@ -14,9 +14,10 @@ import { Scene } from "@babylonjs/core/scene";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 export class Factory {
+  private labelMaterials = new Map<string, StandardMaterial>();
   private mats = new Map<string, StandardMaterial>();
   private surfaces: SurfaceMaterials;
-  constructor(public scene: Scene) { this.surfaces = new SurfaceMaterials(scene); }
+  constructor(public scene: Scene) { this.surfaces = new SurfaceMaterials(scene); scene.onDisposeObservable.addOnce(() => this.labelMaterials.clear()); }
   mat(color: string, glow = false) {
     const key = color + glow;
     let m = this.mats.get(key);
@@ -96,6 +97,28 @@ export class Factory {
     floor = false,
     parent?: TransformNode,
   ) {
+    const mat = this.labelMaterial(text, width, height, color, background);
+    const name = mat.name;
+    const m = CreatePlane(name, { width, height }, this.scene);
+    m.material = mat;
+    m.position.set(pos[0], pos[1], pos[2]);
+    if (floor) m.rotation.x = Math.PI / 2;
+    m.parent = parent ?? null;
+    m.isPickable = false;
+    return m;
+  }
+  compound(name: string, parts: Mesh[], pos: Vector3) {
+    const root = new TransformNode(name, this.scene);
+    root.position.copyFrom(pos);
+    root.rotationQuaternion = Quaternion.Identity();
+    for (const p of parts) p.parent = root;
+    return root;
+  }
+  private labelMaterial(text: string | (() => string), width: number, height: number, color: string, background: string) {
+    // Only literal labels are immutable. Callbacks retain their own locale listener.
+    const key = typeof text === 'string' ? JSON.stringify([text, width, height, color, background]) : undefined;
+    const cached = key === undefined ? undefined : this.labelMaterials.get(key);
+    if (cached) return cached;
     const name = typeof text === "function" ? text() : text;
     const tex = new DynamicTexture(
       name,
@@ -131,19 +154,8 @@ export class Factory {
     mat.emissiveColor = new Color3(0.25, 0.25, 0.25);
     mat.specularColor = Color3.Black();
     mat.backFaceCulling = false;
-    const m = CreatePlane(name, { width, height }, this.scene);
-    m.material = mat;
-    m.position.set(pos[0], pos[1], pos[2]);
-    if (floor) m.rotation.x = Math.PI / 2;
-    m.parent = parent ?? null;
-    m.isPickable = false;
-    return m;
+    if (key !== undefined && this.labelMaterials.size < 128) this.labelMaterials.set(key, mat);
+    return mat;
   }
-  compound(name: string, parts: Mesh[], pos: Vector3) {
-    const root = new TransformNode(name, this.scene);
-    root.position.copyFrom(pos);
-    root.rotationQuaternion = Quaternion.Identity();
-    for (const p of parts) p.parent = root;
-    return root;
-  }
+
 }

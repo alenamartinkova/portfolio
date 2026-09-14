@@ -12,6 +12,8 @@ import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator'
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { buildArchitecture } from './Architecture';
 import { Factory } from './Factory';
+import { PlantModels } from './PlantModels';
+import { MovingFurnitureModels } from './MovingFurnitureModels';
 import { PhysicsInteractionSystem } from '../systems/PhysicsInteractionSystem';
 import { officeLevels, type OfficeLevel, type Stop } from './levels';
 import { SecuritySystem } from '../systems/SecuritySystem';
@@ -19,6 +21,8 @@ export { route, type Stop } from './levels';
 export class Level {
     security!: SecuritySystem;
     f!: Factory;
+    private plants?: PlantModels;
+    private movingFurniture?: MovingFurnitureModels;
     platforms: Mesh[] = [];
     checkpointMeshes: Mesh[] = [];
     exitDoor!: Mesh;
@@ -259,60 +263,21 @@ export class Level {
             this.physics.rigid(support);
             yield;
         }
-        const moving = ['chair', 'cart', 'box'].includes(s.kind);
-        const color = moving ? '#d9975e' : s.kind === 'sofa' ? '#669489' : s.kind === 'counter' ? '#e3dfc7' : '#d7bd91';
+        if (s.kind === 'chair' || s.kind === 'cart') {
+            // Keep the original full-height hull and low center of mass. Only visuals are shared.
+            const hull = this.f.box('rolling ' + s.kind, [s.w, height, s.d], [s.x, baseY + height / 2, s.z], '#d9975e');
+            hull.visibility = 0;
+            yield;
+            this.physics.rigid(hull, s.kind === 'chair' ? 12 : 28, s.kind === 'chair' ? 'office chair' : 'rolling cart');
+            yield;
+            this.movingFurniture ??= new MovingFurnitureModels(this.f);
+            yield* this.movingFurniture.attach(hull, s.kind, s.w, height, s.d);
+            return hull;
+        }
+        const color = s.kind === 'box' ? '#d9975e' : s.kind === 'sofa' ? '#669489' : s.kind === 'counter' ? '#e3dfc7' : '#d7bd91';
         const thickness = s.kind === 'box' ? height : s.kind === 'sofa' ? .45 : .18;
         const top = f.box(s.kind, [s.w, thickness, s.d], [s.x, s.y - thickness / 2, s.z], color);
         yield;
-        if (s.kind === 'chair' || s.kind === 'cart') {
-            // Invisible full-height hull gives stable low center of mass; the seat remains the landing face.
-            const hull = f.box('rolling ' + s.kind, [s.w, height, s.d], [s.x, baseY + height / 2, s.z], color);
-            yield;
-            hull.visibility = 0;
-            top.parent = hull;
-            top.position.set(0, height / 2 - thickness / 2, 0);
-            this.physics.rigid(hull, s.kind === 'chair' ? 12 : 28, s.kind === 'chair' ? 'office chair' : 'rolling cart');
-            yield;
-            if (s.kind === 'chair') {
-                f.cylinder('gas lift pedestal', .12, height - .3, [0, -.05, 0], '#a5b0ac', hull);
-                yield;
-                f.cylinder('pedestal sleeve', .2, height * .42, [0, -height * .2, 0], '#3a4548', hull);
-                yield;
-                for (let i = 0; i < 5; i++) {
-                    const a = i * Math.PI * 2 / 5, x = Math.sin(a) * s.w * .38, z = Math.cos(a) * s.d * .38;
-                    f.tube('chair wheel spoke', [[0, -height / 2 + .25, 0], [x * .7, -height / 2 + .2, z * .7], [x, -height / 2 + .18, z]], .045, '#89948f', hull);
-                    yield;
-                    const wheel = f.cylinder('rubber caster', .19, .14, [x, -height / 2 + .11, z], '#2d3437', hull);
-                    yield;
-                    wheel.rotation.z = Math.PI / 2;
-                }
-                f.tube('chair back support', [[0, height / 2 - .2, s.d * .3], [0, height / 2 + .3, s.d * .45], [0, height / 2 + .55, s.d * .45]], .055, '#4d5756', hull);
-                yield;
-                const back = f.box('chair back cushion', [s.w * .92, .72, .22], [0, height / 2 + .38, s.d * .44], '#b97a50', hull);
-                yield;
-                back.rotation.x = -.12;
-                for (const side of [-1, 1]) {
-                    f.tube('armrest frame', [[side * s.w * .39, height / 2 - .1, 0], [side * s.w * .44, height / 2 + .22, .08]], .038, '#53605d', hull);
-                    yield;
-                    f.box('armrest pad', [.12, .07, s.d * .45], [side * s.w * .44, height / 2 + .25, .03], '#3a4243', hull);
-                    yield;
-                }
-            } else {
-                for (const x of [-s.w * .4, s.w * .4]) {
-                    yield; for (const z of [-s.d * .4, s.d * .4]) {
-                        f.cylinder('cart upright', .06, height - .2, [x, 0, z], '#718983', hull);
-                        yield;
-                        const wheel = f.cylinder('rubber caster', .22, .15, [x, -height / 2 + .13, z], '#293c40', hull);
-                        yield;
-                        wheel.rotation.z = Math.PI / 2;
-                    }
-                }
-                f.box('bottom cart shelf', [s.w, .1, s.d], [0, -height / 2 + .35, 0], '#709087', hull);
-                yield;
-                for (const side of [-1, 1]) { yield; f.tube('cart handle', [[side * s.w * .44, height / 2, -.35], [side * s.w * .44, height / 2 + .2, -.35], [side * s.w * .44, height / 2 + .2, .35], [side * s.w * .44, height / 2, .35]], .035, '#9caaa1', hull); }
-            }
-            return hull;
-        }
         this.physics.rigid(top, s.kind === 'box' ? 18 : 0, s.kind === 'box' ? 'archive box' : s.kind);
         yield;
         if (s.kind === 'box') {
@@ -398,23 +363,10 @@ export class Level {
     }
     plant(x: number, z: number) { return finishConstruction(this.buildPlant(x, z)); }
     private *buildPlant(x: number, z: number) {
-        const f = this.f;
-        const pot = f.cylinder('ceramic plant pot', .72, .65, [x, .325, z], '#b89b7d');
-        yield;
+        this.plants ??= new PlantModels(this.f);
+        const pot = yield* this.plants.create(x, z);
         this.physics.rigid(pot, 8, 'potted plant');
         yield;
-        f.cylinder('planter rim', .76, .065, [0, .29, 0], '#c8b395', pot);
-        yield;
-        f.cylinder('potting soil', .64, .02, [0, .326, 0], '#514637', pot);
-        yield;
-        for (let i = 0; i < 9; i++) {
-            const a = i * 2.4, h = .7 + (i % 3) * .27;
-            const x = Math.sin(a) * .3, z = Math.cos(a) * .3;
-            f.tube('plant stem', [[0, .32, 0], [x * .35, h * .7, z * .35], [x, h, z]], .017, '#476747', pot);
-            yield;
-            const leaf = f.sphere('broad leaf', [.32, .66, .047], [x, h + .13, z], i % 2 ? '#497256' : '#6c9065', pot);
-            yield;
-            leaf.rotation.set(.35, a, Math.sin(a) * .55);
-        }
+        return pot;
     }
 }
