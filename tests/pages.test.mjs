@@ -6,7 +6,7 @@ import { createServer } from 'vite'
 import { GAMES } from '../games/catalog.js'
 import { MORE } from '../src/motion/projects.js'
 
-let server, renderPortfolio, GamesApp
+let server, renderPortfolio, renderNotFound, GamesApp
 
 before(async () => {
   server = await createServer({
@@ -15,13 +15,24 @@ before(async () => {
     cacheDir: 'node_modules/.vite-tests',
     optimizeDeps: { noDiscovery: true, include: [] },
   })
-  ;({ render: renderPortfolio } = await server.ssrLoadModule('/src/entry-server.jsx'))
+  ;({ render: renderPortfolio, renderNotFound } = await server.ssrLoadModule('/src/entry-server.jsx'))
   ;({ default: GamesApp } = await server.ssrLoadModule('/src/games/GamesApp.jsx'))
 })
 
 after(async () => { await server?.close() })
 
 for (const locale of ['en', 'sk']) {
+  test(`404 prerender provides localized recovery links without JavaScript in ${locale}`, () => {
+    const html = renderNotFound(locale)
+    const home = locale === 'sk' ? '/sk/' : '/'
+    assert.equal((html.match(/<h1\b/g) || []).length, 1)
+    assert.ok(html.includes(locale === 'sk' ? 'Stránka sa nenašla' : 'Page not found'))
+    for (const href of [home, `${home}#work`, `${home}#contact`]) {
+      assert.ok(html.includes(`href="${href}"`), `Missing recovery link: ${href}`)
+    }
+    assert.ok(!html.includes('id="client-work-grid"'), 'An error must not render the portfolio')
+  })
+
   test(`portfolio prerender keeps its content and game links in ${locale}`, () => {
     const html = renderPortfolio(locale)
     for (const section of ['about', 'stack', 'work', 'career', 'contact']) {

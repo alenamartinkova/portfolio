@@ -4,6 +4,11 @@ import GamesApp from './games/GamesApp'
 export function renderGames() { return renderToString(<GamesApp ssrLocale="en" />) }
 import en from './i18n/en'
 import sk from './i18n/sk'
+import NotFound from './not-found/NotFound'
+
+export function renderNotFound(locale = 'en') {
+  return renderToString(<NotFound ssrLocale={locale} />)
+}
 
 /**
  * Used only by scripts/prerender.mjs at build time. The output is markup for

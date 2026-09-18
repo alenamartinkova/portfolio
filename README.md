@@ -155,6 +155,12 @@ remain readable without JavaScript, and collapse only after the page initializes
 Portfolio translations live in `src/i18n/`; each game's translations stay in its
 own source tree. The final static output remains `build/` for Netlify.
 
+Unknown URLs use the custom 404 page in `src/not-found/`. The build prerenders
+`/404.html` and `/sk/404.html`, including styles and recovery links that work
+without JavaScript. Netlify serves the matching language with HTTP status 404
+and preserves the requested URL. Preview either document locally, or open an
+unknown extensionless URL to check the Vite fallback.
+
 ## Images
 
 The full-resolution photo lives in `assets-src/` so it is **not** copied into

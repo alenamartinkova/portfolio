@@ -11,6 +11,7 @@
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { localizeStructuredData } from '../src/seo.js'
+import { NOT_FOUND_COPY } from '../src/not-found/copy.js'
 
 const SSR_ENTRY = new URL('../build-ssr/entry-server.js', import.meta.url)
 const HTML_PATH = new URL('../build/index.html', import.meta.url)
@@ -19,7 +20,7 @@ const SK_HTML_PATH = new URL('../build/sk/index.html', import.meta.url)
 const PLACEHOLDER = '<div id="root"></div>'
 const ORIGIN = 'https://martinkova.dev'
 
-const { render, renderGames, metaFor } = await import(pathToFileURL(SSR_ENTRY.pathname).href)
+const { render, renderGames, renderNotFound, metaFor } = await import(pathToFileURL(SSR_ENTRY.pathname).href)
 
 const gamesPath = new URL('../build/games/index.html', import.meta.url)
 writeFileSync(gamesPath, readFileSync(gamesPath, 'utf8').replace(PLACEHOLDER, `<div id="root">${renderGames()}</div>`))
@@ -79,6 +80,19 @@ skHtml = swap(
 
 mkdirSync(SK_DIR, { recursive: true })
 writeFileSync(SK_HTML_PATH, skHtml)
+
+// Netlify serves these documents with status 404, retaining the requested URL.
+const notFoundPath = new URL('../build/404.html', import.meta.url)
+const notFoundTemplate = readFileSync(notFoundPath, 'utf8')
+for (const locale of ['en', 'sk']) {
+  const copy = NOT_FOUND_COPY[locale]
+  const html = notFoundTemplate
+    .replace(PLACEHOLDER, `<div id="root">${renderNotFound(locale)}</div>`)
+    .replace('<html lang="en"', `<html lang="${locale}"`)
+    .replace(NOT_FOUND_COPY.en.title, copy.title)
+    .replace(NOT_FOUND_COPY.en.description, copy.description)
+  writeFileSync(new URL(`../build/${locale === 'sk' ? 'sk/' : ''}404.html`, import.meta.url), html)
+}
 
 rmSync(new URL('../build-ssr', import.meta.url), { recursive: true, force: true })
 

@@ -36,6 +36,17 @@
   status = 301
   force = true
 
+# Existing files take precedence; unknown URLs retain a real 404 response.
+[[redirects]]
+  from = "/sk/*"
+  to = "/sk/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
 # Vite fingerprints these filenames, so their contents never change.
 [[headers]]
   for = "/assets/*"

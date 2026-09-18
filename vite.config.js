@@ -99,7 +99,7 @@ export default defineConfig({
   build: {
     outDir: 'build', emptyOutDir: true,
     rollupOptions: {
-      input: { main: 'index.html', games: 'games/index.html', motion: 'motion/index.html', ...Object.fromEntries(GAMES.map(({ id }) => [id, `games/${id}/index.html`])) },
+      input: { main: 'index.html', notFound: '404.html', games: 'games/index.html', motion: 'motion/index.html', ...Object.fromEntries(GAMES.map(({ id }) => [id, `games/${id}/index.html`])) },
       output: {
         codeSplitting: { groups: [
           // Never place the CJS/runtime bridge inside React: Babylon uses it too.
