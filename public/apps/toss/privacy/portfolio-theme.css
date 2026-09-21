@@ -1,0 +1,289 @@
+/* Portfolio design snapshot: shared/styles/{fonts,foundations,tokens}.css.
+   Refresh these definitions when the portfolio design tokens change. */
+/* ---------------------------------------------------------------
+   Self-hosted variable fonts (subset copies of the Google Fonts
+   builds). Serving them first-party removes two render-blocking
+   third-party requests and the GDPR wrinkle of fonts.gstatic.com.
+   latin covers EN, latin-ext the Slovak diacritics.
+   --------------------------------------------------------------- */
+
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url(/fonts/inter-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url(/fonts/inter-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url(/fonts/space-grotesk-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url(/fonts/space-grotesk-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url(/fonts/jetbrains-mono-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url(/fonts/jetbrains-mono-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+/* The same type roles and component shapes across the portfolio and games. */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --font-control: 500 13px/1.4 var(--font-sans);
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-pill: 999px;
+  --shadow-panel: 0 8px 28px #00000012;
+  --shadow-dialog: 0 24px 80px #00000030;
+}
+
+:where(body) { -webkit-font-smoothing: antialiased; }
+:where(button, input, select, textarea) { font-family: var(--font-sans); }
+:where(kbd, output, time) { font-variant-numeric: tabular-nums; }
+
+
+/* ---------------------------------------------------------------
+   Design tokens
+   Purple stays the accent — it signals, it doesn't fill surfaces.
+
+   Dark is the default and lives on :root. The light theme overrides
+   only the colour tokens; radii, type and motion are shared.
+   --------------------------------------------------------------- */
+
+:root {
+  /* surfaces */
+  --bg: #101018;
+  --bg-rgb: 16, 16, 24;
+  --surface: #17171f;
+  --surface-2: #1d1d27;
+  --surface-3: #25252f;
+  /* raised surface used inside the diagram; separate from --surface-2 so the
+     two themes can move it in opposite directions */
+  --node: #1d1d27;
+
+  /* hairlines — depth comes from borders, not shadows */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-mid: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.24);
+
+  /* overlay washes — white on dark, ink on light */
+  --tint-soft: rgba(255, 255, 255, 0.016);
+  --tint: rgba(255, 255, 255, 0.022);
+  --tint-2: rgba(255, 255, 255, 0.03);
+  --tint-strong: rgba(255, 255, 255, 0.055);
+
+  /* text */
+  --text: #eceef6;
+  --text-muted: #a2a6ba;
+  --text-dim: #82869c;
+
+  /* accent */
+  --accent: #9c6bff;
+  --accent-bright: #b78dff;
+  --accent-soft: rgba(156, 107, 255, 0.1);
+  --accent-line: rgba(156, 107, 255, 0.38);
+  --accent-cold: #6b8bff;
+  /* text that sits on top of --accent */
+  --on-accent: #0a0616;
+  --bloom: rgba(156, 107, 255, 0.22);
+  /* second, colder light source low on the page */
+  --bloom-2: rgba(107, 139, 255, 0.1);
+
+  /* status */
+  --ok: #3ddc97;
+  --ok-soft: rgba(61, 220, 151, 0.12);
+
+  --scrollbar-thumb: #2f2f3d;
+
+  /* Component surfaces retain the chosen accent in both themes. */
+  --panel-bg: color-mix(in srgb, var(--accent) 3%, var(--surface));
+  --panel-overlay: color-mix(in srgb, var(--panel-bg) 96%, transparent);
+  --dialog-bg: color-mix(in srgb, var(--accent) 2%, var(--surface));
+
+  /* rhythm */
+  --page-w: 1200px;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  /* the sticky nav's own height — the hero subtracts it to fill exactly one
+     screen without pushing itself past the fold */
+  --nav-h: 60px;
+
+  /* motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 0.22s;
+
+  /* native form controls, scrollbars and caret follow the theme */
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  /* Paper rather than pure white, so the white panels still read as raised. */
+  --bg: #f2f2f7;
+  --bg-rgb: 242, 242, 247;
+  --surface: #ffffff;
+  --surface-2: #f6f6fb;
+  --surface-3: #e9e9f2;
+  --node: #ffffff;
+
+  --line: rgba(18, 18, 40, 0.11);
+  --line-mid: rgba(18, 18, 40, 0.17);
+  --line-strong: rgba(18, 18, 40, 0.3);
+
+  --tint-soft: rgba(18, 18, 40, 0.015);
+  --tint: rgba(18, 18, 40, 0.022);
+  --tint-2: rgba(18, 18, 40, 0.03);
+  --tint-strong: rgba(18, 18, 40, 0.06);
+
+  --text: #14141d;
+  --text-muted: #4c4e61;
+  --text-dim: #5f6175;
+
+  /* #9c6bff only reaches 3.4:1 on white, so light mode drops to a deeper
+     violet of the same family and flips --accent-bright to mean "darker". */
+  --accent: #6633d6;
+  --accent-bright: #5124ad;
+  --accent-soft: rgba(102, 51, 214, 0.08);
+  --accent-line: rgba(102, 51, 214, 0.32);
+  --accent-cold: #2f4bc4;
+  --on-accent: #ffffff;
+  --bloom: rgba(102, 51, 214, 0.09);
+  --bloom-2: rgba(47, 75, 196, 0.06);
+
+  --ok: #0c8a5c;
+  --ok-soft: rgba(12, 138, 92, 0.12);
+
+  --scrollbar-thumb: #c4c4d4;
+
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------
+   Accent presets
+   No block for the default violet: leaving [data-accent] unset keeps
+   the base tokens above untouched.
+   --------------------------------------------------------------- */
+
+[data-accent='cyan'] {
+  --accent: #45d8d0;
+  --accent-bright: #7ae6e0;
+  --accent-soft: rgba(69, 216, 208, 0.1);
+  --accent-line: rgba(69, 216, 208, 0.38);
+  --bloom: rgba(69, 216, 208, 0.16);
+}
+
+[data-theme='light'][data-accent='cyan'] {
+  --accent: #0c7873;
+  --accent-bright: #085450;
+  --accent-soft: rgba(12, 120, 115, 0.08);
+  --accent-line: rgba(12, 120, 115, 0.32);
+  --bloom: rgba(12, 120, 115, 0.09);
+}
+
+[data-accent='lime'] {
+  --accent: #a6e34d;
+  --accent-bright: #c2ed88;
+  --accent-soft: rgba(166, 227, 77, 0.1);
+  --accent-line: rgba(166, 227, 77, 0.38);
+  --bloom: rgba(166, 227, 77, 0.16);
+}
+
+[data-theme='light'][data-accent='lime'] {
+  --accent: #4d7a12;
+  --accent-bright: #3b5e0d;
+  --accent-soft: rgba(77, 122, 18, 0.08);
+  --accent-line: rgba(77, 122, 18, 0.32);
+  --bloom: rgba(77, 122, 18, 0.09);
+}
+
+[data-accent='amber'] {
+  --accent: #f0b23c;
+  --accent-bright: #f7cd7a;
+  --accent-soft: rgba(240, 178, 60, 0.1);
+  --accent-line: rgba(240, 178, 60, 0.38);
+  --bloom: rgba(240, 178, 60, 0.16);
+}
+
+[data-theme='light'][data-accent='amber'] {
+  --accent: #96610a;
+  --accent-bright: #734a06;
+  --accent-soft: rgba(150, 97, 10, 0.08);
+  --accent-line: rgba(150, 97, 10, 0.32);
+  --bloom: rgba(150, 97, 10, 0.09);
+}
+
+[data-accent='rose'] {
+  --accent: #ff6b9c;
+  --accent-bright: #ff9bbb;
+  --accent-soft: rgba(255, 107, 156, 0.1);
+  --accent-line: rgba(255, 107, 156, 0.38);
+  --bloom: rgba(255, 107, 156, 0.16);
+}
+
+[data-theme='light'][data-accent='rose'] {
+  --accent: #c2185b;
+  --accent-bright: #9c1348;
+  --accent-soft: rgba(194, 24, 91, 0.08);
+  --accent-line: rgba(194, 24, 91, 0.32);
+  --bloom: rgba(194, 24, 91, 0.09);
+}
+
+[data-accent='blue'] {
+  --accent: #6b8bff;
+  --accent-bright: #96abff;
+  --accent-soft: rgba(107, 139, 255, 0.1);
+  --accent-line: rgba(107, 139, 255, 0.38);
+  --bloom: rgba(107, 139, 255, 0.16);
+}
+
+[data-theme='light'][data-accent='blue'] {
+  --accent: #2f4bc4;
+  --accent-bright: #243b9c;
+  --accent-soft: rgba(47, 75, 196, 0.08);
+  --accent-line: rgba(47, 75, 196, 0.32);
+  --bloom: rgba(47, 75, 196, 0.09);
+}
