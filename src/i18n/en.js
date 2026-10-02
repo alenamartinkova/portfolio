@@ -30,7 +30,7 @@ export default {
   hero: {
     eyebrow: 'Tech & team lead · Ostrava / remote',
     role: 'Full stack developer focused on backend',
-    lead: 'I lead the backend of Rankacy, a CS2 analytics platform, at Mesocort AI, and take on client projects across the whole stack on the side. I’m big on architecture that still makes sense a year later, APIs that survive real traffic, and deadlines that hold.',
+    lead: 'As Backend Lead at Mesocort AI, I’m responsible for backend development across the company. I also take on client projects across the whole stack on the side. I’m big on architecture that still makes sense a year later, APIs that survive real traffic, and deadlines that hold.',
     ctaContact: 'Contact me!',
     ctaWork: 'See recent work',
   },

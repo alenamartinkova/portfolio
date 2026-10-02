@@ -24,7 +24,7 @@ export default {
   hero: {
     eyebrow: 'Tech & team lead · Ostrava / remote',
     role: 'Full stack vývojárka so zameraním na backend',
-    lead: 'V Mesocort AI vediem backend analytickej platformy Rankacy pre CS2 a popri tom robím klientske projekty naprieč celým stackom. Potrpím si na architektúru, ktorá dáva zmysel aj o rok, API, ktoré vydržia, a termíny, ktoré platia.',
+    lead: 'V Mesocort AI mám ako Backend Lead na starosti backend naprieč celou firmou. Popri tom robím klientske projekty naprieč celým stackom. Potrpím si na architektúru, ktorá dáva zmysel aj o rok, API, ktoré vydržia, a termíny, ktoré platia.',
     ctaContact: 'Napíšte mi!',
     ctaWork: 'Pozrieť prácu',
   },
