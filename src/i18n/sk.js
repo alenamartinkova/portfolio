@@ -4,7 +4,7 @@ export default {
     lang: 'sk',
     title: 'Alena Martinková — full stack vývojárka · tech & team lead',
     description:
-      'Full stack vývojárka so zameraním na backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Vediem backend v Rankacy.',
+      'Full stack vývojárka so zameraním na backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Vediem backend v Mesocort AI.',
   },
 
   games: gameCopy.games,
@@ -15,7 +15,7 @@ export default {
     work: 'práca',
     career: 'kariéra',
     contact: 'kontakt',
-    status: 'Backend Lead @ Rankacy',
+    status: 'Backend Lead @ Mesocort AI',
     skip: 'Preskočiť na obsah',
     menu: 'Navigačné menu',
     sections: 'Sekcie',
@@ -24,17 +24,17 @@ export default {
   hero: {
     eyebrow: 'Tech & team lead · Ostrava / remote',
     role: 'Full stack vývojárka so zameraním na backend',
-    lead: 'V Rankacy vediem backend analytickej platformy pre CS2 a popri tom robím klientske projekty naprieč celým stackom. Potrpím si na architektúru, ktorá dáva zmysel aj o rok, API, ktoré vydržia, a termíny, ktoré platia.',
+    lead: 'V Mesocort AI vediem backend analytickej platformy Rankacy pre CS2 a popri tom robím klientske projekty naprieč celým stackom. Potrpím si na architektúru, ktorá dáva zmysel aj o rok, API, ktoré vydržia, a termíny, ktoré platia.',
     ctaContact: 'Napíšte mi!',
     ctaWork: 'Pozrieť prácu',
   },
 
   terminal: {
     keys: { status: 'stav', location: 'lokalita', email: 'e-mail' },
-    status: 'Aktuálne: Backend Lead @ Rankacy',
+    status: 'Aktuálne: Backend Lead @ Mesocort AI',
     location: 'Pôsobím v Ostrave · remote-friendly',
     focus: [
-      'Pipeline na dáta zo zápasov a štatistické API v Rankacy',
+      'Pipeline na dáta zo zápasov a štatistické API pre platformu Rankacy',
       'Event-driven služby: FastAPI · RabbitMQ · PostgreSQL',
       'Mentoring, code review a architektúra naprieč tímom',
     ],
@@ -51,7 +51,7 @@ export default {
       'Môj denný stack je Python (FastAPI), PostgreSQL, Redis a RabbitMQ, vpredu React. Záleží mi na čistej architektúre, testoch, ktoré si na seba zarobia (PyTest, Cypress), a observabilite, z ktorej sa dá naozaj debugovať.',
       'Viesť tím pre mňa znamená jasné zadania, úprimné code review a mentoring bez mikromanažmentu. Mimo kódu ma baví kreatívna stránka — čokoľvek, vďaka čomu sa produkt lepšie používa.',
     ],
-    caption: 'Aktuálne vyvíjam v Rankacy',
+    caption: 'Aktuálne vyvíjam v Mesocort AI',
     stats: [
       'Rokov dodávania produktov',
       'Služieb a aplikácií dodaných od návrhu po produkciu',
@@ -181,7 +181,7 @@ export default {
     items: [
       {
         period: '2024 — súčasnosť',
-        title: 'Backend Lead Developer · Rankacy',
+        title: 'Backend Lead Developer · Mesocort AI',
         description:
           'Nastúpila som ako full stack vývojárka, po dvoch mesiacoch som prevzala vedenie backendu. Architektúra, plánovanie, review — a každodenný chod platformového tímu.',
       },

@@ -56,7 +56,7 @@ function PortfolioPage() {
       <header className="m-nav">
         <div className="m-nav-identity">
           <a className="m-brand" href="#top" aria-label="Alena Martinková">am<span>.</span></a>
-          <span className="m-nav-status" title={t.nav.status}><span className="m-status-dot" aria-hidden="true" /><span>Rankacy</span></span>
+          <span className="m-nav-status" title={t.nav.status}><span className="m-status-dot" aria-hidden="true" /><span>Mesocort AI</span></span>
         </div>
         <nav aria-label={t.nav.sections}>
           <a href="#about">{t.nav.about}</a>

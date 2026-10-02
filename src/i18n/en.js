@@ -10,7 +10,7 @@ export default {
     lang: 'en',
     title: 'Alena Martinková — Full Stack Developer · Tech & Team Lead',
     description:
-      'Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Rankacy.',
+      'Full stack developer focused on backend · tech & team lead. Python, FastAPI, PostgreSQL, Redis, RabbitMQ, React. Leading backend at Mesocort AI.',
   },
 
   games: gameCopy.games,
@@ -21,7 +21,7 @@ export default {
     work: 'work',
     career: 'career',
     contact: 'contact',
-    status: 'Backend Lead @ Rankacy',
+    status: 'Backend Lead @ Mesocort AI',
     skip: 'Skip to content',
     menu: 'Navigation menu',
     sections: 'Sections',
@@ -30,17 +30,17 @@ export default {
   hero: {
     eyebrow: 'Tech & team lead · Ostrava / remote',
     role: 'Full stack developer focused on backend',
-    lead: 'I lead the backend of a CS2 analytics platform at Rankacy, and take on client projects across the whole stack on the side. I’m big on architecture that still makes sense a year later, APIs that survive real traffic, and deadlines that hold.',
+    lead: 'I lead the backend of Rankacy, a CS2 analytics platform, at Mesocort AI, and take on client projects across the whole stack on the side. I’m big on architecture that still makes sense a year later, APIs that survive real traffic, and deadlines that hold.',
     ctaContact: 'Contact me!',
     ctaWork: 'See recent work',
   },
 
   terminal: {
     keys: { status: 'status', location: 'location', email: 'email' },
-    status: 'Currently: Backend Lead @ Rankacy',
+    status: 'Currently: Backend Lead @ Mesocort AI',
     location: 'Based in Ostrava · remote-friendly',
     focus: [
-      'Match data pipelines & stats APIs at Rankacy',
+      'Match data pipelines & stats APIs for the Rankacy platform',
       'Event-driven services: FastAPI · RabbitMQ · PostgreSQL',
       'Mentoring, code review & architecture across the team',
     ],
@@ -57,7 +57,7 @@ export default {
       'My daily stack is Python (FastAPI), PostgreSQL, Redis and RabbitMQ, with React in front. I care about clean architecture, tests that earn their keep (PyTest, Cypress) and observability you can actually debug from.',
       'Leading a team means clear specs, honest code review and mentoring without micromanaging. Outside the code I enjoy the creative side — anything that makes the product feel better to use.',
     ],
-    caption: 'Currently building at Rankacy',
+    caption: 'Currently building at Mesocort AI',
     stats: [
       'Years of shipping products',
       'Services & apps delivered end to end',
@@ -187,7 +187,7 @@ export default {
     items: [
       {
         period: '2024 — present',
-        title: 'Backend Lead Developer · Rankacy',
+        title: 'Backend Lead Developer · Mesocort AI',
         description:
           'Joined as a full stack developer, took over backend leadership after two months. Architecture, planning, reviews — and the day-to-day running of the platform team.',
       },
